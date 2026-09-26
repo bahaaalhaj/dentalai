@@ -1,34 +1,35 @@
 # DentalAI
 
-An AI-focused project exploring intelligent solutions for dental and oral-health workflows.
+> A full-stack dental-clinic management application with AI-assisted exploration.
 
 ## Overview
 
-DentalAI is a project workspace for applying artificial intelligence to dental-domain problems. It is designed as a portfolio project that brings together software engineering, data-driven thinking, and healthcare-oriented product design.
+DentalAI is a software-engineering project that combines clinic operations with a modern frontend, a managed backend database, and exploratory AI features. It was designed around practical patient and doctor workflows rather than a standalone model demo.
 
-> This project is for educational and technical exploration. It is not a substitute for professional dental diagnosis or clinical advice.
+> Educational project only. It does not provide medical or dental diagnosis.
 
-## Focus areas
+## Highlights
 
-- AI-assisted dental workflows
-- Structured handling of dental-related data
-- User-centered healthcare interfaces
-- Responsible presentation of AI results
+- Built patient and doctor workflows, appointments, billing, and dashboards
+- Developed interactive dental-focused interfaces with **React** and **TypeScript**
+- Integrated **Supabase** for database-backed and role-based workflows
+- Added interactive data visualization
+- Explored AI-assisted dental X-ray analysis using a **YOLO** model and clinical-calculation support
 
-## Getting started
+## Tech stack
+
+`React` · `TypeScript` · `Supabase` · `Data Visualization` · `YOLO`
+
+## Run locally
 
 ```bash
 git clone https://github.com/bahaaalhaj/dentalai.git
 cd dentalai
 ```
 
-Review the project files for the current setup and implementation details.
-
-## Status
-
-In development. Documentation and feature coverage will evolve alongside the application.
+Refer to the project files for the current setup instructions.
 
 ## Author
 
-**Bahaa Alhaj**  
-GitHub: [@bahaaalhaj](https://github.com/bahaaalhaj)
+**Bahaa Alhaj** - AI Engineering student  
+[GitHub profile](https://github.com/bahaaalhaj)
