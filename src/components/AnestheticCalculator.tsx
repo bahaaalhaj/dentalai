@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, ShieldCheck, Calculator, AlertCircle, Trash2, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Calculator, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { supabase } from '../lib/supabase';
+import {
+  clinicalFeatureFlags,
+  CLINICAL_FEATURE_UNAVAILABLE_MESSAGE,
+} from '../lib/feature-flags';
 
 interface CalculationResult {
   status: 'safe' | 'warning' | 'danger';
@@ -31,6 +35,28 @@ const CHRONIC_DISEASES = [
 ];
 
 export function AnestheticCalculator({ patientId }: { patientId: string }) {
+  if (!clinicalFeatureFlags.anestheticDecisionSupport) {
+    return (
+      <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 h-full flex flex-col">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-3 bg-amber-50 rounded-2xl text-amber-600">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">
+            Experimental Anesthetic Decision Support
+          </h3>
+        </div>
+        <div role="status" className="p-5 rounded-2xl border border-amber-200 bg-amber-50 text-sm font-semibold leading-relaxed text-amber-900">
+          {CLINICAL_FEATURE_UNAVAILABLE_MESSAGE}
+        </div>
+      </div>
+    );
+  }
+
+  return <EnabledAnestheticCalculator patientId={patientId} />;
+}
+
+function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
   const [age, setAge] = useState('');
   const [weight, setWeight] = useState('');
   const [bp, setBp] = useState('');
@@ -167,12 +193,15 @@ export function AnestheticCalculator({ patientId }: { patientId: string }) {
           <div className="p-3 bg-red-50 rounded-2xl text-red-600">
             <Calculator className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-black text-slate-900 tracking-tight">Clinical Dose Modeler</h3>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight">Experimental Anesthetic Decision Support</h3>
         </div>
         {isSaving && <span className="text-[10px] font-bold text-slate-400 animate-pulse uppercase tracking-widest">Saving Sync...</span>}
       </div>
 
       <div className="flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
+        <div className="p-4 rounded-2xl border border-amber-200 bg-amber-50 text-xs font-bold leading-relaxed text-amber-900">
+          Development/demo use only. This unvalidated model must not be used for patient-care decisions.
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Age</label>
@@ -270,7 +299,7 @@ export function AnestheticCalculator({ patientId }: { patientId: string }) {
           onClick={calculate}
           className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl"
         >
-          Generate Safety Analysis
+          Generate Experimental Estimate
         </button>
 
         {result && (
@@ -294,7 +323,7 @@ export function AnestheticCalculator({ patientId }: { patientId: string }) {
                    "text-[10px] font-black uppercase tracking-widest",
                    result.status === 'safe' ? "text-emerald-700" : "text-red-700"
                  )}>
-                   {result.status === 'safe' ? "Safe" : "Toxicity Warning"}
+                   {result.status === 'safe' ? "No Modeled Warning" : "Modeled Warning"}
                  </span>
                </div>
                <ShieldCheck className={cn(
@@ -305,11 +334,11 @@ export function AnestheticCalculator({ patientId }: { patientId: string }) {
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Dose Target</p>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Modeled Dose Estimate</p>
                 <p className="text-xl font-black text-slate-900">{result.recommendedMg} mg</p>
               </div>
               <div className="bg-white/50 p-4 rounded-2xl border border-white/50">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Max Cartridges</p>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Modeled Cartridge Estimate</p>
                 <div className="flex items-end gap-1">
                    <p className="text-xl font-black text-slate-900">{result.cartridges}</p>
                    <p className="text-[10px] font-bold text-slate-400 mb-1">qty</p>

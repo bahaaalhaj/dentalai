@@ -344,7 +344,7 @@ export function PatientDashboard() {
               {patientXrays.length > 0 && (
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                   <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Brain className="w-5 h-5 text-indigo-500" /> Clinical Scans
+                    <Brain className="w-5 h-5 text-indigo-500" /> Archived X-Ray Scans
                   </h3>
                   <div className="space-y-4">
                     {patientXrays.map((xr) => (
@@ -352,16 +352,9 @@ export function PatientDashboard() {
                         <img src={xr.image_url} alt="X-ray Scan" className="w-full h-32 object-cover rounded-lg mb-3 border border-slate-200" />
                         <div className="space-y-2">
                           <p className="text-[10px] font-black text-slate-400 uppercase">{format(new Date(xr.created_at), 'dd MMMM yyyy')}</p>
-                          <div className="flex flex-wrap gap-1">
-                            <span className="text-[9px] font-bold px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">
-                              Bone Loss: {xr.ai_report?.bone_loss}
-                            </span>
-                            {xr.ai_report?.infected_teeth?.length > 0 && (
-                              <span className="text-[9px] font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full">
-                                Cavities: {xr.ai_report.infected_teeth.join(', ')}
-                              </span>
-                            )}
-                          </div>
+                          <p className="text-[10px] font-bold leading-relaxed text-amber-700">
+                            Automated findings are withheld pending technical and clinical validation.
+                          </p>
                         </div>
                       </div>
                     ))}

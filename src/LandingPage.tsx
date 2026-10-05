@@ -44,7 +44,7 @@ export function LandingPage() {
               Welcome to <span className="text-indigo-600">DentalAi</span>
             </h1>
             <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-xl">
-              Experience the future of dentistry. AI-powered diagnostics, interactive treatment planning, and seamless care management.
+              Appointment scheduling, interactive records, and care-management tools for the dental clinic.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link to="/register" className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-semibold hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center justify-center gap-2 group">
@@ -124,11 +124,11 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">Our Smart Services</h2>
-            <p className="text-slate-600">Combining clinical excellence with cutting-edge artificial intelligence to provide the best care.</p>
+            <p className="text-slate-600">Digital tools that support clinic administration and communication.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Shield, title: "AI X-Ray Analysis", desc: "Instant detection of cavities and infections using our proprietary AI models." },
+              { icon: Shield, title: "Experimental X-Ray Workspace", desc: "Unavailable for patient-care use pending technical and clinical validation." },
               { icon: Clock, title: "Smart Scheduling", desc: "Automated reminders and easy online booking for your convenience." },
               { icon: Heart, title: "Personalized Care", desc: "Tailored treatment plans based on your unique dental history." }
             ].map((s, i) => (

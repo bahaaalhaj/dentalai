@@ -4,6 +4,10 @@ import { TeethChart } from './components/TeethChart';
 import { AnestheticCalculator } from './components/AnestheticCalculator';
 import { BillingSection } from './components/BillingSection';
 import { ClinicalProcessor } from './lib/clinical-cv';
+import {
+  clinicalFeatureFlags,
+  CLINICAL_FEATURE_UNAVAILABLE_MESSAGE,
+} from './lib/feature-flags';
 import { 
   Users, Calendar, FileText, BarChart3, Settings, 
   Search, Bell, Upload, Brain, ChevronRight,
@@ -229,6 +233,11 @@ export function DoctorDashboard() {
   }, []);
 
   const loadPatientXrays = React.useCallback(async (patientId: string) => {
+    if (!clinicalFeatureFlags.xrayAnalysis) {
+      setPatientXrays([]);
+      return;
+    }
+
     const { data } = await supabase
       .from('xray_images')
       .select('*')
@@ -354,6 +363,11 @@ export function DoctorDashboard() {
   };
 
   const analyzeXray = async (file: File) => {
+    if (!clinicalFeatureFlags.xrayAnalysis) {
+      alert(CLINICAL_FEATURE_UNAVAILABLE_MESSAGE);
+      return;
+    }
+
     if (!selectedPatient) return;
     setIsXrayAnalyzing(true);
     setAiResult(null);
@@ -741,7 +755,16 @@ export function DoctorDashboard() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <section className="bg-white p-6 rounded-4xl border-2 border-slate-50">
-                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">X-Ray AI Diagnostic</h3>
+                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Experimental X-Ray Analysis</h3>
+                          {!clinicalFeatureFlags.xrayAnalysis ? (
+                            <div role="status" className="p-5 rounded-2xl border border-amber-200 bg-amber-50 text-sm font-semibold leading-relaxed text-amber-900">
+                              {CLINICAL_FEATURE_UNAVAILABLE_MESSAGE}
+                            </div>
+                          ) : (
+                          <>
+                          <div className="mb-4 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-xs font-bold leading-relaxed text-amber-900">
+                            Development/demo use only. No validated inference runtime is configured, so this module will not generate findings.
+                          </div>
                           <div 
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={handleDrop}
@@ -758,7 +781,7 @@ export function DoctorDashboard() {
                                 {isXrayAnalyzing && (
                                   <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3">
                                     <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                                    <p className="text-white text-xs font-bold uppercase tracking-widest animate-pulse">Running YOLO Engine...</p>
+                                    <p className="text-white text-xs font-bold uppercase tracking-widest animate-pulse">Processing Experimental Module...</p>
                                   </div>
                                 )}
                               </div>
@@ -774,7 +797,7 @@ export function DoctorDashboard() {
                                 <Upload className="w-12 h-12 text-slate-200 mx-auto mb-4 group-hover:scale-110 group-hover:text-indigo-400 transition-all" />
                                 <p className="text-sm text-slate-400 font-medium mb-6">Drop X-ray scan here or click to browse</p>
                                 <div className="px-8 py-3 bg-white shadow-sm border border-slate-200 rounded-xl text-xs font-black text-slate-700 hover:shadow-md transition-all flex items-center gap-2 mx-auto w-fit">
-                                  {isXrayAnalyzing ? "AI is Analyzing..." : "Select X-ray Scan"}
+                                  {isXrayAnalyzing ? "Processing..." : "Select X-ray Scan"}
                                   <Brain className="w-4 h-4 text-indigo-600" />
                                 </div>
                               </>
@@ -794,12 +817,12 @@ export function DoctorDashboard() {
                             <div className="mt-6 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 shadow-sm">
                               <div className="flex items-center gap-2 mb-3">
                                 <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                                <span className="font-bold text-sm text-emerald-900 uppercase">Analysis Saved ({aiResult.confidence})</span>
+                                <span className="font-bold text-sm text-emerald-900 uppercase">Unvalidated Output Saved ({aiResult.confidence})</span>
                               </div>
                               <ul className="text-xs text-emerald-700 space-y-2 font-medium">
                                 <li className="flex items-center gap-2">
                                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
-                                   Diagnostic: {aiResult.infected_teeth.length > 0 ? `Caries/Cavity on Teeth ${aiResult.infected_teeth.join(', ')}` : 'No Caries Detected'}
+                                   Experimental output: {aiResult.infected_teeth.length > 0 ? `Caries/Cavity markers on Teeth ${aiResult.infected_teeth.join(', ')}` : 'No markers produced'}
                                 </li>
                                 <li className="flex items-center gap-2">
                                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
@@ -826,12 +849,14 @@ export function DoctorDashboard() {
                                     <img src={xr.image_url} alt="Xray" className="w-full h-24 object-cover rounded-xl border border-slate-200" />
                                     <div className="flex items-center justify-between">
                                       <p className="text-[9px] font-bold text-slate-500 uppercase">{format(new Date(xr.created_at), 'dd MMM yyyy')}</p>
-                                      <span className="text-[8px] font-black bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded uppercase">Verified</span>
+                                      <span className="text-[8px] font-black bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded uppercase">Unvalidated record</span>
                                     </div>
                                   </div>
                                 ))}
                               </div>
                             </div>
+                          )}
+                          </>
                           )}
                         </section>
 
