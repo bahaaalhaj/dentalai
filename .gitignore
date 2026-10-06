@@ -6,3 +6,25 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Python and training caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+wandb/
+
+# ML datasets, training outputs, and model artifacts belong in artifact storage.
+# Existing tracked files remain preserved until the documented migration occurs.
+dataset_yolo/
+scripts/dataset/
+runs/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.weights
+*.tflite
+*.h5

@@ -1,17 +1,23 @@
-import React, { useEffect, useState, Suspense, lazy } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
+import type { Session } from '@supabase/supabase-js';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase, UserRole } from './lib/supabase';
-import { LoadingScreen } from './components/LoadingScreen'
+import { supabase } from './lib/supabase';
+import type { UserRole } from './lib/supabase';
+import { LoadingScreen } from './components/LoadingScreen';
 
-const LandingPage = lazy(() => import('./LandingPage').then(m => ({ default: m.LandingPage })));
-const AuthPage = lazy(() => import('./AuthPage').then(m => ({ default: m.AuthPage })));
-const PatientDashboard = lazy(() => import('./PatientDashboard').then(m => ({ default: m.PatientDashboard })));
-const DoctorDashboard = lazy(() => import('./DoctorDashboard').then(m => ({ default: m.DoctorDashboard })));
+const LandingPage = lazy(() => import('./LandingPage').then((m) => ({ default: m.LandingPage })));
+const AuthPage = lazy(() => import('./AuthPage').then((m) => ({ default: m.AuthPage })));
+const PatientDashboard = lazy(() =>
+  import('./PatientDashboard').then((m) => ({ default: m.PatientDashboard })),
+);
+const DoctorDashboard = lazy(() =>
+  import('./DoctorDashboard').then((m) => ({ default: m.DoctorDashboard })),
+);
 
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +28,9 @@ export default function App() {
       else setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) fetchRole(session.user.id);
       else {
@@ -41,13 +49,13 @@ export default function App() {
         .select('role')
         .eq('id', userId)
         .single();
-      
+
       if (error) {
         console.error('Error fetching role:', error);
         setRole('patient');
       } else {
         console.log('User role fetched:', data?.role);
-        setRole(data?.role as UserRole || 'patient');
+        setRole((data?.role as UserRole) || 'patient');
       }
     } catch (err) {
       console.error('Unexpected error fetching role:', err);
@@ -65,18 +73,28 @@ export default function App() {
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={session ? <Navigate to="/dashboard" /> : <AuthPage mode="login" />} />
-            <Route path="/register" element={session ? <Navigate to="/dashboard" /> : <AuthPage mode="register" />} />
-            
-            <Route 
-              path="/dashboard" 
+            <Route
+              path="/login"
+              element={session ? <Navigate to="/dashboard" /> : <AuthPage mode="login" />}
+            />
+            <Route
+              path="/register"
+              element={session ? <Navigate to="/dashboard" /> : <AuthPage mode="register" />}
+            />
+
+            <Route
+              path="/dashboard"
               element={
                 session ? (
-                  role === 'doctor' ? <DoctorDashboard /> : <PatientDashboard />
+                  role === 'doctor' ? (
+                    <DoctorDashboard />
+                  ) : (
+                    <PatientDashboard />
+                  )
                 ) : (
                   <Navigate to="/" />
                 )
-              } 
+              }
             />
           </Routes>
         </Suspense>

@@ -24,20 +24,15 @@ export function resolveClinicalFeatureFlags(
       ? configuredEnvironment
       : null;
 
-  const explicitlyEnabled = (value: string | undefined) =>
-    value?.trim().toLowerCase() === 'true';
+  const explicitlyEnabled = (value: string | undefined) => value?.trim().toLowerCase() === 'true';
 
   return {
     clinicalEnvironment,
-    xrayAnalysis:
-      clinicalEnvironment !== null &&
-      explicitlyEnabled(env.VITE_ENABLE_XRAY_ANALYSIS),
+    xrayAnalysis: clinicalEnvironment !== null && explicitlyEnabled(env.VITE_ENABLE_XRAY_ANALYSIS),
     anestheticDecisionSupport:
       clinicalEnvironment !== null &&
       explicitlyEnabled(env.VITE_ENABLE_ANESTHETIC_DECISION_SUPPORT),
   };
 }
 
-export const clinicalFeatureFlags = Object.freeze(
-  resolveClinicalFeatureFlags(import.meta.env),
-);
+export const clinicalFeatureFlags = Object.freeze(resolveClinicalFeatureFlags(import.meta.env));

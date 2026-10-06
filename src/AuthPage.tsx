@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { supabase } from './lib/supabase';
 import { Shield, Mail, Lock, User, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getErrorMessage } from './lib/errors';
 
 const COUNTRY_CODES = [
   { code: '+963', country: 'SY' },
@@ -23,7 +25,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -31,16 +33,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
     try {
       if (mode === 'register') {
         const fullPhone = `${countryCode}${phone}`;
-        const { data, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { 
-              full_name: fullName, 
+            data: {
+              full_name: fullName,
               role: 'patient',
-              phone: fullPhone
-            }
-          }
+              phone: fullPhone,
+            },
+          },
         });
         if (signUpError) throw signUpError;
         alert('Registration successful!');
@@ -52,8 +54,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         if (signInError) throw signInError;
         window.location.href = '/dashboard';
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -69,9 +71,13 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             </div>
             <span className="text-2xl font-bold tracking-tight text-slate-900">DentalAi</span>
           </Link>
-          <h1 className="text-3xl font-bold text-slate-900">{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h1>
+          <h1 className="text-3xl font-bold text-slate-900">
+            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+          </h1>
           <p className="text-slate-500 mt-2">
-            {mode === 'login' ? 'Enter your credentials to access your portal' : 'Join DentalAi for smart dental care management'}
+            {mode === 'login'
+              ? 'Enter your credentials to access your portal'
+              : 'Join DentalAi for smart dental care management'}
           </p>
         </div>
 
@@ -86,7 +92,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             {mode === 'register' && (
               <>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Full Name</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Full Name
+                  </label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
@@ -101,7 +109,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Phone Number</label>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Phone Number
+                  </label>
                   <div className="flex gap-2">
                     <div className="w-1/3 min-w-25">
                       <select
@@ -133,7 +143,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             )}
 
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Email Address</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Email Address
+              </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
@@ -148,7 +160,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
@@ -167,15 +181,18 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
               disabled={loading}
               className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group"
             >
-              {loading ? 'Processing...' : (mode === 'login' ? 'Sign In' : 'Create Account')}
+              {loading ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Create Account'}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
 
           <div className="mt-8 pt-8 border-t border-slate-100 text-center">
             <p className="text-slate-500 text-sm">
-              {mode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
-              <Link to={mode === 'login' ? '/register' : '/login'} className="text-indigo-600 font-bold hover:underline">
+              {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
+              <Link
+                to={mode === 'login' ? '/register' : '/login'}
+                className="text-indigo-600 font-bold hover:underline"
+              >
                 {mode === 'login' ? 'Sign Up' : 'Sign In'}
               </Link>
             </p>

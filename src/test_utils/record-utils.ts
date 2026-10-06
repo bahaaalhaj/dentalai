@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabase';
 
 export async function checkPatientExists(patientId: string) {
-  
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -45,7 +44,7 @@ export async function CreateMedicalRecord(patientId: string) {
         },
         {
           onConflict: 'patient_id',
-        }
+        },
       )
       .select();
 
@@ -54,7 +53,6 @@ export async function CreateMedicalRecord(patientId: string) {
     }
 
     return { success: true, data: data?.[0] };
-
   } catch (err: any) {
     console.error('Error creating medical record:', err);
     return {
@@ -63,6 +61,3 @@ export async function CreateMedicalRecord(patientId: string) {
     };
   }
 }
-
-
-

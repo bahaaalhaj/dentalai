@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getAvailableSlots, fetchBookedSlots, TIME_SLOTS , bookAppointment ,cancelAppointment} from '../test_utils/appointment-utils';
+import {
+  getAvailableSlots,
+  TIME_SLOTS,
+  bookAppointment,
+  cancelAppointment,
+} from '../test_utils/appointment-utils';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -8,8 +13,6 @@ import { supabase } from '../lib/supabase';
  */
 
 describe('Appointment Availability Logic', () => {
-    const bookedSlots = ["09:00", "10:30", "14:00"];
-    
   it('should return all slots if none are booked', () => {
     const availableSlots = getAvailableSlots(TIME_SLOTS, []);
     expect(availableSlots.length).toBe(TIME_SLOTS.length);
@@ -21,9 +24,9 @@ describe('Appointment Availability Logic', () => {
     const mockEqTime = vi.fn().mockReturnValue({ single: mockSingle });
     const mockEqDate = vi.fn().mockReturnValue({ eq: mockEqTime });
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEqDate });
-    
+
     vi.spyOn(supabase, 'from').mockReturnValue({
-      select: mockSelect
+      select: mockSelect,
     } as any);
 
     // 2. Act: Attempt to book
@@ -32,19 +35,19 @@ describe('Appointment Availability Logic', () => {
     // 3. Assert: Result should be failure with specific error message
     expect(result.success).toBe(false);
     expect(result.error).toBe('This time slot is already booked.');
-    
+
     // Cleanup mocks
     vi.restoreAllMocks();
   });
 
-it('should return error when cancelling an appointment that does not exist', async () => {
+  it('should return error when cancelling an appointment that does not exist', async () => {
     // 1. Arrange: Mock supabase to return null (not found)
     const mockSingle = vi.fn().mockResolvedValue({ data: null, error: null });
     const mockEq = vi.fn().mockReturnValue({ single: mockSingle });
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq });
-    
+
     vi.spyOn(supabase, 'from').mockReturnValue({
-      select: mockSelect
+      select: mockSelect,
     } as any);
 
     // 2. Act: Attempt to cancel
@@ -53,7 +56,7 @@ it('should return error when cancelling an appointment that does not exist', asy
     // 3. Assert: Result should be failure
     expect(result.success).toBe(false);
     expect(result.error).toBe('Appointment not found.');
-    
+
     vi.restoreAllMocks();
-    });
+  });
 });

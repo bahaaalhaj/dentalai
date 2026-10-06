@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Activity } from 'lucide-react';
 
@@ -13,14 +12,14 @@ export function LoadingScreen() {
       >
         <div className="relative mb-6">
           <motion.div
-            animate={{ 
+            animate={{
               scale: [1, 1.2, 1],
-              opacity: [0.5, 1, 0.5]
+              opacity: [0.5, 1, 0.5],
             }}
-            transition={{ 
-              repeat: Infinity, 
+            transition={{
+              repeat: Infinity,
               duration: 2,
-              ease: "easeInOut" 
+              ease: 'easeInOut',
             }}
             className="absolute inset-0 bg-indigo-500 rounded-full blur-xl opacity-20"
           />
@@ -28,17 +27,17 @@ export function LoadingScreen() {
             <Activity className="w-10 h-10 text-white animate-pulse" />
           </div>
         </div>
-        
+
         <h2 className="text-xl font-bold text-slate-900 mb-2">Dental AI</h2>
         <div className="flex gap-1">
           {[0, 1, 2].map((i) => (
             <motion.div
               key={i}
               animate={{ opacity: [0.2, 1, 0.2] }}
-              transition={{ 
-                repeat: Infinity, 
-                duration: 1, 
-                delay: i * 0.2 
+              transition={{
+                repeat: Infinity,
+                duration: 1,
+                delay: i * 0.2,
               }}
               className="w-1.5 h-1.5 bg-indigo-500 rounded-full"
             />

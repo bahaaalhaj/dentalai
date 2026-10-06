@@ -2,10 +2,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { performXrayAnalysis } from '../test_utils/xray-utils';
 
 describe('X-Ray Analysis Tests', () => {
-  
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // محاكاة (Mocking) للـ FileReader والـ Image لتعمل داخل بيئة الاختبار الوهمية
     (global as any).FileReader = class {
       onload: any;
@@ -34,10 +33,7 @@ describe('X-Ray Analysis Tests', () => {
     // 3. Assert: التأكد من أن النظام رفض الملف فوراً
     expect(result.success).toBe(false);
     expect(result.error).toBe('File is not a valid image. Please upload an image file.');
-    
+
     console.log('Test Output for Non-Image File (PDF):', result);
   });
-
-  
-
 });

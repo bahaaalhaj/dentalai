@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AnestheticCalculator } from '../components/AnestheticCalculator';
@@ -9,10 +8,7 @@ import {
   CLINICAL_FEATURE_UNAVAILABLE_MESSAGE,
   resolveClinicalFeatureFlags,
 } from '../lib/feature-flags';
-import {
-  ClinicalProcessor,
-  XRAY_INFERENCE_UNAVAILABLE_MESSAGE,
-} from '../lib/clinical-cv';
+import { ClinicalProcessor, XRAY_INFERENCE_UNAVAILABLE_MESSAGE } from '../lib/clinical-cv';
 
 describe('clinical feature flags', () => {
   it('disables both experimental clinical modules by default', () => {
@@ -69,11 +65,7 @@ describe('anesthetic safety freeze', () => {
   it('shows the unavailable notice and exposes no recommendation control by default', () => {
     render(<AnestheticCalculator patientId="patient-1" />);
 
-    expect(screen.getByRole('status').textContent).toContain(
-      CLINICAL_FEATURE_UNAVAILABLE_MESSAGE,
-    );
-    expect(
-      screen.queryByRole('button', { name: /generate experimental estimate/i }),
-    ).toBeNull();
+    expect(screen.getByRole('status').textContent).toContain(CLINICAL_FEATURE_UNAVAILABLE_MESSAGE);
+    expect(screen.queryByRole('button', { name: /generate experimental estimate/i })).toBeNull();
   });
 });

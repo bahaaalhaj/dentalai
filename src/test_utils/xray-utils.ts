@@ -9,10 +9,9 @@ export async function performXrayAnalysis(file: File) {
 
     // 2. إرسال الصورة للتحليل (هنا سيتم فحص الكثافة الذي أضفناه)
     const data: XrayAnalysisResult = await ClinicalProcessor.analyze(file);
-    
+
     // 3. في حال النجاح
     return { success: true, data };
-    
   } catch (err: any) {
     // 4. التقاط خطأ الكثافة (Density) أو أي خطأ آخر قمنا بعمله عبر reject
     return { success: false, error: err.message || 'An unknown error occurred during analysis' };

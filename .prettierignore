@@ -1,0 +1,12 @@
+dist/
+node_modules/
+coverage/
+dataset_yolo/
+scripts/dataset/
+runs/
+package-lock.json
+*.pt
+*.jpg
+*.jsonl
+public/animations/*.json
+dental_data.yaml

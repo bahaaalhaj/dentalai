@@ -1,21 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
+import { readSupabaseConfig } from './supabase-config';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const { url: supabaseUrl, anonKey: supabaseAnonKey } = readSupabaseConfig(import.meta.env);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
-    storage:
-    typeof window !== 'undefined'
-    ? window.sessionStorage
-    : undefined,
+    storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
     autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
+    detectSessionInUrl: true,
+  },
 });
 
 export type UserRole = 'patient' | 'doctor';
+export type ToothCondition =
+  'healthy' | 'filling' | 'root_canal' | 'extracted' | 'crown' | 'implant' | 'cavity';
 
 export interface Profile {
   id: string;
@@ -36,8 +35,14 @@ export interface Appointment {
   notes?: string;
 }
 
-export interface ToothStatus {
-  [key: string]: 'healthy' | 'filling' | 'root_canal' | 'extracted' | 'crown' | 'implant' | 'cavity';
+export type ToothStatus = Record<string, ToothCondition>;
+
+export interface XrayImage {
+  id: string;
+  patient_id: string;
+  image_url: string;
+  ai_report?: unknown;
+  created_at: string;
 }
 
 export interface ProcedurePrice {
