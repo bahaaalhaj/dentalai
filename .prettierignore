@@ -8,5 +8,6 @@ package-lock.json
 *.pt
 *.jpg
 *.jsonl
-public/animations/*.json
+apps/web/public/animations/*.json
 dental_data.yaml
+services/ai/.venv/

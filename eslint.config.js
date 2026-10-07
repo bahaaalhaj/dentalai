@@ -8,7 +8,7 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   {
     ignores: [
-      'dist/**',
+      '**/dist/**',
       'node_modules/**',
       'coverage/**',
       'dataset_yolo/**',
@@ -45,7 +45,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/tests/**/*.{ts,tsx}', 'src/test_utils/**/*.{ts,tsx}'],
+    files: ['**/src/tests/**/*.{ts,tsx}', '**/src/test_utils/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       'react-refresh/only-export-components': 'off',

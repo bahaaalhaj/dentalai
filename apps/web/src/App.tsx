@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import type { UserRole } from './lib/supabase';
-import { LoadingScreen } from './components/LoadingScreen';
+import { ErrorBoundary, LoadingScreen } from '@dentalai/ui';
 
 const LandingPage = lazy(() => import('./LandingPage').then((m) => ({ default: m.LandingPage })));
 const AuthPage = lazy(() => import('./AuthPage').then((m) => ({ default: m.AuthPage })));
@@ -13,8 +13,6 @@ const PatientDashboard = lazy(() =>
 const DoctorDashboard = lazy(() =>
   import('./DoctorDashboard').then((m) => ({ default: m.DoctorDashboard })),
 );
-
-import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);

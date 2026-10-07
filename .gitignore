@@ -5,7 +5,7 @@ coverage/
 .DS_Store
 *.log
 .env*
-!.env.example
+!**/.env.example
 
 # Python and training caches
 __pycache__/
@@ -28,3 +28,8 @@ runs/
 *.weights
 *.tflite
 *.h5
+
+# Workspace build output
+apps/*/dist/
+packages/*/dist/
+*.tsbuildinfo
