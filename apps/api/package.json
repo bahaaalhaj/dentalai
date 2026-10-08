@@ -9,6 +9,8 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "auth:bootstrap-owner": "tsx src/domains/access/bootstrap-owner.ts",
+    "dev:seed": "tsx src/development/seed-cli.ts",
+    "dev:configure": "tsx src/development/configure-cli.ts",
     "test": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "start": "node dist/server.js --production"

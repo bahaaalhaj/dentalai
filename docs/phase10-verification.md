@@ -1,5 +1,11 @@
 # Phase 10 verification and release status
 
+Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
+describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
+see [the current reset report](./phase12-test-data-reset.md).
+Removed files can be inspected at checkpoint tag `checkpoint/phase12-pre-test-reset-20261009`,
+not reapplied as current setup or public access policies.
+
 Phase 10 engineering implementation is present. It is **not clinically validated or ready for
 patient-care decisions**. Actual private-storage integration and a real dental-artifact golden test
 remain blocked; no clinical model accuracy or dataset licensing verification is claimed.

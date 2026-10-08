@@ -1,5 +1,11 @@
 # Phase 11 verification — 9 October 2026
 
+Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
+describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
+see [the current reset report](./phase12-test-data-reset.md).
+Removed files can be inspected at checkpoint tag `checkpoint/phase12-pre-test-reset-20261009`,
+not reapplied as current setup or public access policies.
+
 Implemented only the **fail-closed engineering structure**, not a clinically approved calculator.
 No approved reference set, formulary or qualified-clinician-reviewed golden cases were found. All
 recommendations and clinician confirmation remain disabled, even with development/demo flags.

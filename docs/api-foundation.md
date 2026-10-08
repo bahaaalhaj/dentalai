@@ -1,12 +1,12 @@
 # API foundation
 
-Phase 5 establishes the server-side boundary at `/api/v1` without migrating authentication, clinical
-features, or existing Supabase-backed screens. The browser has a typed HTTP client but receives no
-database models or database credentials.
+The versioned server boundary at `/api/v1` owns authentication, tenancy and all implemented domains.
+The browser uses safe transport schemas, never database models or credentials. The retained
+foundation below is extended by domain-specific clinical, billing and file contracts.
 
-Phase 6 now adds backend authentication and access contracts. The running server also requires
-`AUTH_SECRET`, `APP_ORIGIN`, `SMTP_URL`, and `MAIL_FROM`; see [authentication.md](authentication.md).
-The scope and endpoints below describe the retained Phase 5 foundation, not a clinical feature API.
+Authentication requires `AUTH_SECRET`, `APP_ORIGIN` and explicitly configured mail. Production uses
+`SMTP_URL` / `MAIL_FROM`; offline development can use private filesystem mail.
+See [authentication](authentication.md) and [local setup](../README.md).
 
 ## Running the API
 
@@ -30,7 +30,7 @@ does not load Vite or require built frontend assets.
 | `GET`  | `/api/v1/contracts/v1?format=openapi` | OpenAPI 3.1 document generated from shared Zod contracts        |
 
 `GET /api/health` remains as a compatibility alias. No clinical operation returns a placeholder success
-response; clinical routes are not implemented in this phase.
+response; implemented clinical routes use their actual shared contracts.
 
 ## Request lifecycle
 

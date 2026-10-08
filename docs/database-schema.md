@@ -1,9 +1,9 @@
 # PostgreSQL schema
 
-Phase 4 introduces a self-hosted PostgreSQL target through `packages/database`. Drizzle provides the
-SQL-visible TypeScript model and migration runner; committed SQL in `packages/database/drizzle` remains
-the review artifact. The Express API is the future database boundary. The browser is not configured to
-connect to PostgreSQL, and existing Supabase-backed features are intentionally unchanged in this phase.
+The server-only schema lives in `packages/database`. Drizzle supplies SQL-visible types and migration
+execution; committed reviewed SQL is authoritative. The Express API is the only browser data boundary.
+All runtime features now use local PostgreSQL. See [the Phase 12 reset report](phase12-test-data-reset.md)
+for synthetic SYP seeding; no legacy source records were imported.
 
 Phase 6 adds reviewed migration `0002_backend_auth.sql` for Better Auth credential accounts, opaque
 sessions, hashed reset-token verification storage, persistent rate limits/brute-force counters, and
@@ -136,7 +136,7 @@ appointment/block checks.
 npm run infra:up
 # Set server-only DATABASE_URL in the shell or root .env; never use a VITE_ prefix.
 npm run db:migrate --workspace @dentalai/database
-npm run db:seed --workspace @dentalai/database
+npm run dev:seed # local-only synthetic SYP fixtures; not the historical upgrade fixture
 npm run test:db
 ```
 
@@ -177,8 +177,8 @@ Deploy this additive migration after a verified backup and staging upgrade test.
 is transactional. There is deliberately no destructive down migration: after new financial events,
 dropping ledger/workflow tables would lose provenance. Roll application code forward or restore a
 verified backup with operator-approved reconciliation; do not discard recorded money history.
-Clean-from-zero and incremental-upgrade tests retain historical rows. No hosted Supabase data has
-been imported, modified or deleted by Phase 9.
+Clean-from-zero and incremental-upgrade tests retain historical rows. Historical Phase 9 implementation did not import or modify hosted source data. Phase 12 uses
+an explicitly approved disposable-test-data reset, not a financial migration.
 
 The initial catalog exposes at most 500 patients ordered by name; deployments exceeding this need
 explicit pagination/search before operational use. Invoice history is unpaginated. Invoice numbering

@@ -1,20 +1,19 @@
 # Architecture
 
-Phase 7 update: browser authentication and membership lookup use `/api/v1/auth` and `/api/v1/access`;
-appointments and anonymized availability use `/api/v1/appointments` and `/api/v1/scheduling` with
-self-hosted PostgreSQL. Legacy Supabase clinical/billing code remains installed but clinical dashboards
-are not routed with new sessions. See [authentication.md](authentication.md) and
-[appointments.md](appointments.md) for the access and scheduling boundaries.
+Phase 12: all routed workflows use the local `/api/v1` boundary and self-hosted PostgreSQL.
+The approved disposable-test-data reset is not a legacy import. See
+[the reset report](phase12-test-data-reset.md), [authentication](authentication.md) and
+[appointments](appointments.md).
 
 ## Runtime boundaries
 
-- `apps/web` contains the React/Vite user interface. Routed authentication and scheduling use only
-  backend transport contracts. Retained, unrouted clinical/billing code still uses Supabase.
+- `apps/web` contains the React/Vite interface and browser-safe API contracts only. Authentication,
+  scheduling, clinical records, billing, files and anesthesia have no direct database client.
 - `apps/api` owns HTTP delivery, the `/api/health` endpoint, Vite middleware during development, and
   static frontend delivery in production. Its versioned `/api/v1` boundary is organized into domain
   repositories, services, and routes; it can also run independently without Vite.
-- `services/ai` reserves an independently deployable Python boundary for future validated inference.
-  It exposes health only and must not fabricate clinical output.
+- `services/ai` contains private, versioned inference. Missing/unhealthy configured model artifacts
+  return unavailable. No fabricated findings or approved clinical performance are bundled.
 - `packages/contracts` owns Zod transport schemas shared by TypeScript applications.
 - `packages/domain` owns framework-independent clinical feature gates, appointment transitions, and
   Temporal-based timezone/date utilities.
@@ -32,9 +31,10 @@ an explicitly reviewed API contract and preserve the clinical feature gates.
 documentation metadata. It must not expose database models, server environment values, or credentials.
 `packages/database` is server-only and must not be imported into `apps/web`.
 
-PostgreSQL and MinIO are the self-hosted infrastructure target. The Phase 4 schema is available only to
-server-side code; Supabase remains for unmigrated clinical/billing features. Authentication and scheduling
-are migrated as runtime features; legacy-data imports and clinical/storage migrations have not occurred.
+PostgreSQL is server-only. Private storage explicitly selects S3/MinIO or filesystem; neither is
+publicly mounted and S3 failure never triggers a filesystem fallback. Offline development uses a
+private filesystem mailbox (prohibited in production); production requires SMTP. Deliberate API
+refresh replaces cloud realtime behavior. See [deployment and backup](deployment-and-backup.md).
 
 Browser E2E files under `apps/web/e2e` run in Node and import a server-side fictional database fixture;
 these are not browser application modules and are never bundled into the frontend.

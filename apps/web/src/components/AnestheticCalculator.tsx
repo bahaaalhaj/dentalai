@@ -2,7 +2,7 @@ import { ANESTHESIA_RULE_SET } from '@dentalai/domain';
 import { CLINICAL_FEATURE_UNAVAILABLE_MESSAGE } from '../lib/feature-flags';
 
 export function AnestheticCalculator({ patientId }: { patientId: string }) {
-  // Legacy component name retained for existing callers. No browser calculation or Supabase path.
+  // Legacy component name retained for existing callers. No browser calculation or database path.
   // Neither a demo flag nor clinician confirmation can bypass the missing-reference gate.
   return (
     <section

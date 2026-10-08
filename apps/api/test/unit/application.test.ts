@@ -31,6 +31,17 @@ async function testApplication(repository: { ping(): Promise<void> }) {
 }
 
 describe('versioned API foundation', () => {
+  it('allows bundled WASM without allowing JavaScript eval or external scripts/connections', async () => {
+    const application = await testApplication({ ping: async () => undefined });
+    const response = await request(application).get('/api/v1/health/live').expect(200);
+    const policy = String(response.headers['content-security-policy']);
+    expect(policy).toContain("script-src 'self' 'wasm-unsafe-eval'");
+    expect(policy).toContain("default-src 'self'");
+    expect(policy).toContain("script-src-attr 'none'");
+    expect(policy).not.toContain("'unsafe-eval'");
+    expect(policy).not.toContain('unpkg');
+  });
+
   it('serves validated liveness and generated OpenAPI contracts with request IDs', async () => {
     const application = await testApplication({ ping: async () => undefined });
     const live = await request(application)

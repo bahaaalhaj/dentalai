@@ -13,10 +13,12 @@ import { createLogger } from './infrastructure/logger.js';
 import { OutboxWorker } from './workers/outbox.worker.js';
 import { createAuthProvider } from './domains/auth/auth.provider.js';
 import { smtpMailSender } from './domains/auth/mail.js';
+import { localMailSender } from './domains/auth/local-mail.js';
 import { AccessRepository } from './domains/access/access.repository.js';
 import { drainServer } from './infrastructure/shutdown.js';
 import { S3Client } from '@aws-sdk/client-s3';
 import { S3PrivateStorage } from './domains/imaging/storage.js';
+import { FilesystemPrivateStorage } from './domains/imaging/filesystem-storage.js';
 import { PrivateInferenceClient } from './domains/imaging/inference.js';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -73,9 +75,12 @@ function frontendMount(
 async function startServer(): Promise<void> {
   loadRootEnvironmentFile();
   const environment = readEnvironment();
-  if (!environment.authSecret || !environment.smtpUrl || !environment.mailFrom) {
+  if (
+    !environment.authSecret ||
+    (environment.mailDriver === 'smtp' && (!environment.smtpUrl || !environment.mailFrom))
+  ) {
     throw new Error(
-      'AUTH_SECRET (32+ characters), SMTP_URL, and MAIL_FROM are required for backend authentication.',
+      'AUTH_SECRET (32+ characters) and explicit mail configuration are required: SMTP_URL/MAIL_FROM, or a development-only private filesystem mailbox.',
     );
   }
   if (environment.nodeEnv === 'production' && !environment.appOrigin.startsWith('https://')) {
@@ -87,29 +92,36 @@ async function startServer(): Promise<void> {
   const authOptions = {
     secret: environment.authSecret,
     origin: environment.appOrigin,
-    sendMail: smtpMailSender(environment.smtpUrl, environment.mailFrom),
+    sendMail:
+      environment.mailDriver === 'filesystem' && environment.privateMailDirectory
+        ? localMailSender(environment.privateMailDirectory)
+        : smtpMailSender(environment.smtpUrl!, environment.mailFrom!),
   };
   const provider = createAuthProvider(db, authOptions);
   const systemService = new SystemService(new PostgresSystemRepository(pool), lifecycle);
   const storage =
     environment.clinicalStorageEnabled &&
-    environment.s3Endpoint &&
-    environment.s3Bucket &&
-    environment.s3AccessKey &&
-    environment.s3SecretKey
-      ? new S3PrivateStorage(
-          new S3Client({
-            endpoint: environment.s3Endpoint,
-            region: 'us-east-1',
-            forcePathStyle: true,
-            credentials: {
-              accessKeyId: environment.s3AccessKey,
-              secretAccessKey: environment.s3SecretKey,
-            },
-          }),
-          environment.s3Bucket,
-        )
-      : undefined;
+    environment.storageDriver === 'filesystem' &&
+    environment.privateStorageDirectory
+      ? new FilesystemPrivateStorage(environment.privateStorageDirectory)
+      : environment.clinicalStorageEnabled &&
+          environment.s3Endpoint &&
+          environment.s3Bucket &&
+          environment.s3AccessKey &&
+          environment.s3SecretKey
+        ? new S3PrivateStorage(
+            new S3Client({
+              endpoint: environment.s3Endpoint,
+              region: 'us-east-1',
+              forcePathStyle: true,
+              credentials: {
+                accessKeyId: environment.s3AccessKey,
+                secretAccessKey: environment.s3SecretKey,
+              },
+            }),
+            environment.s3Bucket,
+          )
+        : undefined;
   const inference =
     environment.xrayInferenceEnabled && environment.aiServiceUrl && environment.aiServiceToken
       ? new PrivateInferenceClient(

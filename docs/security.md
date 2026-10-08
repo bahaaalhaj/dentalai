@@ -1,13 +1,19 @@
 # Security notes
 
-- Repository examples contain variable names only. Supabase service-role credentials must never be
-  exposed to the browser or committed.
+- Repository examples contain variable names only. Database, auth and storage credentials must never
+  be exposed to the browser or committed. Generated local credentials/configuration are ignored.
 - Docker Compose requires explicit PostgreSQL and MinIO credentials; it supplies no credential defaults.
 - The MinIO bootstrap container creates the configured bucket with anonymous access disabled.
 - Compose port publishing is loopback-only, including PostgreSQL and the MinIO administration console.
 - Local named volumes may contain sensitive development data and must not be copied into the repository.
-- The FastAPI placeholder exposes no inference or upload route.
-- Unit tests replace Supabase and block network access.
+- The private FastAPI service uses actual versioned inference or a safe unavailable error, never simulation.
+- Unit tests block network access. Integration tests use disposable local PostgreSQL.
+- Explicit filesystem storage is private, immutable and never mounted as web assets. Vite denies private
+  object/mail/credential directories. Apply Windows ACLs; mode bits alone are not an access policy.
+- Filesystem mail captures actual messages privately only in development/test; production rejects it.
+- Helmet retains same-origin script/connection defaults. `script-src` additionally permits
+  `wasm-unsafe-eval` for the bundled landing animation only; JavaScript `unsafe-eval`, external
+  scripts and external connections remain disallowed. Browser tests assert actual rendering offline.
 
 These controls support local development; they are not a production security accreditation.
 
@@ -22,16 +28,13 @@ must not enter access/error logs; audit before/after data is sensitive and needs
 access and a legally reviewed retention policy. Approval means a recorded clinician decision, **not**
 software or clinical validation. The workflow permits self-approval, not mandatory two-person review.
 
-## Legacy deployment is not automatically secured
+## Former hosted project is not automatically secured
 
-Removing Supabase calls from the routed frontend does not revoke access to an existing hosted
-database or storage bucket. The archived schema historically granted full appointment-row public
-read access, patient deletion, and public X-ray object reads. Its appointment provisioning statements
-now fail closed, but no remote database was inspected or changed during the review. Before cutover,
-back up/reconcile legacy appointments and apply the reviewed appointment freeze script; verify the
-actual hosted policies and grants. Separately inventory and restrict legacy clinical/storage access
-with its owners before any patient-data deployment. Do not assume unmounting a screen protects data
-already reachable through a Supabase URL/key.
+The Phase 12 reset is authorized for disposable test data only; no source backup/counts were obtainable
+and no hosted policies were changed. SDK/configuration removal does not revoke old hosted access.
+Project shutdown, public-policy retirement and credential revocation remain operator actions.
+No legacy public bucket/policy setup remains in local deployment. See
+[the reset report](phase12-test-data-reset.md); do not mistake local independence for remote retirement.
 
 Repository secret scanning does not establish that training images are de-identified or licensed.
 
@@ -53,9 +56,8 @@ money or receipts. Stored payment methods are labels only: do not enter card PAN
 credentials or other secrets into external receipt references or change reasons. No payment
 processor is integrated, and recording a refund does not itself transfer funds.
 
-Retiring browser Supabase billing calls does not revoke hosted table access. Before live cutover,
-operators must back up and reconcile old prices/payments, review actual hosted RLS/grants,
-restrict old writes, and confirm receipt/settlement reconciliation. Existing datasets/models and
-storage dependencies remain unchanged; Phase 9 is not a patient-data deployment certification.
+The approved test-data reset imports no historical money. For any real financial deployment, operators
+must separately reconcile provenance/currency/settlements and test backup/restore. This is not a
+patient-data deployment certification.
 Historical datasets/weights remain tracked pending the approved artifact migration; their consent,
 licensing, PHI classification and retention are unresolved. No dataset/model content was removed.

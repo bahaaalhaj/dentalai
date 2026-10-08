@@ -1,7 +1,11 @@
 import { motion } from 'framer-motion';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { DotLottieReact, setWasmUrl } from '@lottiefiles/dotlottie-react';
+import lottieWasmUrl from '@lottiefiles/dotlottie-web/dotlottie-player.wasm?url';
 import { Activity, Shield, Clock, Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+// Configure the browser wrapper's own player, not the separately bundled standalone SDK class.
+setWasmUrl(lottieWasmUrl);
 
 export function LandingPage() {
   return (

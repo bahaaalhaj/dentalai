@@ -1,4 +1,5 @@
--- Development-only seed. All identities and contact details below are fictional.
+-- Historical upgrade/constraint fixture only. Root dev:seed provides current local SYP fixtures.
+-- All identities and contact details below are fictional.
 -- The reserved .invalid domain ensures no email can reach a real person.
 
 BEGIN;

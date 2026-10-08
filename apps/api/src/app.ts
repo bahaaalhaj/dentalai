@@ -64,7 +64,17 @@ export async function createApplication({
       },
     }),
   );
-  application.use(helmet());
+  application.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          // The bundled landing animation compiles local WASM. This does not allow JS eval
+          // or external scripts/connections; all other Helmet defaults remain in force.
+          scriptSrc: ["'self'", "'wasm-unsafe-eval'"],
+        },
+      },
+    }),
+  );
   application.use(
     cors({
       origin(origin, callback) {

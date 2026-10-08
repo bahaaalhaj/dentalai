@@ -1,5 +1,11 @@
 # Phase 7 verification record
 
+Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
+describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
+see [the current reset report](./phase12-test-data-reset.md).
+Removed files can be inspected at checkpoint tag `checkpoint/phase12-pre-test-reset-20261009`,
+not reapplied as current setup or public access policies.
+
 Implemented and tested locally on Windows, Node 24.19.0 / npm 11.17.0, 2026-10-08. CI remains configured
 for Node 22; that remote run was not executed here. Existing uncommitted Phase 5/6 changes were
 preserved. Phase 1 clinical safety gates were inspected and remain disabled by default; the prior
@@ -159,7 +165,7 @@ remain uncommitted, introduce no later feature phase, and do not change clinical
    public X-ray reads. Local appointment provisioning is now fail-closed. The hosted project was not
    inspected or changed; backup, reconcile and verify the actual grants/policies before cutover.
    The optional freeze script is not evidence that an existing project is secured.
-   Source: [legacy schema:128](../infra/supabase/database_schema.sql#L128).
+   Historical source: `infra/supabase/database_schema.sql:128` at the pre-removal checkpoint tag.
 4. **P1, deployment blocker mitigated — previously applied baseline was rewritten.** The completed
    commit changed migration 0000. Clean creation now succeeds, but compatibility with unknown original
    Phase 4 deployments is not established. The runner checks history hashes/timestamps, accepts only

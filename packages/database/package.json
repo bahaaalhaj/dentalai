@@ -26,7 +26,6 @@
     "db:generate": "drizzle-kit generate",
     "db:snapshot": "tsx src/cli/snapshot-current.ts",
     "db:migrate": "tsx src/cli/migrate.ts",
-    "db:seed": "tsx src/cli/seed.ts",
     "test:integration": "vitest run --config vitest.config.ts"
   },
   "dependencies": {

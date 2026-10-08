@@ -6,18 +6,10 @@ rescheduling, cancellation, upcoming/history lists, and an audit timeline. The s
 location-local date filter and authorized status actions. Native modal dialogs and live notifications
 replace appointment browser alerts/confirmations. The existing slate/indigo theme is retained.
 
-Clinical-record screens, X-ray inference, and anesthetic decision support have not been migrated or
-validated. The clinical-safety freeze is unchanged. Supabase remains installed for retained clinical
-and billing code; it is not used by the appointment flow. No production data has been imported,
-modified, or removed as part of this implementation.
-
-The legacy dashboard's patient-deletion action is also disabled: its Supabase profile cascade could
-otherwise erase old appointment history. Operators must retire old Supabase appointment grants/RLS
-policies after reconciliation. An optional reviewed script is provided at
-`infra/supabase/phase7-appointment-freeze.sql`; it is **not automatically executed**. The retained
-`database_schema.sql` is a legacy reference, not the new application's deployment schema. Do not
-reapply its public appointment policies. Legacy Supabase data is not protected by the new API merely
-because the browser stopped querying it.
+Clinical records, billing, private files and anesthesia now use their own local API domains.
+The clinical-safety freeze remains. Phase 12 intentionally replaces disposable test data, not
+historical records; see [the reset report](phase12-test-data-reset.md). No legacy public-policy
+setup script remains in the deployment path.
 
 ## Setup and ownership
 
@@ -35,8 +27,9 @@ because the browser stopped querying it.
    currently accepts an existing clinic patient-record UUID; a clinical patient directory is not
    being migrated in this phase.
 
-The fictional development seed does not create reusable real-user passwords. Tests provision their
-own fictional verified users and disposable databases instead of using real SMTP/Supabase.
+The root `dev:seed` creates clearly synthetic local-only identities and hashed, privately generated
+credentials, never real users or cloud password hashes. Tests create disposable databases and use
+real local API sessions. The seed already configures providers, hours, chairs and linked patients.
 
 ## Authorization and transport
 

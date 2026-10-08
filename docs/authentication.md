@@ -1,9 +1,9 @@
 # Phase 6: backend-owned authentication and clinic access
 
-Only authentication, clinic selection, invitations, session management, and explicitly permitted
-patient **identity metadata** are implemented. Appointment and clinical-record features are not migrated.
-The X-ray/anesthetic safety freeze is unchanged. Supabase remains installed for later feature work;
-its browser session persistence, automatic refresh, and URL-session detection are disabled.
+Authentication, clinic selection, invitations and sessions are backend-owned. Appointment, clinical,
+billing, file and anesthesia domains now use this same API boundary. Phase 12 intentionally resets
+disposable development data; see [the reset report](phase12-test-data-reset.md). Clinical-safety gates
+remain unchanged.
 
 ## Trust boundary and roles
 
@@ -24,7 +24,6 @@ Staff register/verify this same unprivileged account, then accept an administrat
 | Selected clinic identity                           | yes   | yes   | yes     | yes          | yes                |
 | Create/list/revoke clinic staff invitations        | yes   | yes   | no      | no           | no                 |
 | Patient identity metadata within selected clinic   | yes   | yes   | yes     | yes          | linked record only |
-| Appointments or clinical records through this API  | no    | no    | no      | no           | no                 |
 
 Clinic selection accepts a membership identifier **only as a selector**. The server proves that it
 belongs to the authenticated user and an active clinic; browser clinic/user/role fields are rejected.
@@ -95,8 +94,9 @@ node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'
 Use a local SMTP capture service or an explicitly configured SMTP provider; no mail credentials or
 no-op production mail sender are supplied. Migrate before starting. `npm run dev` hosts web/API on
 one origin; `npm run dev:api` starts the API independently. Separate Vite uses a `/api` proxy to port
-3000 and requires `APP_ORIGIN` to equal the browser's Vite origin. Auth pages do not require Supabase
-credentials; retained legacy feature modules still validate their public Supabase configuration.
+3000 and requires `APP_ORIGIN` to equal the browser's Vite origin. For offline development,
+`MAIL_DRIVER=filesystem` and an absolute `PRIVATE_MAIL_DIRECTORY` capture actual messages privately;
+this driver is prohibited in production. The generated local setup configures it explicitly.
 
 Production requires HTTPS for APP_ORIGIN and TLS at a trusted edge. Secure cookies are never relaxed.
 Browsers generally permit Secure cookies on localhost; use local HTTPS for non-localhost hosts or
@@ -108,9 +108,9 @@ repository; do not treat an HTTP deployment with missing cookies as successful a
 `0002_backend_auth.sql` creates `auth_accounts`, `auth_sessions`, `auth_verifications`,
 `auth_rate_limits`, `login_attempts`, and append-only `security_events`. Existing `sessions` and
 `users.password_hash` remain reserved legacy columns/tables; the auth provider never authenticates
-with them. There is no automatic Supabase-user/password/session import. Existing users need a
-separately reviewed account transition before product rollout. No real users or clinical data are
-migrated in this phase.
+with them. No legacy hashes, users or sessions are imported under the approved test-data reset.
+The operator-only local seed creates synthetic verified identities with fresh local credentials;
+public verification and invitation rules are unchanged.
 
 The reviewed custom migration includes `0002_snapshot.json` so later ORM generation starts from the
 current schema. `npm run db:snapshot --workspace @dentalai/database` generates non-overwriting ORM
@@ -139,15 +139,13 @@ not a claim of clinical readiness or completed security certification.
 
 `npm run verify` checks types, lint, formatting, unit tests, build, and audit. With a disposable
 PostgreSQL URL, `npm run test:db` creates/drops UUID-named databases and tests clean migrations and
-real authentication. SMTP is injected into an in-memory test capture; no live email/Supabase calls
+real authentication. SMTP is injected into an in-memory test capture; no live email or external database calls
 are required. Tests cover each role, every protected resource family, role/identity injection,
 CSRF, verification, email-bound invitations, fixation, expiry, revocation, logout, reset replay,
 brute force, spoofed-IP rate-limit bypass, membership revocation, database session context, and audit.
 
-The themed account dashboard replaces entry into the old clinical dashboards during this boundary
-transition. Their code and Supabase feature queries are retained but not routed or bridged to new
-sessions. Migrating those queries or forwarding a new session identity into anonymous Supabase
-access would exceed Phase 6 and create an unsafe second authorization boundary.
+The themed account dashboard enters the focused local appointment, clinical, billing and private
+image modules. The obsolete unrouted dashboards and their direct database queries are removed.
 
 References: [Better Auth security](https://better-auth.com/docs/reference/security),
 [email/password](https://better-auth.com/docs/authentication/email-password),

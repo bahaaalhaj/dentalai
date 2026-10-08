@@ -45,8 +45,8 @@ author/provider/request ID, reason, input snapshot, versioned output, database t
 New assessments append corrections/reassessments, never erase old input or output. Normalized patient
 allergy/medication records remain in the Phase 8 schema; assessment JSON is an immutable input snapshot,
 not a replacement clinical source of truth. No automatic imported history or cumulative exposure window
-is inferred. Legacy Supabase recommendations are preserved physically but no longer read or written
-by this component, and are not treated as approved assessments.
+is inferred. No legacy recommendations are imported under the approved test-data reset; only
+explicitly blocked synthetic assessments are seeded. No prior recommendation is adopted as approved.
 
 ## API and persistence
 

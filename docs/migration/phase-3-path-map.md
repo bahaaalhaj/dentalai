@@ -1,5 +1,11 @@
 # Phase 3 path migration map
 
+Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
+describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
+see [the current reset report](../phase12-test-data-reset.md).
+Removed files can be inspected at checkpoint tag `checkpoint/phase12-pre-test-reset-20261009`,
+not reapplied as current setup or public access policies.
+
 | Previous path                                               | Phase 3 path                                                                            |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | `src/`                                                      | `apps/web/src/`                                                                         |

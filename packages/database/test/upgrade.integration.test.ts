@@ -41,7 +41,9 @@ async function upgradeFixture(prefix: number, test: (pool: Pool, url: string) =>
     await test(pool, url.toString());
   } finally {
     await pool.end();
-    await admin.query(`DROP DATABASE IF EXISTS "${name}" WITH (FORCE)`);
+    // Do not kill connections while pg is still completing socket shutdown.
+    // A leaked connection must fail cleanup visibly rather than create an uncaught pool error.
+    await admin.query(`DROP DATABASE IF EXISTS "${name}"`);
     await admin.end();
     // Only this mkdtemp-created fixture directory is removed, never repository migrations/data.
     await rm(folder, { recursive: true, force: true });

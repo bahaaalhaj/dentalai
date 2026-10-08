@@ -77,10 +77,10 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Install browser for appointment, clinical and billing E2E
+      - name: Install browser for appointment, clinical, billing and private imaging E2E
         run: npx playwright install --with-deps --no-shell chromium
 
-      - name: Appointment, approved clinical-history and billing-ledger E2E
+      - name: Appointment, approved clinical-history, billing-ledger and offline private-imaging E2E
         run: npm run test:e2e
 
       - name: Validate local infrastructure configuration
@@ -91,7 +91,9 @@ jobs:
           MINIO_ROOT_USER: ci_validation
           MINIO_ROOT_PASSWORD: ci_validation_only
           MINIO_BUCKET: ci-validation
-        run: docker compose -f infra/compose.yml config --quiet
+        run: |
+          docker compose -f infra/compose.yml config --quiet
+          docker compose -f infra/compose.local.yml config --quiet
 
       - name: Audit dependencies
         run: npm run audit

@@ -10,7 +10,13 @@ browser analyzer remains permanently unavailable; anesthetic safety flags are un
 
 ## Private storage and integrity
 
-Server-only configuration: `CLINICAL_STORAGE_ENABLED`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`,
+Server-only storage is explicitly selected by `STORAGE_DRIVER` (`s3` by default).
+`filesystem` requires absolute `PRIVATE_STORAGE_DIRECTORY`, outside web/build folders, protected by
+OS access controls; immutable tenant UUID keys are accessed only through authenticated streaming.
+There is no fallback between adapters. Vite's private-directory denylist also protects development
+files/mail/credentials. Offline filesystem tests do not certify real S3 or storage encryption.
+
+S3 configuration: `CLINICAL_STORAGE_ENABLED`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`,
 `S3_SECRET_KEY`. The bucket must already exist, have no bucket policy or shared ACL, and remain
 private. The adapter rejects policy-bearing buckets before reads/writes and uses private object
 ACLs. Use a dedicated bucket and least-privilege service credential, not the MinIO root account.
@@ -60,8 +66,8 @@ transition; there is no automatic background inference retry.
 and storage together, migrate and test staging restore. Reviewed SQL is authoritative for checks/
 triggers; ORM metadata describes tables. There is no destructive down migration. Rolling back code
 leaves history intact; never restore an older DB while silently losing newer object registrations.
-The legacy browser public Supabase upload/delete/report paths are retired, not imported as truth.
-Existing Supabase objects/rows remain physically preserved pending an authorized private migration.
+The approved Phase 12 test-data reset imports no legacy objects/results. Its fictional study is
+metadata only; no image acquisition or findings are invented. See [the reset report](phase12-test-data-reset.md).
 
 ## Pending validation / deployment gates
 

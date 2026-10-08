@@ -1,5 +1,10 @@
 dist/
 node_modules/
+.local/
+infra/private-objects/
+infra/private-mail/
+*.dump
+*.backup
 coverage/
 test-results/
 playwright-report/

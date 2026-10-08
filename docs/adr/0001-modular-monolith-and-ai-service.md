@@ -5,6 +5,9 @@
 
 ## Context
 
+This context records the Phase 3 baseline at the decision date, not current deployment setup.
+See [Phase 12](../phase12-test-data-reset.md) for the completed local-runtime retirement/reset.
+
 DentalAI is currently one small product with tightly related clinic workflows and a direct Supabase
 integration. Splitting each capability into a network service now would add deployment, observability,
 versioning, authentication, and failure-mode complexity before stable service boundaries exist.

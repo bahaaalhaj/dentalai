@@ -41,6 +41,8 @@ const EnvironmentSchema = z
     SHUTDOWN_TIMEOUT_MS: emptyToUndefined(z.coerce.number().int().min(1_000).default(10_000)),
     OUTBOX_WORKER_ENABLED: booleanString,
     CLINICAL_STORAGE_ENABLED: booleanString,
+    STORAGE_DRIVER: emptyToUndefined(z.enum(['s3', 'filesystem']).default('s3')),
+    PRIVATE_STORAGE_DIRECTORY: emptyToUndefined(z.string().min(1).optional()),
     XRAY_INFERENCE_ENABLED: booleanString,
     S3_ENDPOINT: emptyToUndefined(z.url().optional()),
     S3_BUCKET: emptyToUndefined(z.string().min(3).optional()),
@@ -68,11 +70,22 @@ const EnvironmentSchema = z
         .optional(),
     ),
     MAIL_FROM: emptyToUndefined(z.email().optional()),
+    MAIL_DRIVER: emptyToUndefined(z.enum(['smtp', 'filesystem']).default('smtp')),
+    PRIVATE_MAIL_DIRECTORY: emptyToUndefined(z.string().min(1).optional()),
     OUTBOX_POLL_INTERVAL_MS: emptyToUndefined(z.coerce.number().int().min(250).default(5_000)),
   })
   .transform((environment, context) => {
     if (
+      environment.MAIL_DRIVER === 'filesystem' &&
+      (environment.NODE_ENV === 'production' || !environment.PRIVATE_MAIL_DIRECTORY)
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Private filesystem mail requires development/test and PRIVATE_MAIL_DIRECTORY.',
+      });
+    if (
       environment.CLINICAL_STORAGE_ENABLED &&
+      environment.STORAGE_DRIVER === 's3' &&
       (!environment.S3_ENDPOINT ||
         !environment.S3_BUCKET ||
         !environment.S3_ACCESS_KEY ||
@@ -81,6 +94,15 @@ const EnvironmentSchema = z
       context.addIssue({
         code: 'custom',
         message: 'Private clinical storage requires all S3 configuration fields.',
+      });
+    if (
+      environment.CLINICAL_STORAGE_ENABLED &&
+      environment.STORAGE_DRIVER === 'filesystem' &&
+      !environment.PRIVATE_STORAGE_DIRECTORY
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Filesystem private storage requires PRIVATE_STORAGE_DIRECTORY.',
       });
     if (
       environment.XRAY_INFERENCE_ENABLED &&
@@ -123,6 +145,8 @@ const EnvironmentSchema = z
     return {
       nodeEnv: environment.NODE_ENV,
       clinicalStorageEnabled: environment.CLINICAL_STORAGE_ENABLED,
+      storageDriver: environment.STORAGE_DRIVER,
+      privateStorageDirectory: environment.PRIVATE_STORAGE_DIRECTORY,
       xrayInferenceEnabled: environment.XRAY_INFERENCE_ENABLED,
       s3Endpoint: environment.S3_ENDPOINT,
       s3Bucket: environment.S3_BUCKET,
@@ -134,6 +158,8 @@ const EnvironmentSchema = z
       appOrigin: environment.APP_ORIGIN,
       smtpUrl: environment.SMTP_URL,
       mailFrom: environment.MAIL_FROM,
+      mailDriver: environment.MAIL_DRIVER,
+      privateMailDirectory: environment.PRIVATE_MAIL_DIRECTORY,
       host: environment.HOST,
       port: environment.PORT,
       databaseUrl: environment.DATABASE_URL,

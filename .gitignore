@@ -1,4 +1,9 @@
 node_modules/
+.local/
+infra/private-objects/
+infra/private-mail/
+*.dump
+*.backup
 build/
 dist/
 coverage/

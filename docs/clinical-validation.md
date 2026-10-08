@@ -91,25 +91,17 @@ is substituted. Operators must keep the database clock synchronized; retry after
 
 ### Cutover limits and preservation
 
-No hosted Supabase data was read, imported or deleted. No historical authorship or missing states were
-invented. Older self-hosted normalized rows remain visible in the clinician-only read-only archive;
-they require reconciliation and never auto-publish. A single overwritten Supabase row cannot recover
-lost past states without source backups/audit exports. Preserve/export every available source version
-and raw tooth code before importing; never silently reinterpret a bare `11` from the old 1–32 chart
-as FDI `11`. See the [source mapping](migration/supabase-to-postgresql.md).
+Phase 12 intentionally resets disposable source test data; it does not import or reconstruct lost
+clinical history. See [the reset report](phase12-test-data-reset.md). Older self-hosted normalized
+rows remain clinician-only read-only reconciliation archives, never automatically patient-approved.
+Do not silently reinterpret old 1–32 tooth notation as FDI. Focused local clinical modules preserve
+immutable revisions and approval workflows, independently of appointments and finances.
 
-The migrated browser `medical_records`/`teeth_status` queries, subscriptions, upserts and click-cycling
-handler are retired, including the billing dependency that priced tooth states. Legacy billing totals
-are explicitly unavailable, not fabricated as zero. Supabase remains installed for unmigrated billing,
-files and experimental-tool storage. Legacy dashboards remain unrouted; the new focused clinical pages
-are routed separately from appointments. Clinical code uses only the typed backend client, no Supabase.
-
-Back up and restore-test before deployment. No destructive down migration is provided; rolling the
-application back must retain these tables/ledgers and block incompatible writers. Verify hosted legacy
-policies separately; frontend migration does not revoke old cloud access. Patient registration/linkage,
-legacy import provenance, retention, least-privilege DB roles and production security approval remain
-operator decisions. The initial clinician directory is capped at 500 rows; larger deployments need
-directory pagination/search before rollout.
+Back up/restore-test before changing an existing deployment; no destructive down migration is
+provided. Clinical histories/audits must remain intact across code changes. Retention, least-privilege
+DB roles, synchronized clocks, patient linkage and production clinical/security approval remain
+operator decisions. The clinician directory is capped at 500 patients; larger deployments require
+pagination/search before rollout.
 
 ### Phase 8 verification coverage
 
@@ -132,14 +124,17 @@ draft privacy, explicit keyboard tooth selection without a write, approval, unpu
 approved version history and read-only patient access. The existing appointment browser flow remains.
 The clinical browser helper allows at most four explicit retries **only** after observing a rolled-back
 `CLINICAL_CLOCK_CONFLICT` and its visible recoverable error. It waits for the database clock to advance;
-any other response/error fails immediately. No API response, inference or Supabase result is fabricated.
+any other response/error fails immediately. No API response or inference result is fabricated.
 CI runs verification groups sequentially. UI test workers are capped at two without suppressing errors
 or changing test timeouts; simultaneously running database, browser and UI checks locally caused a
 5-second UI-test timeout during development.
 The existing auth-guard test preloads the real auth screen so its assertions do not depend on
 lazy-import disk latency. The screen and authorization assertions remain unmocked.
 
-### Local command results — 2026-10-08
+### Historical Phase 8 command results — 2026-10-08
+
+This section records that phase's state, not current deployment instructions. Later completion and
+retirements are documented in [Phase 12](phase12-test-data-reset.md).
 
 Environment: Windows/PowerShell, Node 24.19.0, npm 11.17.0, PostgreSQL 17.11 in an isolated disposable
 Docker container. Only fictional seed/fixture records were used; no live Supabase or external patient

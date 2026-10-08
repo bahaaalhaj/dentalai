@@ -10,6 +10,9 @@ export default tseslint.config(
     ignores: [
       '**/dist/**',
       'node_modules/**',
+      '.local/**',
+      'infra/private-objects/**',
+      'infra/private-mail/**',
       'coverage/**',
       '**/test-results/**',
       '**/playwright-report/**',
@@ -20,6 +23,10 @@ export default tseslint.config(
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    files: ['**/*.mjs'],
+    languageOptions: { globals: globals.node },
+  },
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {

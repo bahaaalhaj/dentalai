@@ -1,5 +1,11 @@
 # Phase 6 verification record
 
+Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
+describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
+see [the current reset report](./phase12-test-data-reset.md).
+Removed files can be inspected at checkpoint tag `checkpoint/phase12-pre-test-reset-20261009`,
+not reapplied as current setup or public access policies.
+
 Run on Windows / Node 22-compatible npm workspace tooling, 2026-10-07. Existing uncommitted Phase 5
 foundation changes were preserved; no commit, Supabase-user import, appointment migration, or clinical
 record migration was performed. GitHub Actions was not executed remotely; its commands were exercised
