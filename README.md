@@ -99,8 +99,9 @@ npm run test:db                                 # uses a generated disposable da
 
 See [docs/database-schema.md](docs/database-schema.md) for the schema and unresolved decisions, and
 [docs/migration/supabase-to-postgresql.md](docs/migration/supabase-to-postgresql.md) for the non-executed
-legacy mapping. Authentication, role lookup, appointments and availability now use the backend API; legacy clinical feature code
-retains Supabase but is not routed with the new sessions. The browser never connects directly to PostgreSQL.
+legacy mapping. Authentication, appointments and Phase 8 clinical records now use the backend API.
+Unmigrated billing, files and experimental-tool code retain Supabase but are not routed with the new
+sessions. The browser never connects directly to PostgreSQL.
 
 ## Verification
 
@@ -117,7 +118,8 @@ npm run verify
 - `npm test` — isolated web and API unit tests; Supabase and external network access stay mocked
 - `npm run test:db` — rebuild migrations from zero, verify PostgreSQL constraints, and run API database integration tests (requires `DATABASE_URL`)
 - `npm run build` — shared packages, frontend, and API production builds
-- `npm run test:e2e` — real production-browser patient booking/staff confirmation, using disposable PostgreSQL; run the build and `npx playwright install --with-deps --no-shell chromium` first
+- `npm run test:e2e` — real production-browser appointment and clinician-approval/patient-history flows,
+  using disposable PostgreSQL; run the build and `npx playwright install --with-deps --no-shell chromium` first
 - `npm run audit` — dependency audit at high severity or above
 
 ## Experimental limitations
@@ -128,9 +130,22 @@ npm run verify
 - None of these modules may be used for patient-care decisions. See
   [docs/clinical-validation.md](docs/clinical-validation.md).
 - Backend-owned authentication, invitations, clinic membership, RBAC, appointments and availability are
-  implemented. Clinical-record screens remain unavailable until their feature migration. Scheduling
+  implemented. Phase 8 adds dentist-authored encounters, immutable clinical revisions, explicit review,
+  normalized findings/procedures and treatment items, and an approved-only read-only patient portal.
+  Scheduling
   requires configured locations/timezones, an invited dentist, chairs, types/hours, and explicitly
   linked patient entities; legacy appointment data is not automatically imported.
+- Select **Clinical patients** as an active dentist with an active provider record; select a patient,
+  start an encounter, save explicit draft entries, then approve or reject them with a reason. Close
+  the encounter only after review. Corrections append versions in an open encounter. Patients use
+  **Approved clinical history**, independently of appointments. Owners/admins are not clinicians
+  unless separately assigned the dentist role/provider record.
+- Phase 8 uses FDI two-digit tooth notation. No unrecorded tooth is assumed healthy and clicking a
+  tooth never changes its condition. See the [clinical workflow and numbering rules](docs/clinical-validation.md#phase-8-clinical-record-workflows).
+- Hosted Supabase records are not automatically imported or deleted. Older self-hosted normalized
+  rows remain visible to clinicians in a clearly labeled read-only reconciliation archive, never
+  auto-approved for patients. Source identifiers, tooth notation, authorship and portal linkage must
+  be reconciled before a live data cutover; legacy tooth-derived billing totals are unavailable.
 - Existing Supabase users/sessions are not automatically imported. SMTP, HTTPS, owner provisioning,
   patient linkage, retention, MFA, and production security review require operator decisions; see the
   [authentication scope and limitations](docs/authentication.md).

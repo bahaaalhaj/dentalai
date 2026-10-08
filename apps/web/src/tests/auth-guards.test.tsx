@@ -3,6 +3,9 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
 import { apiClient, ApiClientError } from '../lib/api-client';
+// Load the real screen up front: guard assertions must not depend on lazy-import disk latency.
+// The production component and its expiry message remain unmocked.
+import '../AuthPage';
 
 beforeEach(() => {
   window.history.replaceState(null, '', '/dashboard');

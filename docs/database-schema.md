@@ -148,8 +148,8 @@ the seed twice to verify idempotency, exercises constraints, and drops the datab
 
 1. Confirm the production base currencies and the minor-unit scale for legacy `*_sp` values before any
    billing import; the old schema does not declare a currency or scale.
-2. Select the canonical tooth-numbering vocabulary (FDI, Universal, or a normalized code system) before
-   production clinical migration.
+2. Phase 8 selects FDI two-digit numbering for new clinical records. Legacy numbering and provenance
+   still require clinician/operator reconciliation before import; never reinterpret source codes silently.
 3. Define patient deduplication, medical-record-number allocation, and optional portal-account linking.
 4. Phase 7 skips ambiguous/nonexistent DST slots and offset-crossing durations. Define future
    recurrence expansion and overnight working-hours behavior before extending that policy.

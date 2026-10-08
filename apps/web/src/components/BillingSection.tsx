@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, Profile, ProcedurePrice, Payment, MedicalRecord } from '../lib/supabase';
+import { supabase, Profile, ProcedurePrice, Payment } from '../lib/supabase';
 import { Wallet, Trash2, History, Receipt, ArrowUpCircle } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -11,7 +11,6 @@ interface BillingSectionProps {
 export function BillingSection({ patients, selectedPatientId }: BillingSectionProps) {
   const [prices, setPrices] = useState<ProcedurePrice[]>([]);
   const [targetPatientId, setTargetPatientId] = useState<string>(selectedPatientId || '');
-  const [patientRecord, setPatientRecord] = useState<MedicalRecord | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [newPaymentAmount, setNewPaymentAmount] = useState('');
   const [newPaymentNotes, setNewPaymentNotes] = useState('');
@@ -34,14 +33,6 @@ export function BillingSection({ patients, selectedPatientId }: BillingSectionPr
   };
 
   const fetchPatientBillingData = async (patientId: string) => {
-    const { data: record } = await supabase
-      .from('medical_records')
-      .select('*')
-      .eq('patient_id', patientId)
-      .maybeSingle();
-
-    setPatientRecord(record);
-
     const { data: payHistory } = await supabase
       .from('payments')
       .select('*')
@@ -76,22 +67,8 @@ export function BillingSection({ patients, selectedPatientId }: BillingSectionPr
     setIsProcessingPayment(false);
   };
 
-  const calculateTotalCost = () => {
-    if (!patientRecord) return 0;
-    let total = 0;
-    const status = patientRecord.teeth_status;
-
-    Object.values(status).forEach((val) => {
-      const priceObj = prices.find((p) => p.procedure_name === val);
-      if (priceObj) total += priceObj.price_sp;
-    });
-
-    return total;
-  };
-
-  const totalCost = calculateTotalCost();
+  // Tooth findings are not billing events. Legacy estimates are retired, not replaced with zero.
   const totalPaid = payments.reduce((sum, p) => sum + p.amount_sp, 0);
-  const remaining = totalCost - totalPaid;
 
   return (
     <div className="space-y-8 pb-12">
@@ -161,10 +138,7 @@ export function BillingSection({ patients, selectedPatientId }: BillingSectionPr
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">
                   Total Treatment
                 </p>
-                <p className="text-3xl font-black">
-                  {totalCost.toLocaleString()}{' '}
-                  <span className="text-sm font-medium opacity-50">S.P.</span>
-                </p>
+                <p className="text-3xl font-black">Unavailable pending billing migration</p>
               </div>
               <div className="bg-emerald-500/10 p-6 rounded-4xl border border-emerald-500/20">
                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-2">
@@ -175,20 +149,11 @@ export function BillingSection({ patients, selectedPatientId }: BillingSectionPr
                   <span className="text-sm font-medium opacity-50">S.P.</span>
                 </p>
               </div>
-              <div
-                className={
-                  remaining > 0
-                    ? 'bg-red-500/10 p-6 rounded-4xl border border-red-500/20'
-                    : 'bg-blue-500/10 p-6 rounded-4xl border border-blue-500/20'
-                }
-              >
+              <div className="bg-blue-500/10 p-6 rounded-4xl border border-blue-500/20">
                 <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2">
                   Remaining
                 </p>
-                <p className="text-3xl font-black">
-                  {remaining.toLocaleString()}{' '}
-                  <span className="text-sm font-medium opacity-50">S.P.</span>
-                </p>
+                <p className="text-3xl font-black">Unavailable pending billing migration</p>
               </div>
             </div>
 

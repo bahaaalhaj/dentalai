@@ -12,8 +12,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 export type UserRole = 'patient' | 'doctor';
-export type ToothCondition =
-  'healthy' | 'filling' | 'root_canal' | 'extracted' | 'crown' | 'implant' | 'cavity';
 
 export interface Profile {
   id: string;
@@ -22,8 +20,6 @@ export interface Profile {
   phone?: string;
   created_at: string;
 }
-
-export type ToothStatus = Record<string, ToothCondition>;
 
 export interface XrayImage {
   id: string;
@@ -45,12 +41,4 @@ export interface Payment {
   amount_sp: number;
   notes?: string;
   created_at: string;
-}
-
-export interface MedicalRecord {
-  id: string;
-  patient_id: string;
-  medical_history: string;
-  teeth_status: ToothStatus;
-  updated_at: string;
 }

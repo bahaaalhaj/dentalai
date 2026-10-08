@@ -1,5 +1,21 @@
 # Supabase-to-PostgreSQL mapping proposal
 
+Phase 8 update: clinical-record and tooth-status runtime behavior now uses the backend API.
+Supabase medical-record queries/upserts/subscriptions and tooth-cycling handlers are removed after
+production-path checks. No hosted rows were imported/deleted. Older normalized self-hosted rows
+remain a clinician-only read-only archive, not automatically approved. Billing remains unmigrated;
+its dependency that priced tooth states is retired with an explicit unavailable estimate.
+See [../clinical-validation.md](../clinical-validation.md#phase-8-clinical-record-workflows).
+
+For a clinical data cutover, reconcile an immutable source snapshot against explicit clinic, patient,
+portal identity and provider mappings. Retain source IDs, raw text/JSON, source dates and every available
+backup/audit version in a protected checksum-addressed archive. Reconcile tooth notation before mapping
+observations versus procedures; do not infer a performed procedure from a single tooth state. Import
+only under a reviewed mapping, retaining source provenance and setting new review state pending.
+Approval requires an actual clinician; never manufacture historic approval/authorship/timestamps.
+Ambiguous source rows stay quarantined. Row counts, version chains, orphan reports and sampled timelines
+must reconcile before operators restrict legacy writers or cut over. This import has not been executed.
+
 Phase 7 update: appointment/availability runtime behavior now uses the backend API and PostgreSQL.
 After contract/database/browser parity checks, legacy browser Supabase appointment operations and
 destructive past-appointment cleanup were removed. Historical Supabase tables/data are retained;

@@ -30,6 +30,14 @@ import {
   type HourInputSchema,
   type ClosureInputSchema,
   type SchedulingPolicySchema,
+  ClinicalWorkspaceSchema,
+  ClinicalPortalSchema,
+  ClinicalRecordSchema,
+  ClinicalWriteSchema,
+  ClinicalReviewSchema,
+  EncounterSchema,
+  PatientSummarySchema,
+  type ClinicalWrite,
 } from '@dentalai/contracts';
 import { z } from 'zod';
 
@@ -72,6 +80,50 @@ export class DentalAiApiClient {
 
   me() {
     return this.get('/api/v1/access/me', AuthIdentitySchema);
+  }
+  clinicalPatients() {
+    return this.get('/api/v1/clinical/patients', z.array(PatientSummarySchema));
+  }
+  clinicalWorkspace(id: string, encounterId?: string) {
+    return this.get(
+      `/api/v1/clinical/patients/${z.uuid().parse(id)}${encounterId ? `?encounterId=${z.uuid().parse(encounterId)}` : ''}`,
+      ClinicalWorkspaceSchema,
+    );
+  }
+  clinicalPortal() {
+    return this.get('/api/v1/clinical/portal', ClinicalPortalSchema);
+  }
+  startEncounter(id: string, reason: string) {
+    return this.request(
+      `/api/v1/clinical/patients/${z.uuid().parse(id)}/encounters`,
+      EncounterSchema,
+      'POST',
+      { reason, appointmentId: null },
+    );
+  }
+  writeClinicalRecord(id: string, body: ClinicalWrite) {
+    return this.request(
+      `/api/v1/clinical/patients/${z.uuid().parse(id)}/records`,
+      ClinicalRecordSchema,
+      'POST',
+      ClinicalWriteSchema.parse(body),
+    );
+  }
+  reviewClinicalRecord(id: string, decision: 'approved' | 'rejected', reason: string) {
+    return this.request(
+      `/api/v1/clinical/records/${z.uuid().parse(id)}/review`,
+      SuccessSchema,
+      'POST',
+      ClinicalReviewSchema.parse({ decision, reason }),
+    );
+  }
+  closeEncounter(id: string, reason: string) {
+    return this.request(
+      `/api/v1/clinical/encounters/${z.uuid().parse(id)}/close`,
+      SuccessSchema,
+      'POST',
+      { reason },
+    );
   }
   schedulingCatalog() {
     return this.get('/api/v1/scheduling/catalog', SchedulingCatalogSchema);
@@ -246,7 +298,8 @@ export class DentalAiApiClient {
         response.status === 401 &&
         (path.startsWith('/api/v1/access/') ||
           path.startsWith('/api/v1/appointments') ||
-          path.startsWith('/api/v1/scheduling/')) &&
+          path.startsWith('/api/v1/scheduling/') ||
+          path.startsWith('/api/v1/clinical/')) &&
         typeof window !== 'undefined'
       )
         window.dispatchEvent(new Event('dentalai:session-expired'));

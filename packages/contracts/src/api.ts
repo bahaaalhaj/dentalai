@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { accessContracts } from './auth.js';
 import { appointmentContracts } from './appointments.js';
+import { clinicalContracts } from './clinical.js';
 import {
   HealthCheckRequestSchema,
   LivenessResponseSchema,
@@ -61,7 +62,7 @@ export function createOpenApiDocument() {
   };
 
   const accessPaths: Record<string, Record<string, unknown>> = {};
-  for (const contract of [...accessContracts, ...appointmentContracts]) {
+  for (const contract of [...accessContracts, ...appointmentContracts, ...clinicalContracts]) {
     const operation = {
       security: contract.public ? [] : [{ cookieSession: [] }],
       ...('body' in contract
@@ -109,7 +110,7 @@ export function createOpenApiDocument() {
       title: 'DentalAI API',
       version: '1.0.0',
       description:
-        'Backend authentication, clinic access, and foundation API. Clinical operations are not exposed.',
+        'Backend authentication, clinic access, scheduling, and versioned clinical-record workflows. Experimental AI remains unavailable.',
     },
     paths: {
       ...accessPaths,

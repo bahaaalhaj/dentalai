@@ -60,10 +60,10 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Install browser for appointment E2E
+      - name: Install browser for appointment and clinical E2E
         run: npx playwright install --with-deps --no-shell chromium
 
-      - name: Patient booking and staff confirmation E2E
+      - name: Appointment and approved clinical-history E2E
         run: npm run test:e2e
 
       - name: Validate local infrastructure configuration

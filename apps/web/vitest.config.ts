@@ -9,5 +9,7 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     clearMocks: true,
     restoreMocks: true,
+    // Bound jsdom forks on Windows/CI; keep isolation and all error checks enabled.
+    maxWorkers: 2,
   },
 });

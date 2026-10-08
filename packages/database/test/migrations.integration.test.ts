@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Pool } from 'pg';
 import { migrateDatabase, seedDevelopmentDatabase } from '../src/migrations.js';
@@ -49,6 +50,41 @@ afterAll(async () => {
 });
 
 describe('migrations from zero', () => {
+  it('keeps new clinical ORM constraint names aligned with the reviewed SQL catalog', async () => {
+    const snapshot = JSON.parse(
+      await readFile(new URL('../drizzle/meta/0005_snapshot.json', import.meta.url), 'utf8'),
+    ) as {
+      tables: Record<
+        string,
+        {
+          foreignKeys: Record<string, unknown>;
+          checkConstraints: Record<string, unknown>;
+          compositePrimaryKeys: Record<string, unknown>;
+        }
+      >;
+    };
+    for (const table of [
+      'clinical_revisions',
+      'clinical_approvals',
+      'clinical_demographics',
+      'clinical_encounter_provenance',
+      'treatment_plan_item_surfaces',
+    ]) {
+      const metadata = snapshot.tables[`public.${table}`]!;
+      const actual = (
+        await testPool.query<{ conname: string }>(
+          'SELECT conname FROM pg_constraint WHERE conrelid=$1::regclass',
+          [`public.${table}`],
+        )
+      ).rows.map((row) => row.conname);
+      for (const name of [
+        ...Object.keys(metadata.foreignKeys),
+        ...Object.keys(metadata.checkConstraints),
+        ...Object.keys(metadata.compositePrimaryKeys),
+      ])
+        expect(actual).toContain(name);
+    }
+  });
   it('rejects changed migration history without applying SQL or altering retained data', async () => {
     const row = (
       await testPool.query<{ id: number; hash: string }>(
@@ -74,7 +110,7 @@ describe('migrations from zero', () => {
     }
     await expect(migrateDatabase(testUrl.toString())).resolves.toBeUndefined();
   });
-  it('creates the complete schema and records all five reviewed migrations', async () => {
+  it('creates the complete schema and records all six reviewed migrations', async () => {
     const tables = await testPool.query<{ count: string }>(
       `SELECT count(*)::text AS count
        FROM information_schema.tables
@@ -85,7 +121,7 @@ describe('migrations from zero', () => {
     );
 
     expect(Number(tables.rows[0]?.count)).toBeGreaterThanOrEqual(45);
-    expect(migrations.rows[0]?.count).toBe('5');
+    expect(migrations.rows[0]?.count).toBe('6');
   });
 
   it('loads only explicitly fictional development identities and is idempotent', async () => {

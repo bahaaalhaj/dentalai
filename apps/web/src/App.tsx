@@ -10,6 +10,12 @@ const AuthPage = lazy(() => import('./AuthPage').then((m) => ({ default: m.AuthP
 const AppointmentsPage = lazy(() =>
   import('./AppointmentsPage').then((m) => ({ default: m.AppointmentsPage })),
 );
+const ClinicianPatientsPage = lazy(() =>
+  import('./clinical/ClinicianPatientsPage').then((m) => ({ default: m.ClinicianPatientsPage })),
+);
+const PatientClinicalHistory = lazy(() =>
+  import('./clinical/PatientClinicalHistory').then((m) => ({ default: m.PatientClinicalHistory })),
+);
 
 export default function App() {
   const [identity, setIdentity] = useState<AuthIdentity | null>(null);
@@ -62,6 +68,26 @@ export default function App() {
             <Route path="/forgot-password" element={<RecoveryPage />} />
             <Route path="/reset-password" element={<RecoveryPage reset />} />
             <Route path="/invitation" element={<InvitationPage identity={identity} />} />
+            <Route
+              path="/clinical/patients"
+              element={
+                identity?.activeMembership?.roles.includes('dentist') ? (
+                  <ClinicianPatientsPage key={identity.activeMembership.id} />
+                ) : (
+                  <Navigate to={identity ? '/dashboard' : '/login?expired=1'} replace />
+                )
+              }
+            />
+            <Route
+              path="/clinical/history"
+              element={
+                identity?.activeMembership?.roles.includes('patient') ? (
+                  <PatientClinicalHistory key={identity.activeMembership.id} />
+                ) : (
+                  <Navigate to={identity ? '/dashboard' : '/login?expired=1'} replace />
+                )
+              }
+            />
             <Route
               path="/appointments"
               element={

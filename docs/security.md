@@ -11,6 +11,17 @@
 
 These controls support local development; they are not a production security accreditation.
 
+## Phase 8 clinical access
+
+Only active dentists with active provider records may author/read/review clinical workspaces. Admin,
+owner and receptionist roles alone are insufficient. Each transaction revalidates live authorization;
+patient and encounter locks serialize corrections, approvals and closure. Patients receive only their
+linked approved projection, never draft/rejected/internal-review/archive data. Clinical routes use the
+existing CSRF, body limits, request IDs, no-store responses, safe errors and rate limits. Clinical content
+must not enter access/error logs; audit before/after data is sensitive and needs restricted DB/backup
+access and a legally reviewed retention policy. Approval means a recorded clinician decision, **not**
+software or clinical validation. The workflow permits self-approval, not mandatory two-person review.
+
 ## Legacy deployment is not automatically secured
 
 Removing Supabase calls from the routed frontend does not revoke access to an existing hosted

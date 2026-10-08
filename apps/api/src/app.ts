@@ -16,6 +16,7 @@ import { createAccessRouter } from './domains/access/access.routes.js';
 import { createAuthRouter } from './domains/auth/auth.routes.js';
 import { csrfProtection } from './domains/auth/csrf.js';
 import { createSchedulingRouter } from './domains/scheduling/scheduling.routes.js';
+import { createClinicalRouter } from './domains/clinical/clinical.routes.js';
 
 export interface ApiApplicationOptions {
   bodyLimit: string;
@@ -120,6 +121,11 @@ export async function createApplication({
       csrf.verify,
       createSchedulingRouter(authentication.provider, authentication.repository),
     );
+    application.use(
+      '/api/v1',
+      csrf.verify,
+      createClinicalRouter(authentication.provider, authentication.repository),
+    );
   }
   application.get('/api/health', ...createLegacyHealthHandler());
 
@@ -132,7 +138,8 @@ export async function createApplication({
         request.path.startsWith('/api/v1/auth/') ||
         request.path.startsWith('/api/v1/access/') ||
         request.path.startsWith('/api/v1/appointments') ||
-        request.path.startsWith('/api/v1/scheduling/')
+        request.path.startsWith('/api/v1/scheduling/') ||
+        request.path.startsWith('/api/v1/clinical/')
       ) {
         void authentication.repository
           .security('auth.request_rejected', false, undefined, request.requestId)

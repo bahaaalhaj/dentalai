@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
 import { apiClient } from './lib/api-client';
-import type { Profile, ToothCondition, ToothStatus, XrayImage } from './lib/supabase';
-import { TeethChart } from './components/TeethChart';
+import type { Profile, XrayImage } from './lib/supabase';
 import { AnestheticCalculator } from './components/AnestheticCalculator';
 import { BillingSection } from './components/BillingSection';
 import { ClinicalProcessor } from './lib/clinical-cv';
@@ -11,7 +10,6 @@ import { clinicalFeatureFlags, CLINICAL_FEATURE_UNAVAILABLE_MESSAGE } from './li
 import {
   Users,
   Calendar,
-  FileText,
   Search,
   Upload,
   Brain,
@@ -19,31 +17,15 @@ import {
   DollarSign,
   CheckCircle2,
   LogOut,
-  MessageSquare,
   Plus,
-  Activity,
   Trash2,
 } from 'lucide-react';
 import { cn } from './lib/utils';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-
-const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444'] as const;
 
 type SelectedPatient = Pick<Profile, 'id' | 'full_name'>;
 type RevenuePoint = { name: string; revenue: number };
-type TreatmentDatum = { name: string; value: number };
 type XrayReport = {
   cavities_detected: boolean;
   infected_teeth: number[];
@@ -87,7 +69,6 @@ export function DoctorDashboard() {
     window.history.replaceState({}, '', newUrl);
   }, [activeTab, welcomeSection, selectedPatient]);
 
-  const [teethStatus, setTeethStatus] = useState<ToothStatus>({});
   const [isXrayAnalyzing, setIsXrayAnalyzing] = useState(false);
   const [aiResult, setAiResult] = useState<XrayReport | null>(null);
   const [patientXrays, setPatientXrays] = useState<XrayImage[]>([]);
@@ -101,12 +82,7 @@ export function DoctorDashboard() {
     revenue: 0,
   });
   const [chartData, setChartData] = useState<RevenuePoint[]>([]);
-  const [pieData, setPieData] = useState<TreatmentDatum[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Patient Medical Advice state
-  const [doctorAdvice, setDoctorAdvice] = useState('');
-  const [savingAdvice, setSavingAdvice] = useState(false);
 
   // Memoized data fetching to prevent recreation
   const fetchInitialData = React.useCallback(async () => {
@@ -122,9 +98,6 @@ export function DoctorDashboard() {
 
       // 3. Fetch Payments for total revenue
       const { data: paymentsData } = await supabase.from('payments').select('*');
-
-      // 4. Fetch Medical Records for Treatment Distribution
-      const { data: recordsData } = await supabase.from('medical_records').select('teeth_status');
 
       // 5. Calculate Stats
       const revenue = paymentsData?.reduce((sum, p) => sum + p.amount_sp, 0) || 0;
@@ -163,50 +136,9 @@ export function DoctorDashboard() {
         if (chartItem) chartItem.revenue += p.amount_sp;
       });
       setChartData(last6Months);
-
-      // 7. Prepare Pie Data
-      const distribution: Record<string, number> = {
-        Healthy: 0,
-        Cavity: 0,
-        Filling: 0,
-        'Root Canal': 0,
-        Extracted: 0,
-        Crown: 0,
-        Implant: 0,
-      };
-
-      recordsData?.forEach((r) => {
-        const status = r.teeth_status as ToothStatus;
-        if (status) {
-          Object.values(status).forEach((s) => {
-            const label = s
-              .split('_')
-              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(' ');
-            if (distribution[label] !== undefined) distribution[label]++;
-          });
-        }
-      });
-
-      const formattedPieData = Object.entries(distribution)
-        .filter(([_, value]) => value > 0)
-        .map(([name, value]) => ({ name, value }));
-
-      setPieData(formattedPieData.length > 0 ? formattedPieData : [{ name: 'No Data', value: 1 }]);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     }
-  }, []);
-
-  const loadPatientAdvice = React.useCallback(async (patientId: string) => {
-    const { data } = await supabase
-      .from('medical_records')
-      .select('medical_history, teeth_status')
-      .eq('patient_id', patientId)
-      .single();
-
-    setDoctorAdvice(data?.medical_history || '');
-    setTeethStatus(data?.teeth_status || {});
   }, []);
 
   const loadPatientXrays = React.useCallback(async (patientId: string) => {
@@ -230,20 +162,6 @@ export function DoctorDashboard() {
     // Centralized real-time subscription
     const dashboardSubscription = supabase
       .channel('doctor_dashboard_sync')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'medical_records' },
-        (payload) => {
-          fetchInitialData();
-          if (
-            selectedPatient &&
-            'patient_id' in payload.new &&
-            payload.new['patient_id'] === selectedPatient.id
-          ) {
-            loadPatientAdvice(selectedPatient.id);
-          }
-        },
-      )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'xray_images' }, (payload) => {
         if (
           selectedPatient &&
@@ -261,58 +179,13 @@ export function DoctorDashboard() {
     return () => {
       supabase.removeChannel(dashboardSubscription);
     };
-  }, [fetchInitialData, loadPatientAdvice, loadPatientXrays, selectedPatient]);
+  }, [fetchInitialData, loadPatientXrays, selectedPatient]);
 
   useEffect(() => {
     if (selectedPatient) {
-      loadPatientAdvice(selectedPatient.id);
       loadPatientXrays(selectedPatient.id);
     }
-  }, [selectedPatient, loadPatientAdvice, loadPatientXrays]);
-
-  const handleSaveAdvice = async () => {
-    if (!selectedPatient) return;
-    setSavingAdvice(true);
-
-    const { error } = await supabase.from('medical_records').upsert(
-      {
-        patient_id: selectedPatient.id,
-        medical_history: doctorAdvice,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'patient_id' },
-    );
-
-    if (!error) alert("Advice saved successfully and sent to patient's dashboard!");
-    else alert('Error saving advice: ' + error.message);
-
-    setSavingAdvice(false);
-  };
-
-  const handleToothClick = async (id: string) => {
-    if (!selectedPatient) return;
-    const current = teethStatus[id] || 'healthy';
-    const next: Record<ToothCondition, ToothCondition> = {
-      healthy: 'cavity',
-      cavity: 'filling',
-      filling: 'root_canal',
-      root_canal: 'extracted',
-      extracted: 'crown',
-      crown: 'implant',
-      implant: 'healthy',
-    };
-    const newStatus = { ...teethStatus, [id]: next[current] };
-    setTeethStatus(newStatus);
-
-    await supabase.from('medical_records').upsert(
-      {
-        patient_id: selectedPatient.id,
-        teeth_status: newStatus,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'patient_id' },
-    );
-  };
+  }, [selectedPatient, loadPatientXrays]);
 
   const analyzeXray = async (file: File) => {
     if (!clinicalFeatureFlags.xrayAnalysis) {
@@ -561,27 +434,10 @@ export function DoctorDashboard() {
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                   <h3 className="text-lg font-bold text-slate-900 mb-6">Treatment Distribution</h3>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {pieData.map((_entry, index) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={COLORS[index % COLORS.length] ?? COLORS[0]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <p>
+                    Clinical treatment reporting is unavailable here. Use the new clinical workspace
+                    to review findings and procedures.
+                  </p>
                 </div>
               </div>
             </div>
@@ -731,48 +587,15 @@ export function DoctorDashboard() {
                     </div>
 
                     <div className="space-y-10">
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-10">
-                        <section className="bg-slate-50 p-6 rounded-4xl border border-slate-100">
-                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                            <Activity className="w-4 h-4 text-indigo-500" /> Digital Teeth Chart
-                          </h3>
-                          <TeethChart
-                            status={teethStatus}
-                            onToothClick={handleToothClick}
-                            interactive
-                          />
-                        </section>
-
-                        <section className="space-y-6">
-                          <div className="bg-indigo-600 rounded-4xl p-6 shadow-2xl shadow-indigo-200 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                              <MessageSquare className="w-20 h-20" />
-                            </div>
-                            <div className="flex items-center gap-2 mb-4 relative z-10">
-                              <div className="p-2 bg-white/20 rounded-xl">
-                                <FileText className="w-5 h-5 text-white" />
-                              </div>
-                              <h3 className="font-bold text-white text-lg">
-                                Doctor's Instructions
-                              </h3>
-                            </div>
-                            <textarea
-                              className="w-full p-4 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-indigo-200 outline-none focus:ring-4 focus:ring-white/10 mb-4 h-40 resize-none font-medium leading-relaxed"
-                              placeholder="Type advice that the patient will see on their dashboard instantly..."
-                              value={doctorAdvice}
-                              onChange={(e) => setDoctorAdvice(e.target.value)}
-                            />
-                            <button
-                              onClick={handleSaveAdvice}
-                              disabled={savingAdvice}
-                              className="w-full bg-white text-indigo-600 font-bold py-4 rounded-2xl hover:shadow-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                              {savingAdvice ? 'Processing...' : 'Submit Advice'}
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </section>
-                      </div>
+                      <section className="bg-slate-50 p-6 rounded-4xl border border-slate-100">
+                        <h3 className="font-bold">Clinical records and odontogram</h3>
+                        <p>
+                          Legacy tooth cycling and instant advice publication have been retired.
+                        </p>
+                        <a href="/clinical/patients" className="text-indigo-600">
+                          Open the clinician patient workspace
+                        </a>
+                      </section>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <section className="bg-white p-6 rounded-4xl border-2 border-slate-50">

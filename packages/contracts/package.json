@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dentalai/domain": "0.0.0",
     "zod": "4.6.5"
   }
 }

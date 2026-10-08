@@ -108,13 +108,22 @@ export function AccountDashboard({
         </select>
       )}
       <p className="p-4 bg-amber-50 rounded-xl text-slate-700">
-        Clinical-record screens are not yet connected to backend-owned authorization. They remain
-        unavailable until their feature migration. Experimental X-ray and anesthetic tools remain
-        frozen.
+        Clinical records use clinician-authored versions and explicit approval. Experimental X-ray
+        and anesthetic tools remain frozen; billing and other unmigrated screens remain unavailable.
       </p>
       {member && (
         <Link to="/appointments" className={buttonStyle}>
           Appointments and calendar
+        </Link>
+      )}
+      {member?.roles.includes('dentist') && (
+        <Link to="/clinical/patients" className={buttonStyle}>
+          Clinical patients
+        </Link>
+      )}
+      {member?.roles.includes('patient') && (
+        <Link to="/clinical/history" className={buttonStyle}>
+          Approved clinical history
         </Link>
       )}
       {message && <p role="status">{message}</p>}

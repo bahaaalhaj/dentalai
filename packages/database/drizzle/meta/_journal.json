@@ -36,6 +36,13 @@
       "when": 1791295402025,
       "tag": "0004_review_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791295402026,
+      "tag": "0005_clinical_workflows",
+      "breakpoints": true
     }
   ]
 }
