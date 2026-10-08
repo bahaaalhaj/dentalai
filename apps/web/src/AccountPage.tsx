@@ -109,11 +109,24 @@ export function AccountDashboard({
       )}
       <p className="p-4 bg-amber-50 rounded-xl text-slate-700">
         Clinical records use clinician-authored versions and explicit approval. Experimental X-ray
-        and anesthetic tools remain frozen; billing and other unmigrated screens remain unavailable.
+        and anesthetic tools remain frozen. Billing uses server-owned invoices and ledger events;
+        other unmigrated screens remain unavailable.
       </p>
       {member && (
         <Link to="/appointments" className={buttonStyle}>
           Appointments and calendar
+        </Link>
+      )}
+      {member?.roles.some((r) =>
+        ['clinic_owner', 'clinic_admin', 'receptionist', 'dentist'].includes(r),
+      ) && (
+        <Link to="/billing" className={buttonStyle}>
+          Clinic billing
+        </Link>
+      )}
+      {member?.roles.includes('patient') && (
+        <Link to="/billing/portal" className={buttonStyle}>
+          Your invoices and receipts
         </Link>
       )}
       {member?.roles.includes('dentist') && (

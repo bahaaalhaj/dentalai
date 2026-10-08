@@ -28,17 +28,3 @@ export interface XrayImage {
   ai_report?: unknown;
   created_at: string;
 }
-
-export interface ProcedurePrice {
-  procedure_name: string;
-  price_sp: number;
-  updated_at: string;
-}
-
-export interface Payment {
-  id: string;
-  patient_id: string;
-  amount_sp: number;
-  notes?: string;
-  created_at: string;
-}

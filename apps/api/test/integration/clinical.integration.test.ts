@@ -9,6 +9,7 @@ import {
   type ClinicalContent,
 } from '@dentalai/contracts';
 import { createSchedulingFixture, mutation } from '../support/scheduling-fixture.js';
+import { retryClinicalClock } from '../support/clinical-clock.js';
 const url = process.env['DATABASE_URL'];
 if (!url) throw new Error('DATABASE_URL must be disposable PostgreSQL.');
 let f: Awaited<ReturnType<typeof createSchedulingFixture>>;
@@ -53,8 +54,10 @@ const mutate = (path: string, body: object, role = 'dentist') =>
   mutation(f.app, f.origin, path, body, f.members[role]!.cookie);
 const get = (path: string, role = 'dentist') =>
   request(f.app).get(path).set('cookie', f.members[role]!.cookie);
+const fixtureMutation = (path: string, body: object) =>
+  retryClinicalClock(f.database.pool, () => mutate(path, body));
 async function encounter(patient = f.patientId) {
-  const result = await mutate(`/api/v1/clinical/patients/${patient}/encounters`, {
+  const result = await fixtureMutation(`/api/v1/clinical/patients/${patient}/encounters`, {
     reason: 'Fictional encounter',
     appointmentId: null,
   });
@@ -67,7 +70,7 @@ async function write(
   supersedesId: string | null = null,
   patient = f.patientId,
 ) {
-  const result = await mutate(`/api/v1/clinical/patients/${patient}/records`, {
+  const result = await fixtureMutation(`/api/v1/clinical/patients/${patient}/records`, {
     encounterId,
     data,
     supersedesId,
@@ -77,7 +80,7 @@ async function write(
   return ClinicalRecordSchema.parse(result.body);
 }
 async function approve(id: string) {
-  const result = await mutate(`/api/v1/clinical/records/${id}/review`, {
+  const result = await fixtureMutation(`/api/v1/clinical/records/${id}/review`, {
     decision: 'approved',
     reason: 'Fictional clinician approval',
   });
@@ -498,7 +501,7 @@ describe('clinical workflow on production API and PostgreSQL', () => {
       `CREATE FUNCTION reject_phase8_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.action LIKE 'clinical.%' THEN RAISE EXCEPTION 'fictional audit failure'; END IF; RETURN NEW; END $$; CREATE TRIGGER reject_phase8_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION reject_phase8_audit()`,
     );
     try {
-      const result = await mutate(`/api/v1/clinical/patients/${f.patientId}/records`, {
+      const result = await fixtureMutation(`/api/v1/clinical/patients/${f.patientId}/records`, {
         encounterId: e.id,
         data: note,
         supersedesId: null,
@@ -519,7 +522,7 @@ describe('clinical workflow on production API and PostgreSQL', () => {
     try {
       expect(
         (
-          await mutate(`/api/v1/clinical/records/${r.id}/review`, {
+          await fixtureMutation(`/api/v1/clinical/records/${r.id}/review`, {
             decision: 'approved',
             reason: 'Fictional rollback',
           })

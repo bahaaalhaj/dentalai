@@ -139,6 +139,7 @@ export const invoices = pgTable(
   },
   (table) => [
     uniqueIndex('invoices_clinic_number_uidx').on(table.clinicId, table.invoiceNumber),
+    uniqueIndex('invoices_clinic_id_uidx').on(table.clinicId, table.id),
     uniqueIndex('invoices_clinic_id_currency_uidx').on(table.clinicId, table.id, table.currency),
     index('invoices_patient_idx').on(table.clinicId, table.patientId, table.createdAt),
     foreignKey({

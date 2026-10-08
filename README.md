@@ -100,7 +100,7 @@ npm run test:db                                 # uses a generated disposable da
 See [docs/database-schema.md](docs/database-schema.md) for the schema and unresolved decisions, and
 [docs/migration/supabase-to-postgresql.md](docs/migration/supabase-to-postgresql.md) for the non-executed
 legacy mapping. Authentication, appointments and Phase 8 clinical records now use the backend API.
-Unmigrated billing, files and experimental-tool code retain Supabase but are not routed with the new
+Files and experimental-tool code retain Supabase but are not routed with the new
 sessions. The browser never connects directly to PostgreSQL.
 
 ## Verification
@@ -149,6 +149,69 @@ npm run verify
 - Existing Supabase users/sessions are not automatically imported. SMTP, HTTPS, owner provisioning,
   patient linkage, retention, MFA, and production security review require operator decisions; see the
   [authentication scope and limitations](docs/authentication.md).
+
+## Phase 9 billing ledger
+
+Open **Clinic billing** from the account dashboard (`/billing`). Owners/admins publish immutable
+service-price snapshots; owners/admins/receptionists create or replace drafts, explicitly issue
+invoices, and record payments. Dentists have read-only billing access. Only owners/admins may
+record refunds or debit/credit adjustments. Patients use **Your invoices and receipts**
+(`/billing/portal`) and see only issued invoices linked to their authenticated portal account.
+
+All monetary mutations are server-owned, tenant-authorized, transactional and audited. An issued
+invoice is never edited or deleted; adjustments are separate permanent events. Draft disposal is
+a retained, audited transition. Balances and currency-separated reports use immutable ledger
+events, not current tooth status or mutable price lists. Overpayments and credits exceeding the
+open balance are rejected; refund recorded funds before crediting a fully paid invoice.
+
+After the existing local setup, run `npm run db:migrate --workspace @dentalai/database`, then
+`npm run verify`, `npm run test:db`, and `npm run test:e2e` with a disposable PostgreSQL
+`DATABASE_URL`. The browser test uses the production build from `verify` and fictional fixtures;
+tests do not require live Supabase or an external payment service.
+
+This is a ledger for **recorded** payments/refunds, not a card-processing gateway, tax engine,
+insurance-claims system, or legally certified invoicing solution. Receipt references prove a
+recorded event, not a settlement by a bank. Discounts and tax amounts are explicit minor-unit
+inputs; a jurisdiction-specific legal/tax review and settlement reconciliation remain necessary.
+Legacy Supabase/old self-hosted finance records are retained, not automatically imported into
+reports. Their currency, scale, identities and provenance require reconciliation first. See the
+[schema and accounting policy](docs/database-schema.md#phase-9-financial-ledger) and
+[source migration mapping](docs/migration/supabase-to-postgresql.md#phase-9-billing-cutover).
+
+### Phase 9 local verification — 2026-10-08
+
+The working tree was clean at `c519607` (Phase 8) before this implementation. Final local checks:
+
+- `npm run verify`: exit 0; typecheck, lint, formatting, unit tests, production build and the high-severity
+  audit gate. Unit coverage is 55 web tests plus 58 API tests (113 total).
+- `npm run test:db`: exit 0; 20 database migration/constraint tests and 109 API integration tests.
+- `npm run test:e2e`: exit 0; 3 production-bundle browser flows: appointments, billing with
+  owner/receptionist/patient sessions, and approved clinical history.
+- `npm audit --json`: exit 1; 4 existing moderate findings in `esbuild` → `@esbuild-kit/core-utils`
+  → `@esbuild-kit/esm-loader` → `drizzle-kit`, zero high/critical findings. `npm run audit` uses
+  `--audit-level=high` and exits 0. No dependency versions changed or forced upgrade was performed.
+- `git diff --check` and redacted Gitleaks scanning of the working diff plus untracked files: exit 0.
+
+There are 43 additional tests over the Phase 8 baseline, for 245 total across the suites. Tests
+exercise production money rules/contracts, actual API transactions, database enforcement and actual
+UI modules; none requires live Supabase, patient data or a payment processor. The additive upgrade
+test compares unchanged row-JSON snapshots of retained legacy invoices, lines, payments and refunds
+and proves they are not silently adopted into the ledger.
+
+Intermediate runs found an unused import, missing jsdom dialog methods, a stale compiled domain
+package, an expired-session fixture needing real re-login, and clinical fixture clock conflicts.
+The test-only clock helper retries **only** the explicit rolled-back `CLINICAL_CLOCK_CONFLICT`, at
+most four attempts with real database waiting. Permission, validation, other conflicts and server
+failures are not retried; persistent clock failure remains a failure. The deliberate clock-regression
+test still uses direct requests and checks 409/no changes. Production clinical logic, timestamps,
+medical formulas and test timeouts were not relaxed. Operators still need synchronized database
+clocks. The build retains two non-fatal upstream Zod/Rollup comment-annotation warnings.
+
+Changed areas: billing API domain and shared contracts/money rules; migration `0006`, ORM schema,
+snapshot/journal and upgrade tests; typed client, route/account wiring and focused invoice/payment/
+pricing/history UI; retired legacy billing queries/types/revenue widgets; unit/integration/browser
+tests and CI labels; README, schema/security and source-migration notes. No historical datasets,
+models, financial or clinical source records were deleted, and no hosted Supabase data was changed.
 
 ## Clinical feature flags
 

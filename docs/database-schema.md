@@ -144,6 +144,48 @@ The development seed uses only clearly fictional names and reserved `.invalid` e
 database integration test creates a new disposable database, applies every migration from zero, loads
 the seed twice to verify idempotency, exercises constraints, and drops the database.
 
+## Phase 9 financial ledger
+
+Migration `0006_financial_ledger.sql` adds workflow provenance, immutable price publications,
+normalized treatment-plan item links and an append-only ledger, retaining existing tables and
+rows. Invoice lines snapshot server prices and descriptions; optional procedure/plan-item links
+must belong to the invoice patient and clinic and have clinician approval. New prices are new
+publications, never edits to historical price snapshots.
+
+- `billing_invoice_workflows` distinguishes new, reconciled workflow invoices from legacy rows.
+  Version advances with every financial event. Draft replacement needs the expected version.
+  Draft disposal retains the invoice and audit history. Issuance freezes header and line items.
+- `billing_ledger` signs: issuance/debit adjustment/refund increase balance; payment/credit
+  adjustment decrease balance. Draft events are zero. Remaining balance is their sum;
+  adjusted charges are issuance plus adjustments. Payments and refunds are separate immutable
+  source rows. `invoices.balance_minor` is retained legacy storage, **not** the ledger authority.
+- Parent invoice row locks serialize concurrent mutations. A transaction writes sources, event,
+  workflow version and actor/reason/before/after audit together. Deferred SQL constraints reject
+  orphan payments/refunds, unaudited events, unbalanced lines, overpayment, over-refund and
+  source changes without matching atomic events. Composite tenant FKs prevent cross-clinic links.
+- `request_key` is unique per clinic. Identical retries by the same actor and operation return
+  the original receipt; changed details or actor return a conflict. `REC-<UUID>` and `REF-<UUID>`
+  reference recorded payments/refunds, not external settlement. No financial delete endpoint exists.
+- Integer minor units use an explicit currency. Decimal input respects the currency exponent;
+  quantity is integer hundredths. Line extension rounds half-up once using integer arithmetic,
+  then subtracts discount and adds explicit tax. Each event/invoice is bounded to 10^12 minor units;
+  aggregate reports/payments/refunds permit exact safe integers up to 2^53-1 and fail clearly beyond
+  that limit. Reports group currencies without exchange-rate conversion, include issued invoices
+  only, and use one database statement/snapshot.
+
+Deploy this additive migration after a verified backup and staging upgrade test. Migration execution
+is transactional. There is deliberately no destructive down migration: after new financial events,
+dropping ledger/workflow tables would lose provenance. Roll application code forward or restore a
+verified backup with operator-approved reconciliation; do not discard recorded money history.
+Clean-from-zero and incremental-upgrade tests retain historical rows. No hosted Supabase data has
+been imported, modified or deleted by Phase 9.
+
+The initial catalog exposes at most 500 patients ordered by name; deployments exceeding this need
+explicit pagination/search before operational use. Invoice history is unpaginated. Invoice numbering
+is globally unique UUID-based, not jurisdiction-specific sequential legal numbering. Credit notes
+are modeled as audited signed adjustments, not certified legal document templates. Multi-clinic
+patients are authorized through the selected authenticated membership and explicit portal linkage.
+
 ## Explicitly unresolved decisions
 
 1. Confirm the production base currencies and the minor-unit scale for legacy `*_sp` values before any

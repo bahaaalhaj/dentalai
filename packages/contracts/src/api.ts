@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { accessContracts } from './auth.js';
 import { appointmentContracts } from './appointments.js';
 import { clinicalContracts } from './clinical.js';
+import { billingContracts } from './billing.js';
 import {
   HealthCheckRequestSchema,
   LivenessResponseSchema,
@@ -62,7 +63,12 @@ export function createOpenApiDocument() {
   };
 
   const accessPaths: Record<string, Record<string, unknown>> = {};
-  for (const contract of [...accessContracts, ...appointmentContracts, ...clinicalContracts]) {
+  for (const contract of [
+    ...accessContracts,
+    ...appointmentContracts,
+    ...clinicalContracts,
+    ...billingContracts,
+  ]) {
     const operation = {
       security: contract.public ? [] : [{ cookieSession: [] }],
       ...('body' in contract

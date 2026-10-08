@@ -34,5 +34,28 @@ with its owners before any patient-data deployment. Do not assume unmounting a s
 already reachable through a Supabase URL/key.
 
 Repository secret scanning does not establish that training images are de-identified or licensed.
+
+## Phase 9 financial authorization
+
+Billing routes live under `/api/v1/billing` and reuse opaque backend sessions, CSRF protection,
+strict Zod input/response contracts, request IDs, limits and safe centralized errors. Every
+operation rechecks live session, active clinic, membership and roles inside its transaction;
+browser-supplied clinic/user/author/status fields are rejected. Owner/admin manage pricing,
+refunds and adjustments; owner/admin/receptionist issue invoices and record payments; dentists
+read only. Patients cannot mutate finances or select another patient ID in the portal query.
+Portal access derives `patients.portal_user_id` from the authenticated user and active clinic,
+excludes drafts/discarded invoices, and omits internal mutation reasons. Source clinical IDs
+are verified against clinic/patient and clinician approval before linking an invoice line.
+
+Financial audits retain actor, clinic, patient, timestamp, reason and before/after evidence.
+Audit failure rolls back the money mutation. Idempotent payment/refund retries do not duplicate
+money or receipts. Stored payment methods are labels only: do not enter card PAN/CVV, bank
+credentials or other secrets into external receipt references or change reasons. No payment
+processor is integrated, and recording a refund does not itself transfer funds.
+
+Retiring browser Supabase billing calls does not revoke hosted table access. Before live cutover,
+operators must back up and reconcile old prices/payments, review actual hosted RLS/grants,
+restrict old writes, and confirm receipt/settlement reconciliation. Existing datasets/models and
+storage dependencies remain unchanged; Phase 9 is not a patient-data deployment certification.
 Historical datasets/weights remain tracked pending the approved artifact migration; their consent,
 licensing, PHI classification and retention are unresolved. No dataset/model content was removed.

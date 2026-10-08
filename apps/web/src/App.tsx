@@ -16,6 +16,9 @@ const ClinicianPatientsPage = lazy(() =>
 const PatientClinicalHistory = lazy(() =>
   import('./clinical/PatientClinicalHistory').then((m) => ({ default: m.PatientClinicalHistory })),
 );
+const BillingPage = lazy(() =>
+  import('./billing/BillingPage').then((m) => ({ default: m.BillingPage })),
+);
 
 export default function App() {
   const [identity, setIdentity] = useState<AuthIdentity | null>(null);
@@ -56,6 +59,28 @@ export default function App() {
       <Router>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
+            <Route
+              path="/billing"
+              element={
+                identity?.activeMembership?.roles.some((r) =>
+                  ['clinic_owner', 'clinic_admin', 'receptionist', 'dentist'].includes(r),
+                ) ? (
+                  <BillingPage key={identity.activeMembership.id} />
+                ) : (
+                  <Navigate to={identity ? '/dashboard' : '/login?expired=1'} replace />
+                )
+              }
+            />
+            <Route
+              path="/billing/portal"
+              element={
+                identity?.activeMembership?.roles.includes('patient') ? (
+                  <BillingPage portal key={identity.activeMembership.id} />
+                ) : (
+                  <Navigate to={identity ? '/dashboard' : '/login?expired=1'} replace />
+                )
+              }
+            />
             <Route path="/" element={<LandingPage />} />
             <Route
               path="/login"

@@ -43,6 +43,13 @@
       "when": 1791295402026,
       "tag": "0005_clinical_workflows",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791295402027,
+      "tag": "0006_financial_ledger",
+      "breakpoints": true
     }
   ]
 }

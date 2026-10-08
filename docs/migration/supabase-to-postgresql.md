@@ -61,3 +61,22 @@ deleted.
 
 Every import should emit append-only audit evidence and be repeatable in a disposable environment before
 any production cutover.
+
+## Phase 9 billing cutover
+
+The application no longer reads/writes Supabase `procedure_prices` or `payments`, including the
+legacy dashboard payment subscription and tooth-derived cost paths. Supabase remains installed
+for unmigrated storage/experimental code. This change does not alter hosted grants or import data.
+
+| Source                                           | New authority                                                                                  | Required reconciliation                                                                                                                                                           |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `procedure_prices.procedure_name/price_sp`       | `services`, versioned `price_lists`/`price_list_items`, immutable `billing_price_publications` | Establish currency and exponent, service codes, clinic, effective date and authorized publisher; preserve source snapshot.                                                        |
+| `payments.patient_id/amount_sp/notes/created_at` | Issued invoice, immutable `payments` plus `billing_ledger` and audit/receipt evidence          | Resolve source profile to clinic/patient, currency/scale, actual settled amount/method, invoice allocation, actor, timestamp and refund history. Never invent missing provenance. |
+| Current `teeth_status`-derived costs             | No financial import                                                                            | Tooth state is not historical performed-procedure, invoice or settlement evidence. Reconstruct only from reviewed source financial documents.                                     |
+| Existing self-hosted invoices/payments           | Retained legacy tables, outside new workflow reports                                           | Explicit reviewed reconciliation is required before adoption; do not attach workflow markers or fabricate ledger events to make reports look complete.                            |
+
+Preserve checksum-addressed raw exports in an access-controlled archive. Validate the unit mapping,
+opening balances and invoice/payment/refund allocations in a disposable environment, compare totals
+per clinic/currency and obtain operator approval before any import/cutover. Phase 9 implements no
+automatic financial importer and deletes no historical source records. Freeze legacy writes only
+with the deployment owner's approval; keep a verified rollback snapshot and reconciliation plan.

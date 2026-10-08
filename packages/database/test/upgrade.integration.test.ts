@@ -48,6 +48,50 @@ async function upgradeFixture(prefix: number, test: (pool: Pool, url: string) =>
   }
 }
 describe('reviewed incremental upgrades', () => {
+  it('upgrades Phase 8 without altering or silently adopting legacy financial records', async () => {
+    await upgradeFixture(6, async (pool, url) => {
+      const invoice = randomUUID(),
+        item = randomUUID(),
+        payment = randomUUID(),
+        refund = randomUUID();
+      await pool.query(
+        "INSERT INTO invoices(id,clinic_id,patient_id,invoice_number,status,currency,subtotal_minor,total_minor,balance_minor,issued_at,created_by_membership_id) VALUES($1,$2,$3,'FICTIONAL-LEGACY','issued','USD',100,100,70,now(),$4)",
+        [invoice, clinicId, patientId, membershipId],
+      );
+      await pool.query(
+        "INSERT INTO invoice_items(id,clinic_id,invoice_id,description,quantity,unit_amount_minor,line_total_minor,currency) VALUES($1,$2,$3,'Fictional legacy invoice line',1,100,100,'USD')",
+        [item, clinicId, invoice],
+      );
+      await pool.query(
+        "INSERT INTO payments(id,clinic_id,patient_id,invoice_id,status,method,amount_minor,currency,received_at,recorded_by_membership_id) VALUES($1,$2,$3,$4,'succeeded','cash',40,'USD',now(),$5)",
+        [payment, clinicId, patientId, invoice, membershipId],
+      );
+      await pool.query(
+        "INSERT INTO refunds(id,clinic_id,payment_id,status,amount_minor,currency,reason,refunded_at,recorded_by_membership_id) VALUES($1,$2,$3,'succeeded',10,'USD','Fictional legacy refund',now(),$4)",
+        [refund, clinicId, payment, membershipId],
+      );
+      const tables = ['invoices', 'invoice_items', 'payments', 'refunds'] as const;
+      const before = await Promise.all(
+        tables.map((table) =>
+          pool.query(`SELECT to_jsonb(t) AS value FROM ${table} t ORDER BY id`),
+        ),
+      );
+      await migrateDatabase(url);
+      await migrateDatabase(url);
+      for (const [index, table] of tables.entries())
+        expect(
+          (await pool.query(`SELECT to_jsonb(t) AS value FROM ${table} t ORDER BY id`)).rows,
+        ).toEqual(before[index]!.rows);
+      expect((await pool.query('SELECT * FROM billing_invoice_workflows')).rowCount).toBe(0);
+      expect((await pool.query('SELECT * FROM billing_ledger')).rowCount).toBe(0);
+      await expect(
+        pool.query('UPDATE invoices SET due_at=now() WHERE id=$1', [invoice]),
+      ).rejects.toMatchObject({ code: '55000' });
+      await expect(
+        pool.query('DELETE FROM invoice_items WHERE id=$1', [item]),
+      ).rejects.toMatchObject({ code: '55000' });
+    });
+  });
   it('upgrades the Phase 6 schema without losing appointments, notes, sessions or audit history', async () => {
     await upgradeFixture(3, async (pool, url) => {
       const encounter = randomUUID();
@@ -87,7 +131,7 @@ describe('reviewed incremental upgrades', () => {
       expect(
         (await pool.query('SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations'))
           .rows[0]?.count,
-      ).toBe(6);
+      ).toBe(7);
     });
   });
   it('rolls back the entire repair when inconsistent existing data requires manual reconciliation', async () => {

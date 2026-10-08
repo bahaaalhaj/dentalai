@@ -40,6 +40,21 @@ import {
   type ClinicalWrite,
 } from '@dentalai/contracts';
 import { z } from 'zod';
+import {
+  BillingCatalogSchema,
+  BillingInvoiceSchema,
+  BillingMutationSchema,
+  BillingLinksSchema,
+  BillingReportSchema,
+  InvoiceWriteSchema,
+  DraftReplaceSchema,
+  InvoiceActionSchema,
+  PaymentWriteSchema,
+  RefundWriteSchema,
+  AdjustmentWriteSchema,
+  ServiceWriteSchema,
+  PricingWriteSchema,
+} from '@dentalai/contracts';
 
 export class ApiClientError extends Error {
   constructor(
@@ -80,6 +95,84 @@ export class DentalAiApiClient {
 
   me() {
     return this.get('/api/v1/access/me', AuthIdentitySchema);
+  }
+  billingCatalog() {
+    return this.get('/api/v1/billing/catalog', BillingCatalogSchema);
+  }
+  billingInvoices(portal = false) {
+    return this.get(
+      `/api/v1/billing/${portal ? 'portal' : 'invoices'}`,
+      z.array(BillingInvoiceSchema),
+    );
+  }
+  billingLinks(patientId: string) {
+    return this.get(
+      `/api/v1/billing/patients/${z.uuid().parse(patientId)}/links`,
+      BillingLinksSchema,
+    );
+  }
+  billingReports() {
+    return this.get('/api/v1/billing/reports', BillingReportSchema);
+  }
+  createInvoice(body: z.infer<typeof InvoiceWriteSchema>) {
+    return this.post(
+      '/api/v1/billing/invoices',
+      InvoiceWriteSchema.parse(body),
+      BillingMutationSchema,
+    );
+  }
+  reviseInvoice(id: string, body: z.infer<typeof DraftReplaceSchema>) {
+    return this.post(
+      `/api/v1/billing/invoices/${z.uuid().parse(id)}/draft`,
+      DraftReplaceSchema.parse(body),
+      BillingMutationSchema,
+    );
+  }
+  invoiceAction(
+    id: string,
+    action: 'issue' | 'discard',
+    body: z.infer<typeof InvoiceActionSchema>,
+  ) {
+    return this.post(
+      `/api/v1/billing/invoices/${z.uuid().parse(id)}/${action}`,
+      InvoiceActionSchema.parse(body),
+      BillingMutationSchema,
+    );
+  }
+  recordPayment(id: string, body: z.infer<typeof PaymentWriteSchema>) {
+    return this.post(
+      `/api/v1/billing/invoices/${z.uuid().parse(id)}/payments`,
+      PaymentWriteSchema.parse(body),
+      BillingMutationSchema,
+    );
+  }
+  recordRefund(id: string, body: z.infer<typeof RefundWriteSchema>) {
+    return this.post(
+      `/api/v1/billing/invoices/${z.uuid().parse(id)}/refunds`,
+      RefundWriteSchema.parse(body),
+      BillingMutationSchema,
+    );
+  }
+  adjustInvoice(id: string, body: z.infer<typeof AdjustmentWriteSchema>) {
+    return this.post(
+      `/api/v1/billing/invoices/${z.uuid().parse(id)}/adjustments`,
+      AdjustmentWriteSchema.parse(body),
+      BillingMutationSchema,
+    );
+  }
+  createBillingService(body: z.infer<typeof ServiceWriteSchema>) {
+    return this.post(
+      '/api/v1/billing/services',
+      ServiceWriteSchema.parse(body),
+      z.object({ success: z.literal(true) }),
+    );
+  }
+  publishPrices(body: z.infer<typeof PricingWriteSchema>) {
+    return this.post(
+      '/api/v1/billing/price-lists',
+      PricingWriteSchema.parse(body),
+      z.object({ success: z.literal(true) }),
+    );
   }
   clinicalPatients() {
     return this.get('/api/v1/clinical/patients', z.array(PatientSummarySchema));
@@ -267,6 +360,9 @@ export class DentalAiApiClient {
   private async get<T>(path: string, schema: z.ZodType<T>): Promise<T> {
     return this.request(path, schema, 'GET');
   }
+  private post<T>(path: string, payload: unknown, schema: z.ZodType<T>): Promise<T> {
+    return this.request(path, schema, 'POST', payload);
+  }
 
   private async request<T>(
     path: string,
@@ -299,7 +395,8 @@ export class DentalAiApiClient {
         (path.startsWith('/api/v1/access/') ||
           path.startsWith('/api/v1/appointments') ||
           path.startsWith('/api/v1/scheduling/') ||
-          path.startsWith('/api/v1/clinical/')) &&
+          path.startsWith('/api/v1/clinical/') ||
+          path.startsWith('/api/v1/billing/')) &&
         typeof window !== 'undefined'
       )
         window.dispatchEvent(new Event('dentalai:session-expired'));

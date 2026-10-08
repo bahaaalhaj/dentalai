@@ -8,3 +8,4 @@ export * from './imaging.js';
 export * from './billing.js';
 export * from './operations.js';
 export * from './clinical-workflow.js';
+export * from './financial-ledger.js';

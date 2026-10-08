@@ -21,11 +21,9 @@ import {
   Trash2,
 } from 'lucide-react';
 import { cn } from './lib/utils';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 
 type SelectedPatient = Pick<Profile, 'id' | 'full_name'>;
-type RevenuePoint = { name: string; revenue: number };
 type XrayReport = {
   cavities_detected: boolean;
   infected_teeth: number[];
@@ -79,9 +77,7 @@ export function DoctorDashboard() {
   const [patients, setPatients] = useState<Profile[]>([]);
   const [stats, setStats] = useState({
     totalPatients: 0,
-    revenue: 0,
   });
-  const [chartData, setChartData] = useState<RevenuePoint[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Memoized data fetching to prevent recreation
@@ -96,46 +92,7 @@ export function DoctorDashboard() {
 
       setPatients(patientsData || []);
 
-      // 3. Fetch Payments for total revenue
-      const { data: paymentsData } = await supabase.from('payments').select('*');
-
-      // 5. Calculate Stats
-      const revenue = paymentsData?.reduce((sum, p) => sum + p.amount_sp, 0) || 0;
-
-      setStats({
-        totalPatients: patientsData?.length || 0,
-        revenue,
-      });
-
-      // 6. Prepare Chart Data (Revenue Growth)
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      const currentMonth = new Date().getMonth();
-      const last6Months: { name: string; revenue: number }[] = [];
-      for (let i = 5; i >= 0; i--) {
-        const m = (currentMonth - i + 12) % 12;
-        last6Months.push({ name: months[m] ?? '', revenue: 0 });
-      }
-
-      paymentsData?.forEach((p) => {
-        const date = new Date(p.created_at);
-        const monthName = months[date.getMonth()];
-        const chartItem = last6Months.find((item) => item.name === monthName);
-        if (chartItem) chartItem.revenue += p.amount_sp;
-      });
-      setChartData(last6Months);
+      setStats({ totalPatients: patientsData?.length || 0 });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     }
@@ -170,9 +127,6 @@ export function DoctorDashboard() {
         ) {
           loadPatientXrays(selectedPatient.id);
         }
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, () => {
-        fetchInitialData();
       })
       .subscribe();
 
@@ -371,8 +325,8 @@ export function DoctorDashboard() {
                     color: 'emerald',
                   },
                   {
-                    label: 'Total Revenue',
-                    value: `${stats.revenue.toLocaleString()} S.P.`,
+                    label: 'Financial reports',
+                    value: <a href="/billing">View issued ledger</a>,
                     icon: DollarSign,
                     color: 'amber',
                   },
@@ -404,33 +358,10 @@ export function DoctorDashboard() {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                  <h3 className="text-lg font-bold text-slate-900 mb-6">Revenue Growth</h3>
-                  <div className="h-80">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis
-                          dataKey="name"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#64748b', fontSize: 12 }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            borderRadius: '12px',
-                            border: 'none',
-                            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                          }}
-                        />
-                        <Bar dataKey="revenue" fill="#4F46E5" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-6">Financial reports</h3>
+                  <a href="/billing" className="text-indigo-600">
+                    View issued invoices, payments, refunds and balances by currency.
+                  </a>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                   <h3 className="text-lg font-bold text-slate-900 mb-6">Treatment Distribution</h3>
