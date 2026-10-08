@@ -1,5 +1,10 @@
 # DentalAI
 
+Phase 11 anesthesia engineering structure is present, but all recommendations and confirmation
+remain disabled because clinical references and golden cases are unapproved. See
+[anesthesia decision support](docs/anesthesia-decision-support.md). The dentist remains responsible
+for the final decision; this unvalidated module must not be used for patient-care decisions.
+
 DentalAI is an npm-workspace modular monorepo. The current product remains a React/Vite application
 served by an Express API, with Supabase retained temporarily while later feature migrations are out of
 scope. The X-ray analysis and anesthetic decision-support modules remain experimental and disabled by

@@ -7,6 +7,7 @@ import { getErrorMessage } from '../lib/errors';
 import { Odontogram } from './Odontogram';
 import { RecordView } from './RecordView';
 import { ClinicalRecordEditor } from './ClinicalRecordEditor';
+import { AnestheticCalculator } from '../components/AnestheticCalculator';
 
 type Action = { kind: 'start' | 'close' | 'approved' | 'rejected'; id: string };
 export function ClinicianPatientsPage() {
@@ -117,6 +118,7 @@ export function ClinicianPatientsPage() {
             <h2 className="font-bold">
               {workspace.patient.givenName} {workspace.patient.familyName}
             </h2>
+            <AnestheticCalculator key={patientId} patientId={patientId} />
             <section className="bg-white border rounded-2xl p-5 space-y-3">
               <h2 className="text-xl font-bold">Encounters / visits</h2>
               <button

@@ -4,6 +4,7 @@ import { appointmentContracts } from './appointments.js';
 import { clinicalContracts } from './clinical.js';
 import { billingContracts } from './billing.js';
 import { imagingContracts } from './imaging.js';
+import { anesthesiaContracts } from './anesthesia.js';
 import {
   HealthCheckRequestSchema,
   LivenessResponseSchema,
@@ -70,6 +71,7 @@ export function createOpenApiDocument() {
     ...clinicalContracts,
     ...billingContracts,
     ...imagingContracts,
+    ...anesthesiaContracts,
   ]) {
     const operation = {
       security: contract.public ? [] : [{ cookieSession: [] }],
@@ -101,7 +103,14 @@ export function createOpenApiDocument() {
           }
         : {}),
       responses: {
-        '200': { description: 'Validated response', content: jsonContent(contract.response) },
+        ...('blocked' in contract
+          ? {}
+          : {
+              ['successStatus' in contract ? contract.successStatus : 200]: {
+                description: 'Validated response',
+                content: jsonContent(contract.response),
+              },
+            }),
         '400': errorResponse,
         '401': errorResponse,
         '403': errorResponse,

@@ -44,6 +44,9 @@ import {
   ImagingRunSchema,
   ImagingReasonSchema,
   ImagingReviewSchema,
+  AnesthesiaHistorySchema,
+  AnesthesiaAssessmentSchema,
+  AnesthesiaWriteSchema,
 } from '@dentalai/contracts';
 import { z } from 'zod';
 import {
@@ -104,6 +107,19 @@ export class DentalAiApiClient {
   }
   imagingHistory(patientId: string) {
     return this.get(`/api/v1/imaging/patients/${z.uuid().parse(patientId)}`, ImagingHistorySchema);
+  }
+  anesthesiaHistory(patientId: string) {
+    return this.get(
+      `/api/v1/anesthesia/patients/${z.uuid().parse(patientId)}`,
+      AnesthesiaHistorySchema,
+    );
+  }
+  assessAnesthesia(patientId: string, body: z.infer<typeof AnesthesiaWriteSchema>) {
+    return this.post(
+      `/api/v1/anesthesia/patients/${z.uuid().parse(patientId)}/assessments`,
+      AnesthesiaWriteSchema.parse(body),
+      AnesthesiaAssessmentSchema,
+    );
   }
   imagingCapabilities() {
     return this.get('/api/v1/imaging/capabilities', ImagingCapabilitiesSchema);
@@ -442,7 +458,8 @@ export class DentalAiApiClient {
           path.startsWith('/api/v1/scheduling/') ||
           path.startsWith('/api/v1/clinical/') ||
           path.startsWith('/api/v1/billing/') ||
-          path.startsWith('/api/v1/imaging/')) &&
+          path.startsWith('/api/v1/imaging/') ||
+          path.startsWith('/api/v1/anesthesia/')) &&
         typeof window !== 'undefined'
       )
         window.dispatchEvent(new Event('dentalai:session-expired'));

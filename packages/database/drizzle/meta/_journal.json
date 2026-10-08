@@ -57,6 +57,13 @@
       "when": 1791295402028,
       "tag": "0007_private_imaging",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791295402029,
+      "tag": "0008_anesthesia_safety",
+      "breakpoints": true
     }
   ]
 }

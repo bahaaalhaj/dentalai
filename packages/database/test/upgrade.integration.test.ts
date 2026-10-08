@@ -131,7 +131,7 @@ describe('reviewed incremental upgrades', () => {
       expect(
         (await pool.query('SELECT count(*)::int AS count FROM drizzle.__drizzle_migrations'))
           .rows[0]?.count,
-      ).toBe(8);
+      ).toBe(9);
     });
   });
   it('rolls back the entire repair when inconsistent existing data requires manual reconciliation', async () => {

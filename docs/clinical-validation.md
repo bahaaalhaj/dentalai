@@ -7,7 +7,7 @@ Both modules are disabled by default. Development or demonstration access requir
 - `VITE_ENABLE_XRAY_ANALYSIS`
 - `VITE_ENABLE_ANESTHETIC_DECISION_SUPPORT`
 
-The X-ray module has no real inference runtime. Enabling its flag does not generate findings; the previous randomized simulation has been removed. Anesthetic output, when explicitly enabled for development or demonstration, remains unvalidated and is for software evaluation only.
+The browser X-ray analyzer never produces findings; Phase 10 supplies a separately configured private inference service, not a demo simulation. Anesthetic recommendations remain disabled even in development/demo: Phase 11 found no approved clinical reference set, formulary or golden cases. See [anesthesia decision support](anesthesia-decision-support.md) for the versioned, fail-closed structure and every pending clinical rule.
 
 ## Phase 8 clinical-record workflows
 

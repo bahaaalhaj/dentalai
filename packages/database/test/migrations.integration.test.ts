@@ -121,7 +121,7 @@ describe('migrations from zero', () => {
     );
 
     expect(Number(tables.rows[0]?.count)).toBeGreaterThanOrEqual(45);
-    expect(migrations.rows[0]?.count).toBe('8');
+    expect(migrations.rows[0]?.count).toBe('9');
   });
 
   it('loads only explicitly fictional development identities and is idempotent', async () => {

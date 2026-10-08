@@ -19,6 +19,7 @@ import { createSchedulingRouter } from './domains/scheduling/scheduling.routes.j
 import { createClinicalRouter } from './domains/clinical/clinical.routes.js';
 import { createBillingRouter } from './domains/billing/billing.routes.js';
 import { createImagingRouter } from './domains/imaging/imaging.routes.js';
+import { createAnesthesiaRouter } from './domains/anesthesia/anesthesia.routes.js';
 import type { PrivateStorage } from './domains/imaging/storage.js';
 import type { InferenceClient } from './domains/imaging/inference.js';
 
@@ -111,6 +112,11 @@ export async function createApplication({
     application.use(
       '/api/v1',
       csrf.verify,
+      createAnesthesiaRouter(authentication.provider, authentication.repository),
+    );
+    application.use(
+      '/api/v1',
+      csrf.verify,
       createImagingRouter(
         authentication.provider,
         authentication.repository,
@@ -162,7 +168,8 @@ export async function createApplication({
         request.path.startsWith('/api/v1/scheduling/') ||
         request.path.startsWith('/api/v1/clinical/') ||
         request.path.startsWith('/api/v1/billing/') ||
-        request.path.startsWith('/api/v1/imaging/')
+        request.path.startsWith('/api/v1/imaging/') ||
+        request.path.startsWith('/api/v1/anesthesia/')
       ) {
         void authentication.repository
           .security('auth.request_rejected', false, undefined, request.requestId)
