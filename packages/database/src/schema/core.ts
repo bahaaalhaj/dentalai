@@ -117,6 +117,8 @@ export const users = pgTable(
     phone: text('phone'),
     passwordHash: text('password_hash'),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
+    emailVerified: boolean('email_verified').default(false).notNull(),
+    image: text('image'),
     disabledAt: timestamp('disabled_at', { withTimezone: true }),
     createdAt,
     updatedAt,
@@ -160,6 +162,7 @@ export const memberships = pgTable(
   (table) => [
     uniqueIndex('memberships_clinic_user_uidx').on(table.clinicId, table.userId),
     uniqueIndex('memberships_clinic_id_uidx').on(table.clinicId, table.id),
+    uniqueIndex('memberships_clinic_id_user_uidx').on(table.clinicId, table.id, table.userId),
     index('memberships_user_idx').on(table.userId),
   ],
 );
@@ -266,7 +269,10 @@ export const patients = pgTable(
       .on(table.clinicId, table.portalUserId)
       .where(sql`${table.portalUserId} is not null`),
     index('patients_clinic_name_idx').on(table.clinicId, table.familyName, table.givenName),
-    check('patients_name_chk', sql`length(trim(${table.givenName})) > 0 and length(trim(${table.familyName})) > 0`),
+    check(
+      'patients_name_chk',
+      sql`length(trim(${table.givenName})) > 0 and length(trim(${table.familyName})) > 0`,
+    ),
   ],
 );
 

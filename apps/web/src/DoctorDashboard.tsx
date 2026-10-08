@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './lib/supabase';
-import type { Appointment, Profile, ToothCondition, ToothStatus, XrayImage } from './lib/supabase';
+import { apiClient } from './lib/api-client';
+import type { Profile, ToothCondition, ToothStatus, XrayImage } from './lib/supabase';
 import { TeethChart } from './components/TeethChart';
 import { AnestheticCalculator } from './components/AnestheticCalculator';
 import { BillingSection } from './components/BillingSection';
@@ -20,7 +21,6 @@ import {
   LogOut,
   MessageSquare,
   Plus,
-  Clock,
   Activity,
   Trash2,
 } from 'lucide-react';
@@ -44,7 +44,6 @@ const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444'] as const;
 type SelectedPatient = Pick<Profile, 'id' | 'full_name'>;
 type RevenuePoint = { name: string; revenue: number };
 type TreatmentDatum = { name: string; value: number };
-type DayAppointment = Appointment & { patient?: Pick<Profile, 'full_name'> };
 type XrayReport = {
   cavities_detected: boolean;
   infected_teeth: number[];
@@ -99,17 +98,11 @@ export function DoctorDashboard() {
   const [patients, setPatients] = useState<Profile[]>([]);
   const [stats, setStats] = useState({
     totalPatients: 0,
-    todayAppointments: 0,
     revenue: 0,
-    successRate: 0,
   });
   const [chartData, setChartData] = useState<RevenuePoint[]>([]);
   const [pieData, setPieData] = useState<TreatmentDatum[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Calendar specific state
-  const [calendarDate, setCalendarDate] = useState(new Date().toISOString().split('T')[0] ?? '');
-  const [dayAppointments, setDayAppointments] = useState<DayAppointment[]>([]);
 
   // Patient Medical Advice state
   const [doctorAdvice, setDoctorAdvice] = useState('');
@@ -127,36 +120,6 @@ export function DoctorDashboard() {
 
       setPatients(patientsData || []);
 
-      // 2. Fetch Appointments
-      const { data: apptsData } = await supabase
-        .from('appointments')
-        .select('*, patient:profiles!patient_id(full_name)')
-        .order('date', { ascending: true });
-
-      // Auto-cleanup past booked appointments
-      const now = new Date();
-      const todayString = format(now, 'yyyy-MM-dd');
-      const currentTime = format(now, 'HH:mm');
-
-      const pastBooked =
-        apptsData?.filter(
-          (a) =>
-            a.status === 'booked' &&
-            (a.date < todayString || (a.date === todayString && a.time < currentTime)),
-        ) || [];
-
-      if (pastBooked.length > 0) {
-        await supabase
-          .from('appointments')
-          .delete()
-          .in(
-            'id',
-            pastBooked.map((a) => a.id),
-          );
-      }
-
-      const validAppts = apptsData?.filter((a) => !pastBooked.find((p) => p.id === a.id)) || [];
-
       // 3. Fetch Payments for total revenue
       const { data: paymentsData } = await supabase.from('payments').select('*');
 
@@ -164,18 +127,11 @@ export function DoctorDashboard() {
       const { data: recordsData } = await supabase.from('medical_records').select('teeth_status');
 
       // 5. Calculate Stats
-      const todayAppts = validAppts.filter((a) => a.date === todayString).length;
-      const completedAppts = validAppts.filter((a) => a.status === 'completed').length;
-      const totalAppts = validAppts.length;
-
       const revenue = paymentsData?.reduce((sum, p) => sum + p.amount_sp, 0) || 0;
-      const successRate = totalAppts > 0 ? Math.round((completedAppts / totalAppts) * 100) : 100;
 
       setStats({
         totalPatients: patientsData?.length || 0,
-        todayAppointments: todayAppts,
         revenue,
-        successRate,
       });
 
       // 6. Prepare Chart Data (Revenue Growth)
@@ -242,35 +198,6 @@ export function DoctorDashboard() {
     }
   }, []);
 
-  const loadDayAppointments = React.useCallback(async (date: string) => {
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*, patient:profiles!patient_id(full_name)')
-      .eq('date', date)
-      .order('time', { ascending: true });
-
-    if (error) {
-      console.error('Error loading day appointments:', error);
-      return;
-    }
-
-    const now = new Date();
-    const todayStr = format(now, 'yyyy-MM-dd');
-    const currTime = format(now, 'HH:mm');
-
-    const filtered =
-      data?.filter((a) => {
-        // Show everything except oldbooked ones that should have been auto-cleaned
-        // But keep cancelled/completed for historical record of the day
-        if (a.status !== 'booked') return true;
-        if (a.date > todayStr) return true;
-        if (a.date === todayStr && a.time >= currTime) return true;
-        return false;
-      }) || [];
-
-    setDayAppointments(filtered);
-  }, []);
-
   const loadPatientAdvice = React.useCallback(async (patientId: string) => {
     const { data } = await supabase
       .from('medical_records')
@@ -303,10 +230,6 @@ export function DoctorDashboard() {
     // Centralized real-time subscription
     const dashboardSubscription = supabase
       .channel('doctor_dashboard_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => {
-        fetchInitialData();
-        loadDayAppointments(calendarDate);
-      })
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'medical_records' },
@@ -338,20 +261,7 @@ export function DoctorDashboard() {
     return () => {
       supabase.removeChannel(dashboardSubscription);
     };
-  }, [
-    fetchInitialData,
-    loadDayAppointments,
-    loadPatientAdvice,
-    loadPatientXrays,
-    calendarDate,
-    selectedPatient,
-  ]);
-
-  useEffect(() => {
-    if (activeTab === 'welcome' && welcomeSection === 'calendar') {
-      loadDayAppointments(calendarDate);
-    }
-  }, [activeTab, welcomeSection, calendarDate, loadDayAppointments]);
+  }, [fetchInitialData, loadPatientAdvice, loadPatientXrays, selectedPatient]);
 
   useEffect(() => {
     if (selectedPatient) {
@@ -377,40 +287,6 @@ export function DoctorDashboard() {
     else alert('Error saving advice: ' + error.message);
 
     setSavingAdvice(false);
-  };
-
-  const handleDeletePatient = async (e: React.MouseEvent, patientId: string) => {
-    e.stopPropagation(); // Prevent selecting the patient when clicking delete
-
-    if (
-      confirm(
-        'Are you sure you want to delete this patient? This will remove all their records, appointments, and medical history permanently.',
-      )
-    ) {
-      try {
-        // In a real app with proper foreign keys, you might just delete the profile.
-        // Here we delete dependent records first for safety if cascades aren't fully set.
-        await supabase.from('appointments').delete().eq('patient_id', patientId);
-        await supabase.from('medical_records').delete().eq('patient_id', patientId);
-        await supabase.from('xray_images').delete().eq('patient_id', patientId);
-        await supabase.from('payments').delete().eq('patient_id', patientId);
-
-        const { error } = await supabase.from('profiles').delete().eq('id', patientId);
-
-        if (error) throw error;
-
-        setPatients(patients.filter((p) => p.id !== patientId));
-        if (selectedPatient?.id === patientId) {
-          setSelectedPatient(null);
-        }
-        alert('Patient record deleted successfully.');
-      } catch (error) {
-        console.error('Error deleting patient:', error);
-        alert(
-          'Error deleting patient: ' + (error instanceof Error ? error.message : 'Unknown error'),
-        );
-      }
-    }
   };
 
   const handleToothClick = async (id: string) => {
@@ -525,7 +401,7 @@ export function DoctorDashboard() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await apiClient.logout();
     window.location.href = '/';
   };
 
@@ -616,8 +492,8 @@ export function DoctorDashboard() {
                     color: 'indigo',
                   },
                   {
-                    label: 'Appointments Today',
-                    value: stats.todayAppointments,
+                    label: 'Appointments',
+                    value: <a href="/appointments">View calendar</a>,
                     icon: Calendar,
                     color: 'emerald',
                   },
@@ -628,8 +504,8 @@ export function DoctorDashboard() {
                     color: 'amber',
                   },
                   {
-                    label: 'Success Rate',
-                    value: `${stats.successRate}%`,
+                    label: 'Appointment history',
+                    value: <a href="/appointments">View history</a>,
                     icon: CheckCircle2,
                     color: 'blue',
                   },
@@ -716,87 +592,12 @@ export function DoctorDashboard() {
           )}
 
           {activeTab === 'welcome' && welcomeSection === 'calendar' && (
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-150">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-2xl font-bold text-slate-900 uppercase tracking-tight">
-                  Clinic Schedule
-                </h2>
-                <div className="flex items-center gap-4">
-                  <div className="bg-slate-50 p-2 rounded-xl flex items-center gap-2 border border-slate-200">
-                    <label className="text-xs font-bold text-slate-400 uppercase pr-2 border-r border-slate-200">
-                      Date Selector
-                    </label>
-                    <input
-                      type="date"
-                      className="bg-transparent text-sm font-bold text-indigo-600 outline-none"
-                      value={calendarDate}
-                      onChange={(e) => setCalendarDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest border-b pb-2 flex items-center gap-2">
-                  <Clock className="w-4 h-4" /> Appointments for{' '}
-                  {format(new Date(calendarDate), 'MMMM dd, yyyy')}
-                </h3>
-                {dayAppointments.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-4">
-                    {dayAppointments.map((appt) => (
-                      <div
-                        key={appt.id}
-                        className="flex items-center gap-6 p-5 border border-slate-100 rounded-2xl hover:shadow-lg hover:border-indigo-100 transition-all bg-white relative overflow-hidden group"
-                      >
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600"></div>
-                        <div className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl font-black text-xl min-w-25 text-center border border-indigo-100">
-                          {appt.time}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-bold text-slate-900 text-lg">
-                            {appt.patient?.full_name || 'Unknown Patient'}
-                          </p>
-                          <div className="flex gap-2 items-center mt-1">
-                            <span
-                              className={cn(
-                                'text-[10px] uppercase font-black px-2 py-0.5 rounded',
-                                appt.status === 'booked'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-emerald-100 text-emerald-700',
-                              )}
-                            >
-                              {appt.status}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-medium tracking-tighter">
-                              REF: {appt.id.slice(0, 8)}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setSelectedPatient({
-                              id: appt.patient_id,
-                              full_name: appt.patient?.full_name ?? '',
-                            });
-                            setWelcomeSection('patients');
-                          }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-600 text-white p-2 rounded-lg"
-                        >
-                          <ChevronRight className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                    <Calendar className="w-16 h-16 mx-auto mb-4 text-slate-200" />
-                    <p className="text-slate-400 font-medium">
-                      No appointments scheduled for this date.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            <section className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">Clinic Schedule</h2>
+              <a href="/appointments" className="text-indigo-600 font-semibold">
+                Open the backend-owned calendar and appointment actions
+              </a>
+            </section>
           )}
 
           {activeTab === 'welcome' && welcomeSection === 'patients' && (
@@ -884,14 +685,15 @@ export function DoctorDashboard() {
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={(e) => handleDeletePatient(e, p.id)}
+                              disabled
+                              aria-label="Patient deletion unavailable pending record migration"
                               className={cn(
                                 'p-2 rounded-lg transition-all opacity-0 group-hover/item:opacity-100',
                                 selectedPatient?.id === p.id
                                   ? 'hover:bg-white/20 text-white'
                                   : 'hover:bg-red-50 text-slate-300 hover:text-red-500',
                               )}
-                              title="Delete Patient"
+                              title="Patient deletion is disabled to preserve historical appointments and clinical records"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

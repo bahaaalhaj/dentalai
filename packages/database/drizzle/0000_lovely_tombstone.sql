@@ -684,6 +684,30 @@ CREATE TABLE "outbox_jobs" (
 	CONSTRAINT "outbox_jobs_topic_chk" CHECK (length(trim("outbox_jobs"."topic")) > 0)
 );
 --> statement-breakpoint
+-- Composite tenant foreign keys below require their referenced keys before the
+-- foreign keys are created. Drizzle emits the corresponding named indexes at
+-- the end of this migration, which is too late for PostgreSQL validation.
+ALTER TABLE "roles" ADD CONSTRAINT "roles_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "memberships" ADD CONSTRAINT "memberships_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "locations" ADD CONSTRAINT "locations_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "staff" ADD CONSTRAINT "staff_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "providers" ADD CONSTRAINT "providers_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "operatories" ADD CONSTRAINT "operatories_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "patients" ADD CONSTRAINT "patients_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "appointment_types" ADD CONSTRAINT "appointment_types_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "appointments" ADD CONSTRAINT "appointments_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "encounters" ADD CONSTRAINT "encounters_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "clinical_notes" ADD CONSTRAINT "clinical_notes_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "odontogram_findings" ADD CONSTRAINT "odontogram_findings_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "procedures" ADD CONSTRAINT "procedures_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "treatment_plans" ADD CONSTRAINT "treatment_plans_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "ai_analysis_runs" ADD CONSTRAINT "ai_analysis_runs_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "files" ADD CONSTRAINT "files_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "xray_studies" ADD CONSTRAINT "xray_studies_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "services" ADD CONSTRAINT "services_clinic_id_tenant_key" UNIQUE ("clinic_id", "id");--> statement-breakpoint
+ALTER TABLE "invoices" ADD CONSTRAINT "invoices_clinic_id_currency_tenant_key" UNIQUE ("clinic_id", "id", "currency");--> statement-breakpoint
+ALTER TABLE "price_lists" ADD CONSTRAINT "price_lists_clinic_id_currency_tenant_key" UNIQUE ("clinic_id", "id", "currency");--> statement-breakpoint
+ALTER TABLE "payments" ADD CONSTRAINT "payments_clinic_id_currency_tenant_key" UNIQUE ("clinic_id", "id", "currency");--> statement-breakpoint
 ALTER TABLE "clinic_settings" ADD CONSTRAINT "clinic_settings_clinic_id_clinics_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinics"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_clinic_id_clinics_id_fk" FOREIGN KEY ("clinic_id") REFERENCES "public"."clinics"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "invitations" ADD CONSTRAINT "invitations_role_tenant_fk" FOREIGN KEY ("clinic_id","role_id") REFERENCES "public"."roles"("clinic_id","id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint

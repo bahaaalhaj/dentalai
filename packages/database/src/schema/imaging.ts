@@ -260,10 +260,7 @@ export const anesthesiaAssessments = pgTable(
       name: 'anesthesia_assessments_provider_tenant_fk',
     }).onDelete('restrict'),
     check('anesthesia_assessments_version_chk', sql`${table.version} >= 1`),
-    check(
-      'anesthesia_assessments_ruleset_chk',
-      sql`length(trim(${table.ruleSetVersion})) > 0`,
-    ),
+    check('anesthesia_assessments_ruleset_chk', sql`length(trim(${table.ruleSetVersion})) > 0`),
     check(
       'anesthesia_assessments_approval_chk',
       sql`${table.approvalState} <> 'approved' or (${table.approvedByProviderId} is not null and ${table.approvedAt} is not null and ${table.modeledOutput} is not null)`,

@@ -15,9 +15,10 @@
     "apps/api"
   ],
   "scripts": {
-    "dev": "npm run build:packages && npm run dev --workspace @dentalai/api",
+    "dev": "npm run build:packages && npm run dev:full --workspace @dentalai/api",
     "dev:web": "npm run build:packages && npm run dev --workspace @dentalai/web",
     "dev:api": "npm run build:packages && npm run dev --workspace @dentalai/api",
+    "auth:bootstrap-owner": "npm run auth:bootstrap-owner --workspace @dentalai/api --",
     "dev:ai": "python -m uvicorn app.main:app --reload --app-dir services/ai --port 8000",
     "start": "npm run start --workspace @dentalai/api",
     "build:packages": "npm run build --workspace @dentalai/contracts && npm run build --workspace @dentalai/domain && npm run build --workspace @dentalai/database && npm run build --workspace @dentalai/ui",
@@ -27,8 +28,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "npm run build:packages && npm run test --workspaces --if-present",
-    "test:db": "npm run test:integration --workspace @dentalai/database",
+    "test:db": "npm run test:integration --workspace @dentalai/database && npm run test:integration --workspace @dentalai/api",
     "test:watch": "npm run build:packages && npm run test:watch --workspace @dentalai/web",
+    "test:e2e": "npm run test:e2e --workspace @dentalai/web",
     "audit": "npm audit --audit-level=high",
     "verify": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build && npm run audit",
     "infra:config": "docker compose --env-file infra/.env -f infra/compose.yml config --quiet",

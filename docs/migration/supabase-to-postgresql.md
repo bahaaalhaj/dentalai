@@ -1,25 +1,35 @@
 # Supabase-to-PostgreSQL mapping proposal
 
+Phase 7 update: appointment/availability runtime behavior now uses the backend API and PostgreSQL.
+After contract/database/browser parity checks, legacy browser Supabase appointment operations and
+destructive past-appointment cleanup were removed. Historical Supabase tables/data are retained;
+the mapping below is still a proposal for an operator-reviewed data import, not an executed import.
+Clinical/billing Supabase code and the package remain installed. See [../appointments.md](../appointments.md).
+
+Phase 6 update: new account authentication and clinic RBAC are backend-owned. No Supabase accounts,
+passwords, sessions, appointments, or clinical records have been imported; this mapping remains a
+proposal. See [../authentication.md](../authentication.md) before planning account transition.
+
 This is a mapping and review plan, not an executed migration. Supabase remains functional in Phase 4,
 and frontend features still use their existing Supabase paths. No legacy data has been copied or
 deleted.
 
-| Current Supabase source | New PostgreSQL target | Required transformation and review |
-| --- | --- | --- |
-| `auth.users` | `users`; later `sessions` | Preserve identity correlation in migration tooling. Password/session migration depends on the future identity provider and is unresolved. |
-| `profiles` with `role = 'doctor'` | `users` + `memberships` + `membership_roles` + `staff` + `providers` | Split global identity, clinic membership, authorization, employment, and provider credential data. Assign a clinic explicitly. |
-| `profiles` with `role = 'patient'` | `patients`; optional `portal_user_id -> users` | A patient is a clinical record, not necessarily a login. Deduplicate before assigning clinic-scoped MRNs. |
-| `appointments` | `appointments`, `appointment_types`, `appointment_status_history` | Resolve clinic/location/provider/type. Convert separate date/time into an explicit zoned instant. Map `booked` to `scheduled`; preserve cancellation/completion as history. Never cascade-delete. |
-| `medical_records.medical_history` | `clinical_notes`, `medical_alerts`, `allergies`, `medications` | Parse only with clinician-approved rules. Otherwise retain source text as a versioned legacy note for review. |
-| `medical_records.teeth_status` | `odontogram_findings`, `odontogram_finding_surfaces`, `procedures`, `procedure_surfaces` | Validate tooth vocabulary and distinguish observations from performed/planned procedures before import. Keep the source JSON in a migration audit artifact. |
-| `xray_images.image_url` | `files`, `xray_studies`, `xray_study_files` | Copy into private object storage, calculate SHA-256, record size/type, and verify before marking available. The old public bucket policy must not be reproduced. |
-| `xray_images.ai_report` | Quarantined migration artifact; possibly `ai_analysis_runs` only after provenance review | Do not treat legacy simulated/random JSON as findings. Import no run as `succeeded` without real model provenance, result artifact, and explicit review policy. |
-| `anesthetic_recommendations` | `anesthesia_assessments` | Use a `legacy-unvalidated` rule-set marker and a non-approved state if retention is authorized. Never convert old recommendations into approved clinical decisions automatically. |
-| `procedure_prices` | `services`, `price_lists`, `price_list_items` | Map procedure names to stable service codes. Confirm what `price_sp` means, its currency, and minor-unit conversion before importing. |
-| `payments` | `invoices`, `invoice_items`, `payments`; possibly a legacy unapplied-payment workflow | Determine currency and whether each amount is linked to an invoice. Convert to integer minor units only after scale review. Preserve source IDs in migration logs. |
-| `storage.objects` in `xrays` | `files` plus private S3-compatible objects | Copy, hash, malware-scan, verify, then switch references. No public-read policy in the target. |
-| Supabase RLS policies and `is_doctor()` | Future API authorization and PostgreSQL RLS policy set | Do not translate one broad doctor role directly. Map least-privilege role permissions after authentication design. |
-| Realtime publications | Transactional outbox and later API delivery | Define consumers and delivery semantics later. Phase 4 only provides `outbox_jobs`. |
+| Current Supabase source                 | New PostgreSQL target                                                                    | Required transformation and review                                                                                                                                                                |
+| --------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth.users`                            | `users`; later `sessions`                                                                | Preserve identity correlation in migration tooling. Password/session migration depends on the future identity provider and is unresolved.                                                         |
+| `profiles` with `role = 'doctor'`       | `users` + `memberships` + `membership_roles` + `staff` + `providers`                     | Split global identity, clinic membership, authorization, employment, and provider credential data. Assign a clinic explicitly.                                                                    |
+| `profiles` with `role = 'patient'`      | `patients`; optional `portal_user_id -> users`                                           | A patient is a clinical record, not necessarily a login. Deduplicate before assigning clinic-scoped MRNs.                                                                                         |
+| `appointments`                          | `appointments`, `appointment_types`, `appointment_status_history`                        | Resolve clinic/location/provider/type. Convert separate date/time into an explicit zoned instant. Map `booked` to `scheduled`; preserve cancellation/completion as history. Never cascade-delete. |
+| `medical_records.medical_history`       | `clinical_notes`, `medical_alerts`, `allergies`, `medications`                           | Parse only with clinician-approved rules. Otherwise retain source text as a versioned legacy note for review.                                                                                     |
+| `medical_records.teeth_status`          | `odontogram_findings`, `odontogram_finding_surfaces`, `procedures`, `procedure_surfaces` | Validate tooth vocabulary and distinguish observations from performed/planned procedures before import. Keep the source JSON in a migration audit artifact.                                       |
+| `xray_images.image_url`                 | `files`, `xray_studies`, `xray_study_files`                                              | Copy into private object storage, calculate SHA-256, record size/type, and verify before marking available. The old public bucket policy must not be reproduced.                                  |
+| `xray_images.ai_report`                 | Quarantined migration artifact; possibly `ai_analysis_runs` only after provenance review | Do not treat legacy simulated/random JSON as findings. Import no run as `succeeded` without real model provenance, result artifact, and explicit review policy.                                   |
+| `anesthetic_recommendations`            | `anesthesia_assessments`                                                                 | Use a `legacy-unvalidated` rule-set marker and a non-approved state if retention is authorized. Never convert old recommendations into approved clinical decisions automatically.                 |
+| `procedure_prices`                      | `services`, `price_lists`, `price_list_items`                                            | Map procedure names to stable service codes. Confirm what `price_sp` means, its currency, and minor-unit conversion before importing.                                                             |
+| `payments`                              | `invoices`, `invoice_items`, `payments`; possibly a legacy unapplied-payment workflow    | Determine currency and whether each amount is linked to an invoice. Convert to integer minor units only after scale review. Preserve source IDs in migration logs.                                |
+| `storage.objects` in `xrays`            | `files` plus private S3-compatible objects                                               | Copy, hash, malware-scan, verify, then switch references. No public-read policy in the target.                                                                                                    |
+| Supabase RLS policies and `is_doctor()` | Future API authorization and PostgreSQL RLS policy set                                   | Do not translate one broad doctor role directly. Map least-privilege role permissions after authentication design.                                                                                |
+| Realtime publications                   | Transactional outbox and later API delivery                                              | Define consumers and delivery semantics later. Phase 4 only provides `outbox_jobs`.                                                                                                               |
 
 ## Proposed migration sequence
 

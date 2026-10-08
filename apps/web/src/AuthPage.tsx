@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { supabase } from './lib/supabase';
+import { apiClient } from './lib/api-client';
 import { Shield, Mail, Lock, User, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getErrorMessage } from './lib/errors';
@@ -24,6 +24,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -33,25 +34,12 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
     try {
       if (mode === 'register') {
         const fullPhone = `${countryCode}${phone}`;
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              role: 'patient',
-              phone: fullPhone,
-            },
-          },
-        });
-        if (signUpError) throw signUpError;
-        alert('Registration successful!');
+        await apiClient.register({ email, password, name: fullName, phone: fullPhone });
+        setNotice(
+          'Check your email to verify your patient account before signing in. Staff access requires a clinic invitation.',
+        );
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (signInError) throw signInError;
+        await apiClient.login({ email, password });
         window.location.href = '/dashboard';
       }
     } catch (err: unknown) {
@@ -83,6 +71,16 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
 
         <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {notice && (
+              <p role="status" className="text-indigo-600 text-sm">
+                {notice}
+              </p>
+            )}
+            {mode === 'login' && new URLSearchParams(window.location.search).has('expired') && (
+              <p role="status" className="text-slate-600 text-sm">
+                Your session expired or was revoked. Sign in again.
+              </p>
+            )}
             {error && (
               <div className="p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl">
                 {error}
@@ -168,6 +166,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                 <input
                   type="password"
                   required
+                  minLength={mode === 'register' ? 12 : undefined}
+                  maxLength={128}
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -187,6 +188,13 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
           </form>
 
           <div className="mt-8 pt-8 border-t border-slate-100 text-center">
+            {mode === 'login' && (
+              <p className="mb-4 text-sm">
+                <Link to="/forgot-password" className="text-indigo-600">
+                  Reset password or resend verification
+                </Link>
+              </p>
+            )}
             <p className="text-slate-500 text-sm">
               {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
               <Link

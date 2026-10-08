@@ -33,3 +33,5 @@ runs/
 apps/*/dist/
 packages/*/dist/
 *.tsbuildinfo
+playwright-report/
+test-results/

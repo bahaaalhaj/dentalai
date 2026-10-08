@@ -5,6 +5,10 @@ served by an Express API, with Supabase retained temporarily while later feature
 scope. The X-ray analysis and anesthetic decision-support modules remain experimental and disabled by
 default.
 
+Authentication and appointments now use the backend API and self-hosted PostgreSQL. Open
+**Appointments and calendar** from the account dashboard. See [docs/appointments.md](docs/appointments.md)
+for scheduling setup, permissions, timezone policy, and operator prerequisites.
+
 ## Repository layout
 
 ```text
@@ -27,7 +31,7 @@ See [docs/architecture.md](docs/architecture.md) and
 - Node.js 22 or newer
 - npm 11 or a compatible npm version supplied with Node.js 22+
 - Docker with Compose for local PostgreSQL and object storage
-- A Supabase project for current interactive application behavior
+- SMTP delivery/capture and PostgreSQL for backend-owned authentication; Supabase is retained only for unmigrated features
 - Python 3.12+ only when running the optional AI-service placeholder directly
 
 ## Application setup
@@ -39,7 +43,12 @@ npm ci
 cp .env.example .env
 ```
 
-Set the public browser values in `.env`:
+Set server-only `DATABASE_URL`, `AUTH_SECRET` (random, 32+ characters), `APP_ORIGIN`, `SMTP_URL`,
+and `MAIL_FROM` in `.env`. Start local infrastructure and apply migrations below before starting the
+API. See [docs/authentication.md](docs/authentication.md) for verification, invitations, initial owner
+provisioning, and HTTPS/cookie requirements. Auth screens no longer require Supabase credentials.
+
+For retained legacy feature modules, public browser values remain:
 
 ```dotenv
 VITE_SUPABASE_URL=https://your-project.supabase.co
@@ -55,8 +64,11 @@ Start the integrated Express and Vite development server:
 npm run dev
 ```
 
-The application is available at `http://localhost:3000`; API health is at `/api/health`. For a
-frontend-only Vite server, use `npm run dev:web`. To run a production build locally:
+The application is available at `http://localhost:3000` when APP_ORIGIN uses that origin; API health is at `/api/health`. Secure cookies remain enabled locally. For a
+frontend-only Vite server, use `npm run dev:web`. To run the versioned API independently from Vite, set
+`DATABASE_URL` and use `npm run dev:api`; liveness is at `/api/v1/health/live`, readiness is at
+`/api/v1/health/ready`, and generated OpenAPI is at `/api/v1/contracts/v1?format=openapi`. See
+[docs/api-foundation.md](docs/api-foundation.md). To run a production build locally:
 
 ```bash
 npm run build
@@ -87,8 +99,8 @@ npm run test:db                                 # uses a generated disposable da
 
 See [docs/database-schema.md](docs/database-schema.md) for the schema and unresolved decisions, and
 [docs/migration/supabase-to-postgresql.md](docs/migration/supabase-to-postgresql.md) for the non-executed
-legacy mapping. The web application still uses Supabase in this phase and never connects directly to
-PostgreSQL.
+legacy mapping. Authentication, role lookup, appointments and availability now use the backend API; legacy clinical feature code
+retains Supabase but is not routed with the new sessions. The browser never connects directly to PostgreSQL.
 
 ## Verification
 
@@ -102,9 +114,10 @@ npm run verify
 - `npm run typecheck` — strict TypeScript validation across workspaces
 - `npm run lint` — repository ESLint with zero warnings allowed
 - `npm run format:check` — Prettier conformance
-- `npm test` — isolated web unit tests with mocked Supabase and blocked network access
-- `npm run test:db` — rebuild migrations from zero and verify PostgreSQL constraints (requires `DATABASE_URL`)
+- `npm test` — isolated web and API unit tests; Supabase and external network access stay mocked
+- `npm run test:db` — rebuild migrations from zero, verify PostgreSQL constraints, and run API database integration tests (requires `DATABASE_URL`)
 - `npm run build` — shared packages, frontend, and API production builds
+- `npm run test:e2e` — real production-browser patient booking/staff confirmation, using disposable PostgreSQL; run the build and `npx playwright install --with-deps --no-shell chromium` first
 - `npm run audit` — dependency audit at high severity or above
 
 ## Experimental limitations
@@ -114,8 +127,13 @@ npm run verify
 - The FastAPI service exposes health only and has no inference endpoint.
 - None of these modules may be used for patient-care decisions. See
   [docs/clinical-validation.md](docs/clinical-validation.md).
-- Supabase remains the current application backend. The self-hosted PostgreSQL schema now exists as a
-  reviewed migration target, but no frontend, authentication, or clinical-data migration has begun.
+- Backend-owned authentication, invitations, clinic membership, RBAC, appointments and availability are
+  implemented. Clinical-record screens remain unavailable until their feature migration. Scheduling
+  requires configured locations/timezones, an invited dentist, chairs, types/hours, and explicitly
+  linked patient entities; legacy appointment data is not automatically imported.
+- Existing Supabase users/sessions are not automatically imported. SMTP, HTTPS, owner provisioning,
+  patient linkage, retention, MFA, and production security review require operator decisions; see the
+  [authentication scope and limitations](docs/authentication.md).
 
 ## Clinical feature flags
 

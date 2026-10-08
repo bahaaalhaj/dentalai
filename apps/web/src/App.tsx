@@ -1,70 +1,50 @@
 import { useEffect, useState, Suspense, lazy } from 'react';
-import type { Session } from '@supabase/supabase-js';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './lib/supabase';
-import type { UserRole } from './lib/supabase';
+import type { AuthIdentity } from '@dentalai/contracts';
 import { ErrorBoundary, LoadingScreen } from '@dentalai/ui';
+import { apiClient, ApiClientError } from './lib/api-client';
+import { AccountDashboard, RecoveryPage, InvitationPage } from './AccountPage';
 
 const LandingPage = lazy(() => import('./LandingPage').then((m) => ({ default: m.LandingPage })));
 const AuthPage = lazy(() => import('./AuthPage').then((m) => ({ default: m.AuthPage })));
-const PatientDashboard = lazy(() =>
-  import('./PatientDashboard').then((m) => ({ default: m.PatientDashboard })),
-);
-const DoctorDashboard = lazy(() =>
-  import('./DoctorDashboard').then((m) => ({ default: m.DoctorDashboard })),
+const AppointmentsPage = lazy(() =>
+  import('./AppointmentsPage').then((m) => ({ default: m.AppointmentsPage })),
 );
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [role, setRole] = useState<UserRole | null>(null);
+  const [identity, setIdentity] = useState<AuthIdentity | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [unavailable, setUnavailable] = useState(false);
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) fetchRole(session.user.id);
-      else setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) fetchRole(session.user.id);
-      else {
-        setRole(null);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    let active = true;
+    const expired = () => {
+      if (active) setIdentity(null);
+    };
+    window.addEventListener('dentalai:session-expired', expired);
+    apiClient
+      .me()
+      .then((value) => {
+        if (active) setIdentity(value);
+      })
+      .catch((error: unknown) => {
+        if (active && !(error instanceof ApiClientError && error.status === 401))
+          setUnavailable(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+      window.removeEventListener('dentalai:session-expired', expired);
+    };
   }, []);
-
-  async function fetchRole(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching role:', error);
-        setRole('patient');
-      } else {
-        console.log('User role fetched:', data?.role);
-        setRole((data?.role as UserRole) || 'patient');
-      }
-    } catch (err) {
-      console.error('Unexpected error fetching role:', err);
-      setRole('patient');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   if (loading) return <LoadingScreen />;
-
+  if (unavailable)
+    return (
+      <main className="p-10 text-slate-700">
+        Account service unavailable. <button onClick={() => window.location.reload()}>Retry</button>
+      </main>
+    );
   return (
     <ErrorBoundary>
       <Router>
@@ -73,27 +53,43 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route
               path="/login"
-              element={session ? <Navigate to="/dashboard" /> : <AuthPage mode="login" />}
+              element={identity ? <Navigate to="/dashboard" /> : <AuthPage mode="login" />}
             />
             <Route
               path="/register"
-              element={session ? <Navigate to="/dashboard" /> : <AuthPage mode="register" />}
+              element={identity ? <Navigate to="/dashboard" /> : <AuthPage mode="register" />}
             />
-
+            <Route path="/forgot-password" element={<RecoveryPage />} />
+            <Route path="/reset-password" element={<RecoveryPage reset />} />
+            <Route path="/invitation" element={<InvitationPage identity={identity} />} />
             <Route
-              path="/dashboard"
+              path="/appointments"
               element={
-                session ? (
-                  role === 'doctor' ? (
-                    <DoctorDashboard />
+                identity ? (
+                  identity.activeMembership ? (
+                    <AppointmentsPage key={identity.activeMembership.id} identity={identity} />
                   ) : (
-                    <PatientDashboard />
+                    <Navigate to="/dashboard" replace />
                   )
                 ) : (
-                  <Navigate to="/" />
+                  <Navigate to="/login?expired=1" replace />
                 )
               }
             />
+            <Route
+              path="/dashboard"
+              element={
+                identity ? (
+                  <AccountDashboard
+                    identity={identity}
+                    refresh={async () => setIdentity(await apiClient.me())}
+                  />
+                ) : (
+                  <Navigate to="/login?expired=1" replace />
+                )
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </Router>

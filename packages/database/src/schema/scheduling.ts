@@ -11,14 +11,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import {
-  clinics,
-  locations,
-  memberships,
-  operatories,
-  patients,
-  providers,
-} from './core.js';
+import { clinics, locations, memberships, operatories, patients, providers } from './core.js';
 import { appointmentStatus } from './enums.js';
 
 const createdAt = timestamp('created_at', { withTimezone: true }).defaultNow().notNull();
@@ -71,6 +64,8 @@ export const appointments = pgTable(
     cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
     cancelledByMembershipId: uuid('cancelled_by_membership_id'),
     cancellationReason: text('cancellation_reason'),
+    revision: integer('revision').default(0).notNull(),
+    lastChangedByMembershipId: uuid('last_changed_by_membership_id'),
     createdAt,
     updatedAt,
   },
@@ -78,11 +73,7 @@ export const appointments = pgTable(
     uniqueIndex('appointments_clinic_id_uidx').on(table.clinicId, table.id),
     index('appointments_clinic_start_idx').on(table.clinicId, table.startsAt),
     index('appointments_patient_start_idx').on(table.clinicId, table.patientId, table.startsAt),
-    index('appointments_provider_start_idx').on(
-      table.clinicId,
-      table.providerId,
-      table.startsAt,
-    ),
+    index('appointments_provider_start_idx').on(table.clinicId, table.providerId, table.startsAt),
     foreignKey({
       columns: [table.clinicId, table.locationId],
       foreignColumns: [locations.clinicId, locations.id],
@@ -113,6 +104,12 @@ export const appointments = pgTable(
       foreignColumns: [memberships.clinicId, memberships.id],
       name: 'appointments_created_by_tenant_fk',
     }).onDelete('restrict'),
+    foreignKey({
+      columns: [table.clinicId, table.lastChangedByMembershipId],
+      foreignColumns: [memberships.clinicId, memberships.id],
+      name: 'appointments_last_actor_tenant_fk',
+    }).onDelete('restrict'),
+    check('appointments_revision_chk', sql`${table.revision} >= 0`),
     check('appointments_time_range_chk', sql`${table.startsAt} < ${table.endsAt}`),
     check('appointments_timezone_chk', sql`length(trim(${table.timezone})) > 0`),
     check(

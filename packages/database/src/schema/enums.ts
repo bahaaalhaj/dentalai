@@ -42,11 +42,7 @@ export const medicationStatus = pgEnum('medication_status', [
   'completed',
   'entered_in_error',
 ]);
-export const findingStatus = pgEnum('finding_status', [
-  'active',
-  'resolved',
-  'entered_in_error',
-]);
+export const findingStatus = pgEnum('finding_status', ['active', 'resolved', 'entered_in_error']);
 export const procedureStatus = pgEnum('procedure_status', [
   'planned',
   'in_progress',
@@ -63,12 +59,7 @@ export const treatmentPlanStatus = pgEnum('treatment_plan_status', [
   'completed',
   'cancelled',
 ]);
-export const fileStatus = pgEnum('file_status', [
-  'pending',
-  'available',
-  'quarantined',
-  'deleted',
-]);
+export const fileStatus = pgEnum('file_status', ['pending', 'available', 'quarantined', 'deleted']);
 export const xrayStudyStatus = pgEnum('xray_study_status', [
   'ordered',
   'acquired',

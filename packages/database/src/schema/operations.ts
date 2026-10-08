@@ -69,10 +69,7 @@ export const outboxJobs = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex('outbox_jobs_clinic_idempotency_uidx').on(
-      table.clinicId,
-      table.idempotencyKey,
-    ),
+    uniqueIndex('outbox_jobs_clinic_idempotency_uidx').on(table.clinicId, table.idempotencyKey),
     index('outbox_jobs_pending_idx')
       .on(table.availableAt, table.createdAt)
       .where(sql`${table.status} in ('pending', 'failed')`),

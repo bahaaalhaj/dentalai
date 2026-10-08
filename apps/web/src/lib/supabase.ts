@@ -5,10 +5,9 @@ const { url: supabaseUrl, anonKey: supabaseAnonKey } = readSupabaseConfig(import
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
-    storage: typeof window !== 'undefined' ? window.sessionStorage : undefined,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
   },
 });
 
@@ -22,17 +21,6 @@ export interface Profile {
   role: UserRole;
   phone?: string;
   created_at: string;
-}
-
-export interface Appointment {
-  id: string;
-  patient_id: string;
-  doctor_id: string;
-  date: string;
-  time: string;
-  status: 'booked' | 'cancelled' | 'completed';
-  confirmation_status: 'pending' | 'confirmed';
-  notes?: string;
 }
 
 export type ToothStatus = Record<string, ToothCondition>;

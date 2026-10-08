@@ -11,6 +11,8 @@ export default tseslint.config(
       '**/dist/**',
       'node_modules/**',
       'coverage/**',
+      '**/test-results/**',
+      '**/playwright-report/**',
       'dataset_yolo/**',
       'scripts/dataset/**',
       'runs/**',

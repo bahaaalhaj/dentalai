@@ -49,7 +49,7 @@ afterAll(async () => {
 });
 
 describe('migrations from zero', () => {
-  it('creates the complete schema and records both reviewed migrations', async () => {
+  it('creates the complete schema and records all four reviewed migrations', async () => {
     const tables = await testPool.query<{ count: string }>(
       `SELECT count(*)::text AS count
        FROM information_schema.tables
@@ -60,7 +60,7 @@ describe('migrations from zero', () => {
     );
 
     expect(Number(tables.rows[0]?.count)).toBeGreaterThanOrEqual(45);
-    expect(migrations.rows[0]?.count).toBe('2');
+    expect(migrations.rows[0]?.count).toBe('4');
   });
 
   it('loads only explicitly fictional development identities and is idempotent', async () => {
@@ -185,6 +185,9 @@ describe('money and clinical constraints', () => {
       [eventId, ids.clinic],
     );
 
-    await expectPgError(testPool.query('DELETE FROM audit_events WHERE id = $1', [eventId]), '55000');
+    await expectPgError(
+      testPool.query('DELETE FROM audit_events WHERE id = $1', [eventId]),
+      '55000',
+    );
   });
 });

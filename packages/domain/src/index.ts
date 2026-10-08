@@ -1,1 +1,2 @@
-export * from './clinical-features';
+export * from './clinical-features.js';
+export * from './scheduling.js';

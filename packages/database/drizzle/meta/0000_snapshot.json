@@ -56,12 +56,8 @@
           "name": "clinic_settings_clinic_id_clinics_id_fk",
           "tableFrom": "clinic_settings",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -285,12 +281,8 @@
           "name": "invitations_clinic_id_clinics_id_fk",
           "tableFrom": "invitations",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -298,14 +290,8 @@
           "name": "invitations_role_tenant_fk",
           "tableFrom": "invitations",
           "tableTo": "roles",
-          "columnsFrom": [
-            "clinic_id",
-            "role_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "role_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -458,12 +444,8 @@
           "name": "locations_clinic_id_clinics_id_fk",
           "tableFrom": "locations",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -515,12 +497,8 @@
           "name": "membership_roles_clinic_id_clinics_id_fk",
           "tableFrom": "membership_roles",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -528,14 +506,8 @@
           "name": "membership_roles_membership_tenant_fk",
           "tableFrom": "membership_roles",
           "tableTo": "memberships",
-          "columnsFrom": [
-            "clinic_id",
-            "membership_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "membership_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -543,14 +515,8 @@
           "name": "membership_roles_role_tenant_fk",
           "tableFrom": "membership_roles",
           "tableTo": "roles",
-          "columnsFrom": [
-            "clinic_id",
-            "role_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "role_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -558,11 +524,7 @@
       "compositePrimaryKeys": {
         "membership_roles_clinic_id_membership_id_role_id_pk": {
           "name": "membership_roles_clinic_id_membership_id_role_id_pk",
-          "columns": [
-            "clinic_id",
-            "membership_id",
-            "role_id"
-          ]
+          "columns": ["clinic_id", "membership_id", "role_id"]
         }
       },
       "uniqueConstraints": {},
@@ -686,12 +648,8 @@
           "name": "memberships_clinic_id_clinics_id_fk",
           "tableFrom": "memberships",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -699,12 +657,8 @@
           "name": "memberships_user_id_users_id_fk",
           "tableFrom": "memberships",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -821,12 +775,8 @@
           "name": "operatories_clinic_id_clinics_id_fk",
           "tableFrom": "operatories",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -834,14 +784,8 @@
           "name": "operatories_location_tenant_fk",
           "tableFrom": "operatories",
           "tableTo": "locations",
-          "columnsFrom": [
-            "clinic_id",
-            "location_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "location_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1036,12 +980,8 @@
           "name": "patients_clinic_id_clinics_id_fk",
           "tableFrom": "patients",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1049,12 +989,8 @@
           "name": "patients_portal_user_id_users_id_fk",
           "tableFrom": "patients",
           "tableTo": "users",
-          "columnsFrom": [
-            "portal_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["portal_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1182,12 +1118,8 @@
           "name": "providers_clinic_id_clinics_id_fk",
           "tableFrom": "providers",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1195,14 +1127,8 @@
           "name": "providers_staff_tenant_fk",
           "tableFrom": "providers",
           "tableTo": "staff",
-          "columnsFrom": [
-            "clinic_id",
-            "staff_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "staff_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1306,12 +1232,8 @@
           "name": "roles_clinic_id_clinics_id_fk",
           "tableFrom": "roles",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1432,12 +1354,8 @@
           "name": "sessions_clinic_id_clinics_id_fk",
           "tableFrom": "sessions",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1445,12 +1363,8 @@
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1575,12 +1489,8 @@
           "name": "staff_clinic_id_clinics_id_fk",
           "tableFrom": "staff",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1588,14 +1498,8 @@
           "name": "staff_membership_tenant_fk",
           "tableFrom": "staff",
           "tableTo": "memberships",
-          "columnsFrom": [
-            "clinic_id",
-            "membership_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "membership_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1799,12 +1703,8 @@
           "name": "working_hours_clinic_id_clinics_id_fk",
           "tableFrom": "working_hours",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1812,14 +1712,8 @@
           "name": "working_hours_location_tenant_fk",
           "tableFrom": "working_hours",
           "tableTo": "locations",
-          "columnsFrom": [
-            "clinic_id",
-            "location_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "location_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1827,14 +1721,8 @@
           "name": "working_hours_provider_tenant_fk",
           "tableFrom": "working_hours",
           "tableTo": "providers",
-          "columnsFrom": [
-            "clinic_id",
-            "provider_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "provider_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1945,12 +1833,8 @@
           "name": "appointment_status_history_clinic_id_clinics_id_fk",
           "tableFrom": "appointment_status_history",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1958,14 +1842,8 @@
           "name": "appointment_status_history_appointment_tenant_fk",
           "tableFrom": "appointment_status_history",
           "tableTo": "appointments",
-          "columnsFrom": [
-            "clinic_id",
-            "appointment_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "appointment_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1973,14 +1851,8 @@
           "name": "appointment_status_history_actor_tenant_fk",
           "tableFrom": "appointment_status_history",
           "tableTo": "memberships",
-          "columnsFrom": [
-            "clinic_id",
-            "changed_by_membership_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "changed_by_membership_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2108,12 +1980,8 @@
           "name": "appointment_types_clinic_id_clinics_id_fk",
           "tableFrom": "appointment_types",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2356,12 +2224,8 @@
           "name": "appointments_clinic_id_clinics_id_fk",
           "tableFrom": "appointments",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2369,14 +2233,8 @@
           "name": "appointments_location_tenant_fk",
           "tableFrom": "appointments",
           "tableTo": "locations",
-          "columnsFrom": [
-            "clinic_id",
-            "location_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "location_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2384,14 +2242,8 @@
           "name": "appointments_operatory_tenant_fk",
           "tableFrom": "appointments",
           "tableTo": "operatories",
-          "columnsFrom": [
-            "clinic_id",
-            "operatory_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "operatory_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2399,14 +2251,8 @@
           "name": "appointments_patient_tenant_fk",
           "tableFrom": "appointments",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2414,14 +2260,8 @@
           "name": "appointments_provider_tenant_fk",
           "tableFrom": "appointments",
           "tableTo": "providers",
-          "columnsFrom": [
-            "clinic_id",
-            "provider_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "provider_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2429,14 +2269,8 @@
           "name": "appointments_type_tenant_fk",
           "tableFrom": "appointments",
           "tableTo": "appointment_types",
-          "columnsFrom": [
-            "clinic_id",
-            "appointment_type_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "appointment_type_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2444,14 +2278,8 @@
           "name": "appointments_created_by_tenant_fk",
           "tableFrom": "appointments",
           "tableTo": "memberships",
-          "columnsFrom": [
-            "clinic_id",
-            "created_by_membership_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "created_by_membership_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2603,12 +2431,8 @@
           "name": "schedule_blocks_clinic_id_clinics_id_fk",
           "tableFrom": "schedule_blocks",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2616,14 +2440,8 @@
           "name": "schedule_blocks_location_tenant_fk",
           "tableFrom": "schedule_blocks",
           "tableTo": "locations",
-          "columnsFrom": [
-            "clinic_id",
-            "location_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "location_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2631,14 +2449,8 @@
           "name": "schedule_blocks_operatory_tenant_fk",
           "tableFrom": "schedule_blocks",
           "tableTo": "operatories",
-          "columnsFrom": [
-            "clinic_id",
-            "operatory_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "operatory_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2646,14 +2458,8 @@
           "name": "schedule_blocks_provider_tenant_fk",
           "tableFrom": "schedule_blocks",
           "tableTo": "providers",
-          "columnsFrom": [
-            "clinic_id",
-            "provider_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "provider_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2803,12 +2609,8 @@
           "name": "allergies_clinic_id_clinics_id_fk",
           "tableFrom": "allergies",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2816,14 +2618,8 @@
           "name": "allergies_patient_tenant_fk",
           "tableFrom": "allergies",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3036,12 +2832,8 @@
           "name": "clinical_notes_clinic_id_clinics_id_fk",
           "tableFrom": "clinical_notes",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3049,14 +2841,8 @@
           "name": "clinical_notes_patient_tenant_fk",
           "tableFrom": "clinical_notes",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3064,14 +2850,8 @@
           "name": "clinical_notes_encounter_tenant_fk",
           "tableFrom": "clinical_notes",
           "tableTo": "encounters",
-          "columnsFrom": [
-            "clinic_id",
-            "encounter_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "encounter_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3079,14 +2859,8 @@
           "name": "clinical_notes_author_tenant_fk",
           "tableFrom": "clinical_notes",
           "tableTo": "memberships",
-          "columnsFrom": [
-            "clinic_id",
-            "authored_by_membership_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "authored_by_membership_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3262,12 +3036,8 @@
           "name": "encounters_clinic_id_clinics_id_fk",
           "tableFrom": "encounters",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3275,14 +3045,8 @@
           "name": "encounters_patient_tenant_fk",
           "tableFrom": "encounters",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3290,14 +3054,8 @@
           "name": "encounters_appointment_tenant_fk",
           "tableFrom": "encounters",
           "tableTo": "appointments",
-          "columnsFrom": [
-            "clinic_id",
-            "appointment_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "appointment_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3305,14 +3063,8 @@
           "name": "encounters_provider_tenant_fk",
           "tableFrom": "encounters",
           "tableTo": "providers",
-          "columnsFrom": [
-            "clinic_id",
-            "provider_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "provider_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3456,12 +3208,8 @@
           "name": "medical_alerts_clinic_id_clinics_id_fk",
           "tableFrom": "medical_alerts",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3469,14 +3217,8 @@
           "name": "medical_alerts_patient_tenant_fk",
           "tableFrom": "medical_alerts",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3628,12 +3370,8 @@
           "name": "medications_clinic_id_clinics_id_fk",
           "tableFrom": "medications",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3641,14 +3379,8 @@
           "name": "medications_patient_tenant_fk",
           "tableFrom": "medications",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3693,12 +3425,8 @@
           "name": "odontogram_finding_surfaces_clinic_id_clinics_id_fk",
           "tableFrom": "odontogram_finding_surfaces",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3706,14 +3434,8 @@
           "name": "odontogram_finding_surfaces_finding_tenant_fk",
           "tableFrom": "odontogram_finding_surfaces",
           "tableTo": "odontogram_findings",
-          "columnsFrom": [
-            "clinic_id",
-            "finding_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "finding_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3721,11 +3443,7 @@
       "compositePrimaryKeys": {
         "odontogram_finding_surfaces_clinic_id_finding_id_surface_code_pk": {
           "name": "odontogram_finding_surfaces_clinic_id_finding_id_surface_code_pk",
-          "columns": [
-            "clinic_id",
-            "finding_id",
-            "surface_code"
-          ]
+          "columns": ["clinic_id", "finding_id", "surface_code"]
         }
       },
       "uniqueConstraints": {},
@@ -3874,12 +3592,8 @@
           "name": "odontogram_findings_clinic_id_clinics_id_fk",
           "tableFrom": "odontogram_findings",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3887,14 +3601,8 @@
           "name": "odontogram_findings_patient_tenant_fk",
           "tableFrom": "odontogram_findings",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4005,12 +3713,8 @@
           "name": "procedure_status_history_clinic_id_clinics_id_fk",
           "tableFrom": "procedure_status_history",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4018,14 +3722,8 @@
           "name": "procedure_status_history_procedure_tenant_fk",
           "tableFrom": "procedure_status_history",
           "tableTo": "procedures",
-          "columnsFrom": [
-            "clinic_id",
-            "procedure_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "procedure_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4065,12 +3763,8 @@
           "name": "procedure_surfaces_clinic_id_clinics_id_fk",
           "tableFrom": "procedure_surfaces",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4078,14 +3772,8 @@
           "name": "procedure_surfaces_procedure_tenant_fk",
           "tableFrom": "procedure_surfaces",
           "tableTo": "procedures",
-          "columnsFrom": [
-            "clinic_id",
-            "procedure_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "procedure_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4093,11 +3781,7 @@
       "compositePrimaryKeys": {
         "procedure_surfaces_clinic_id_procedure_id_surface_code_pk": {
           "name": "procedure_surfaces_clinic_id_procedure_id_surface_code_pk",
-          "columns": [
-            "clinic_id",
-            "procedure_id",
-            "surface_code"
-          ]
+          "columns": ["clinic_id", "procedure_id", "surface_code"]
         }
       },
       "uniqueConstraints": {},
@@ -4259,12 +3943,8 @@
           "name": "procedures_clinic_id_clinics_id_fk",
           "tableFrom": "procedures",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4272,14 +3952,8 @@
           "name": "procedures_patient_tenant_fk",
           "tableFrom": "procedures",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4287,14 +3961,8 @@
           "name": "procedures_provider_tenant_fk",
           "tableFrom": "procedures",
           "tableTo": "providers",
-          "columnsFrom": [
-            "clinic_id",
-            "provider_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "provider_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4451,12 +4119,8 @@
           "name": "treatment_plan_items_clinic_id_clinics_id_fk",
           "tableFrom": "treatment_plan_items",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4464,14 +4128,8 @@
           "name": "treatment_plan_items_plan_tenant_fk",
           "tableFrom": "treatment_plan_items",
           "tableTo": "treatment_plans",
-          "columnsFrom": [
-            "clinic_id",
-            "treatment_plan_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "treatment_plan_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4637,12 +4295,8 @@
           "name": "treatment_plans_clinic_id_clinics_id_fk",
           "tableFrom": "treatment_plans",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4650,14 +4304,8 @@
           "name": "treatment_plans_patient_tenant_fk",
           "tableFrom": "treatment_plans",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4757,12 +4405,8 @@
           "name": "ai_analysis_reviews_clinic_id_clinics_id_fk",
           "tableFrom": "ai_analysis_reviews",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4770,14 +4414,8 @@
           "name": "ai_analysis_reviews_run_tenant_fk",
           "tableFrom": "ai_analysis_reviews",
           "tableTo": "ai_analysis_runs",
-          "columnsFrom": [
-            "clinic_id",
-            "ai_analysis_run_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "ai_analysis_run_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4785,14 +4423,8 @@
           "name": "ai_analysis_reviews_provider_tenant_fk",
           "tableFrom": "ai_analysis_reviews",
           "tableTo": "providers",
-          "columnsFrom": [
-            "clinic_id",
-            "reviewed_by_provider_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "reviewed_by_provider_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4965,12 +4597,8 @@
           "name": "ai_analysis_runs_clinic_id_clinics_id_fk",
           "tableFrom": "ai_analysis_runs",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4978,14 +4606,8 @@
           "name": "ai_analysis_runs_patient_tenant_fk",
           "tableFrom": "ai_analysis_runs",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4993,14 +4615,8 @@
           "name": "ai_analysis_runs_study_tenant_fk",
           "tableFrom": "ai_analysis_runs",
           "tableTo": "xray_studies",
-          "columnsFrom": [
-            "clinic_id",
-            "xray_study_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "xray_study_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5008,14 +4624,8 @@
           "name": "ai_analysis_runs_result_file_tenant_fk",
           "tableFrom": "ai_analysis_runs",
           "tableTo": "files",
-          "columnsFrom": [
-            "clinic_id",
-            "result_file_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "result_file_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5184,12 +4794,8 @@
           "name": "anesthesia_assessments_clinic_id_clinics_id_fk",
           "tableFrom": "anesthesia_assessments",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5197,14 +4803,8 @@
           "name": "anesthesia_assessments_patient_tenant_fk",
           "tableFrom": "anesthesia_assessments",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5212,14 +4812,8 @@
           "name": "anesthesia_assessments_provider_tenant_fk",
           "tableFrom": "anesthesia_assessments",
           "tableTo": "providers",
-          "columnsFrom": [
-            "clinic_id",
-            "provider_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "provider_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5424,12 +5018,8 @@
           "name": "files_clinic_id_clinics_id_fk",
           "tableFrom": "files",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5437,14 +5027,8 @@
           "name": "files_patient_tenant_fk",
           "tableFrom": "files",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5452,14 +5036,8 @@
           "name": "files_uploader_tenant_fk",
           "tableFrom": "files",
           "tableTo": "memberships",
-          "columnsFrom": [
-            "clinic_id",
-            "uploaded_by_membership_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "uploaded_by_membership_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5607,12 +5185,8 @@
           "name": "xray_studies_clinic_id_clinics_id_fk",
           "tableFrom": "xray_studies",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5620,14 +5194,8 @@
           "name": "xray_studies_patient_tenant_fk",
           "tableFrom": "xray_studies",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5635,14 +5203,8 @@
           "name": "xray_studies_encounter_tenant_fk",
           "tableFrom": "xray_studies",
           "tableTo": "encounters",
-          "columnsFrom": [
-            "clinic_id",
-            "encounter_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "encounter_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5722,12 +5284,8 @@
           "name": "xray_study_files_clinic_id_clinics_id_fk",
           "tableFrom": "xray_study_files",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5735,14 +5293,8 @@
           "name": "xray_study_files_study_tenant_fk",
           "tableFrom": "xray_study_files",
           "tableTo": "xray_studies",
-          "columnsFrom": [
-            "clinic_id",
-            "xray_study_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "xray_study_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5750,14 +5302,8 @@
           "name": "xray_study_files_file_tenant_fk",
           "tableFrom": "xray_study_files",
           "tableTo": "files",
-          "columnsFrom": [
-            "clinic_id",
-            "file_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "file_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5765,11 +5311,7 @@
       "compositePrimaryKeys": {
         "xray_study_files_clinic_id_xray_study_id_file_id_pk": {
           "name": "xray_study_files_clinic_id_xray_study_id_file_id_pk",
-          "columns": [
-            "clinic_id",
-            "xray_study_id",
-            "file_id"
-          ]
+          "columns": ["clinic_id", "xray_study_id", "file_id"]
         }
       },
       "uniqueConstraints": {},
@@ -5921,12 +5463,8 @@
           "name": "invoice_items_clinic_id_clinics_id_fk",
           "tableFrom": "invoice_items",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5934,16 +5472,8 @@
           "name": "invoice_items_invoice_currency_tenant_fk",
           "tableFrom": "invoice_items",
           "tableTo": "invoices",
-          "columnsFrom": [
-            "clinic_id",
-            "invoice_id",
-            "currency"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id",
-            "currency"
-          ],
+          "columnsFrom": ["clinic_id", "invoice_id", "currency"],
+          "columnsTo": ["clinic_id", "id", "currency"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5951,14 +5481,8 @@
           "name": "invoice_items_service_tenant_fk",
           "tableFrom": "invoice_items",
           "tableTo": "services",
-          "columnsFrom": [
-            "clinic_id",
-            "service_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "service_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5966,14 +5490,8 @@
           "name": "invoice_items_procedure_tenant_fk",
           "tableFrom": "invoice_items",
           "tableTo": "procedures",
-          "columnsFrom": [
-            "clinic_id",
-            "procedure_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "procedure_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6202,12 +5720,8 @@
           "name": "invoices_clinic_id_clinics_id_fk",
           "tableFrom": "invoices",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6215,14 +5729,8 @@
           "name": "invoices_patient_tenant_fk",
           "tableFrom": "invoices",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6230,14 +5738,8 @@
           "name": "invoices_encounter_tenant_fk",
           "tableFrom": "invoices",
           "tableTo": "encounters",
-          "columnsFrom": [
-            "clinic_id",
-            "encounter_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "encounter_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6424,12 +5926,8 @@
           "name": "payments_clinic_id_clinics_id_fk",
           "tableFrom": "payments",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6437,14 +5935,8 @@
           "name": "payments_patient_tenant_fk",
           "tableFrom": "payments",
           "tableTo": "patients",
-          "columnsFrom": [
-            "clinic_id",
-            "patient_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "patient_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6452,16 +5944,8 @@
           "name": "payments_invoice_currency_tenant_fk",
           "tableFrom": "payments",
           "tableTo": "invoices",
-          "columnsFrom": [
-            "clinic_id",
-            "invoice_id",
-            "currency"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id",
-            "currency"
-          ],
+          "columnsFrom": ["clinic_id", "invoice_id", "currency"],
+          "columnsTo": ["clinic_id", "id", "currency"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6589,12 +6073,8 @@
           "name": "price_list_items_clinic_id_clinics_id_fk",
           "tableFrom": "price_list_items",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6602,16 +6082,8 @@
           "name": "price_list_items_list_currency_tenant_fk",
           "tableFrom": "price_list_items",
           "tableTo": "price_lists",
-          "columnsFrom": [
-            "clinic_id",
-            "price_list_id",
-            "currency"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id",
-            "currency"
-          ],
+          "columnsFrom": ["clinic_id", "price_list_id", "currency"],
+          "columnsTo": ["clinic_id", "id", "currency"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6619,14 +6091,8 @@
           "name": "price_list_items_service_tenant_fk",
           "tableFrom": "price_list_items",
           "tableTo": "services",
-          "columnsFrom": [
-            "clinic_id",
-            "service_id"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id"
-          ],
+          "columnsFrom": ["clinic_id", "service_id"],
+          "columnsTo": ["clinic_id", "id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6756,12 +6222,8 @@
           "name": "price_lists_clinic_id_clinics_id_fk",
           "tableFrom": "price_lists",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6911,12 +6373,8 @@
           "name": "refunds_clinic_id_clinics_id_fk",
           "tableFrom": "refunds",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6924,16 +6382,8 @@
           "name": "refunds_payment_currency_tenant_fk",
           "tableFrom": "refunds",
           "tableTo": "payments",
-          "columnsFrom": [
-            "clinic_id",
-            "payment_id",
-            "currency"
-          ],
-          "columnsTo": [
-            "clinic_id",
-            "id",
-            "currency"
-          ],
+          "columnsFrom": ["clinic_id", "payment_id", "currency"],
+          "columnsTo": ["clinic_id", "id", "currency"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7067,12 +6517,8 @@
           "name": "services_clinic_id_clinics_id_fk",
           "tableFrom": "services",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7230,12 +6676,8 @@
           "name": "audit_events_clinic_id_clinics_id_fk",
           "tableFrom": "audit_events",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7243,12 +6685,8 @@
           "name": "audit_events_actor_user_id_users_id_fk",
           "tableFrom": "audit_events",
           "tableTo": "users",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7256,12 +6694,8 @@
           "name": "audit_events_actor_membership_id_memberships_id_fk",
           "tableFrom": "audit_events",
           "tableTo": "memberships",
-          "columnsFrom": [
-            "actor_membership_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_membership_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7432,12 +6866,8 @@
           "name": "outbox_jobs_clinic_id_clinics_id_fk",
           "tableFrom": "outbox_jobs",
           "tableTo": "clinics",
-          "columnsFrom": [
-            "clinic_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["clinic_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7462,43 +6892,22 @@
     "public.ai_run_status": {
       "name": "ai_run_status",
       "schema": "public",
-      "values": [
-        "queued",
-        "running",
-        "succeeded",
-        "failed",
-        "cancelled"
-      ]
+      "values": ["queued", "running", "succeeded", "failed", "cancelled"]
     },
     "public.alert_severity": {
       "name": "alert_severity",
       "schema": "public",
-      "values": [
-        "info",
-        "warning",
-        "critical"
-      ]
+      "values": ["info", "warning", "critical"]
     },
     "public.allergy_status": {
       "name": "allergy_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "resolved",
-        "entered_in_error"
-      ]
+      "values": ["active", "inactive", "resolved", "entered_in_error"]
     },
     "public.anesthesia_approval_state": {
       "name": "anesthesia_approval_state",
       "schema": "public",
-      "values": [
-        "draft",
-        "pending_review",
-        "approved",
-        "rejected",
-        "superseded"
-      ]
+      "values": ["draft", "pending_review", "approved", "rejected", "superseded"]
     },
     "public.appointment_status": {
       "name": "appointment_status",
@@ -7516,154 +6925,77 @@
     "public.clinical_note_status": {
       "name": "clinical_note_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "signed",
-        "amended",
-        "entered_in_error"
-      ]
+      "values": ["draft", "signed", "amended", "entered_in_error"]
     },
     "public.clinician_review_status": {
       "name": "clinician_review_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "accepted",
-        "rejected",
-        "needs_revision"
-      ]
+      "values": ["pending", "accepted", "rejected", "needs_revision"]
     },
     "public.encounter_status": {
       "name": "encounter_status",
       "schema": "public",
-      "values": [
-        "open",
-        "signed",
-        "amended"
-      ]
+      "values": ["open", "signed", "amended"]
     },
     "public.file_status": {
       "name": "file_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "available",
-        "quarantined",
-        "deleted"
-      ]
+      "values": ["pending", "available", "quarantined", "deleted"]
     },
     "public.finding_status": {
       "name": "finding_status",
       "schema": "public",
-      "values": [
-        "active",
-        "resolved",
-        "entered_in_error"
-      ]
+      "values": ["active", "resolved", "entered_in_error"]
     },
     "public.invitation_status": {
       "name": "invitation_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "accepted",
-        "expired",
-        "revoked"
-      ]
+      "values": ["pending", "accepted", "expired", "revoked"]
     },
     "public.invoice_status": {
       "name": "invoice_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "issued",
-        "partially_paid",
-        "paid",
-        "void",
-        "uncollectible"
-      ]
+      "values": ["draft", "issued", "partially_paid", "paid", "void", "uncollectible"]
     },
     "public.medication_status": {
       "name": "medication_status",
       "schema": "public",
-      "values": [
-        "active",
-        "stopped",
-        "completed",
-        "entered_in_error"
-      ]
+      "values": ["active", "stopped", "completed", "entered_in_error"]
     },
     "public.membership_status": {
       "name": "membership_status",
       "schema": "public",
-      "values": [
-        "invited",
-        "active",
-        "suspended",
-        "revoked"
-      ]
+      "values": ["invited", "active", "suspended", "revoked"]
     },
     "public.outbox_status": {
       "name": "outbox_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "processing",
-        "completed",
-        "failed"
-      ]
+      "values": ["pending", "processing", "completed", "failed"]
     },
     "public.payment_method": {
       "name": "payment_method",
       "schema": "public",
-      "values": [
-        "cash",
-        "card",
-        "bank_transfer",
-        "insurance",
-        "other"
-      ]
+      "values": ["cash", "card", "bank_transfer", "insurance", "other"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "succeeded",
-        "failed",
-        "voided",
-        "partially_refunded",
-        "refunded"
-      ]
+      "values": ["pending", "succeeded", "failed", "voided", "partially_refunded", "refunded"]
     },
     "public.procedure_status": {
       "name": "procedure_status",
       "schema": "public",
-      "values": [
-        "planned",
-        "in_progress",
-        "completed",
-        "cancelled",
-        "entered_in_error"
-      ]
+      "values": ["planned", "in_progress", "completed", "cancelled", "entered_in_error"]
     },
     "public.refund_status": {
       "name": "refund_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "succeeded",
-        "failed",
-        "cancelled"
-      ]
+      "values": ["pending", "succeeded", "failed", "cancelled"]
     },
     "public.staff_kind": {
       "name": "staff_kind",
       "schema": "public",
-      "values": [
-        "provider",
-        "staff"
-      ]
+      "values": ["provider", "staff"]
     },
     "public.treatment_plan_status": {
       "name": "treatment_plan_status",
@@ -7681,12 +7013,7 @@
     "public.xray_study_status": {
       "name": "xray_study_status",
       "schema": "public",
-      "values": [
-        "ordered",
-        "acquired",
-        "reviewed",
-        "entered_in_error"
-      ]
+      "values": ["ordered", "acquired", "reviewed", "entered_in_error"]
     }
   },
   "schemas": {},

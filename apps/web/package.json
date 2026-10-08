@@ -7,11 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.e2e.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@dentalai/contracts": "0.0.0",
     "@dentalai/domain": "0.0.0",
     "@dentalai/ui": "0.0.0",
     "@lottiefiles/dotlottie-react": "^0.18.10",
@@ -27,6 +29,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.0",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "16.3.3",

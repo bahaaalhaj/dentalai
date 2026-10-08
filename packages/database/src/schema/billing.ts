@@ -59,11 +59,7 @@ export const priceLists = pgTable(
       table.name,
       table.effectiveFrom,
     ),
-    uniqueIndex('price_lists_clinic_id_currency_uidx').on(
-      table.clinicId,
-      table.id,
-      table.currency,
-    ),
+    uniqueIndex('price_lists_clinic_id_currency_uidx').on(table.clinicId, table.id, table.currency),
     check('price_lists_currency_chk', sql`${table.currency} ~ '^[A-Z]{3}$'`),
     check(
       'price_lists_range_chk',
@@ -119,11 +115,21 @@ export const invoices = pgTable(
     invoiceNumber: text('invoice_number').notNull(),
     status: invoiceStatus('status').default('draft').notNull(),
     currency: text('currency').notNull(),
-    subtotalMinor: bigint('subtotal_minor', { mode: 'bigint' }).default(sql`0`).notNull(),
-    discountMinor: bigint('discount_minor', { mode: 'bigint' }).default(sql`0`).notNull(),
-    taxMinor: bigint('tax_minor', { mode: 'bigint' }).default(sql`0`).notNull(),
-    totalMinor: bigint('total_minor', { mode: 'bigint' }).default(sql`0`).notNull(),
-    balanceMinor: bigint('balance_minor', { mode: 'bigint' }).default(sql`0`).notNull(),
+    subtotalMinor: bigint('subtotal_minor', { mode: 'bigint' })
+      .default(sql`0`)
+      .notNull(),
+    discountMinor: bigint('discount_minor', { mode: 'bigint' })
+      .default(sql`0`)
+      .notNull(),
+    taxMinor: bigint('tax_minor', { mode: 'bigint' })
+      .default(sql`0`)
+      .notNull(),
+    totalMinor: bigint('total_minor', { mode: 'bigint' })
+      .default(sql`0`)
+      .notNull(),
+    balanceMinor: bigint('balance_minor', { mode: 'bigint' })
+      .default(sql`0`)
+      .notNull(),
     issuedAt: timestamp('issued_at', { withTimezone: true }),
     dueAt: timestamp('due_at', { withTimezone: true }),
     voidedAt: timestamp('voided_at', { withTimezone: true }),
@@ -133,11 +139,7 @@ export const invoices = pgTable(
   },
   (table) => [
     uniqueIndex('invoices_clinic_number_uidx').on(table.clinicId, table.invoiceNumber),
-    uniqueIndex('invoices_clinic_id_currency_uidx').on(
-      table.clinicId,
-      table.id,
-      table.currency,
-    ),
+    uniqueIndex('invoices_clinic_id_currency_uidx').on(table.clinicId, table.id, table.currency),
     index('invoices_patient_idx').on(table.clinicId, table.patientId, table.createdAt),
     foreignKey({
       columns: [table.clinicId, table.patientId],
@@ -175,8 +177,12 @@ export const invoiceItems = pgTable(
     description: text('description').notNull(),
     quantity: numeric('quantity', { precision: 10, scale: 2 }).default('1').notNull(),
     unitAmountMinor: bigint('unit_amount_minor', { mode: 'bigint' }).notNull(),
-    discountMinor: bigint('discount_minor', { mode: 'bigint' }).default(sql`0`).notNull(),
-    taxMinor: bigint('tax_minor', { mode: 'bigint' }).default(sql`0`).notNull(),
+    discountMinor: bigint('discount_minor', { mode: 'bigint' })
+      .default(sql`0`)
+      .notNull(),
+    taxMinor: bigint('tax_minor', { mode: 'bigint' })
+      .default(sql`0`)
+      .notNull(),
     lineTotalMinor: bigint('line_total_minor', { mode: 'bigint' }).notNull(),
     currency: text('currency').notNull(),
     metadata: jsonb('metadata').$type<Record<string, unknown>>().default({}).notNull(),

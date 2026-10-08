@@ -5,6 +5,12 @@ SQL-visible TypeScript model and migration runner; committed SQL in `packages/da
 the review artifact. The Express API is the future database boundary. The browser is not configured to
 connect to PostgreSQL, and existing Supabase-backed features are intentionally unchanged in this phase.
 
+Phase 6 adds reviewed migration `0002_backend_auth.sql` for Better Auth credential accounts, opaque
+sessions, hashed reset-token verification storage, persistent rate limits/brute-force counters, and
+global append-only security events. `auth_sessions` binds its optional clinic context to the same
+membership **and user** through a composite FK. The older `sessions` table is not used for new login.
+See [authentication.md](authentication.md) for tenant authorization and operator provisioning.
+
 ## Identifier, tenancy, time, and money rules
 
 - Primary identifiers are UUIDs generated with PostgreSQL `gen_random_uuid()`. Imports may retain a
@@ -61,20 +67,25 @@ erDiagram
 
 ## Table catalog
 
-| Domain | Tables | Key history and integrity behavior |
-| --- | --- | --- |
-| Clinic | `clinics`, `clinic_settings`, `locations`, `operatories`, `working_hours` | Valid IANA timezone checks; operatory/location tenant consistency |
-| Identity | `users`, `memberships`, `roles`, `membership_roles`, `invitations`, `sessions` | Users are global; roles and membership links are clinic-bound |
-| People | `patients`, `staff`, `providers` | Patients are clinical entities; portal identity is optional |
-| Scheduling | `appointment_types`, `appointments`, `appointment_status_history`, `schedule_blocks` | Provider, operatory, and patient exclusion constraints; append-only status events; appointment/block collision triggers |
-| Clinical | `encounters`, `clinical_notes`, `medical_alerts`, `allergies`, `medications` | Signed notes are immutable and amendments create versions |
-| Dental | `odontogram_findings`, `odontogram_finding_surfaces`, `procedures`, `procedure_surfaces`, `procedure_status_history` | Tooth and surface codes are explicit; procedure history is append-only |
-| Planning | `treatment_plans`, `treatment_plan_items` | Plan versions can supersede earlier plans without overwriting history |
-| Imaging and decisions | `files`, `xray_studies`, `xray_study_files`, `ai_analysis_runs`, `ai_analysis_reviews`, `anesthesia_assessments` | AI success requires named/versioned model and result artifact; reviews append; finalized anesthesia assessments are immutable and versioned |
-| Billing | `services`, `price_lists`, `price_list_items`, `invoices`, `invoice_items`, `payments`, `refunds` | Integer minor units, currency-consistent FKs, non-negative checks, refund cap |
-| Operations | `audit_events`, `outbox_jobs` | Audit events are append-only; outbox jobs have tenant-scoped idempotency keys |
+| Domain                | Tables                                                                                                               | Key history and integrity behavior                                                                                                          |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Clinic                | `clinics`, `clinic_settings`, `locations`, `operatories`, `working_hours`                                            | Valid IANA timezone checks; operatory/location tenant consistency                                                                           |
+| Identity              | `users`, `memberships`, `roles`, `membership_roles`, `invitations`, `sessions`                                       | Users are global; roles and membership links are clinic-bound                                                                               |
+| People                | `patients`, `staff`, `providers`                                                                                     | Patients are clinical entities; portal identity is optional                                                                                 |
+| Scheduling            | `appointment_types`, `appointments`, `appointment_status_history`, `schedule_blocks`                                 | Provider, operatory, and patient exclusion constraints; append-only status events; appointment/block collision triggers                     |
+| Clinical              | `encounters`, `clinical_notes`, `medical_alerts`, `allergies`, `medications`                                         | Signed notes are immutable and amendments create versions                                                                                   |
+| Dental                | `odontogram_findings`, `odontogram_finding_surfaces`, `procedures`, `procedure_surfaces`, `procedure_status_history` | Tooth and surface codes are explicit; procedure history is append-only                                                                      |
+| Planning              | `treatment_plans`, `treatment_plan_items`                                                                            | Plan versions can supersede earlier plans without overwriting history                                                                       |
+| Imaging and decisions | `files`, `xray_studies`, `xray_study_files`, `ai_analysis_runs`, `ai_analysis_reviews`, `anesthesia_assessments`     | AI success requires named/versioned model and result artifact; reviews append; finalized anesthesia assessments are immutable and versioned |
+| Billing               | `services`, `price_lists`, `price_list_items`, `invoices`, `invoice_items`, `payments`, `refunds`                    | Integer minor units, currency-consistent FKs, non-negative checks, refund cap                                                               |
+| Operations            | `audit_events`, `outbox_jobs`                                                                                        | Audit events are append-only; outbox jobs have tenant-scoped idempotency keys                                                               |
 
 ## Scheduling collision semantics
+
+Phase 7 adds `clinic_closures` and hashed, short-lived `appointment_slot_offers`, appointment revision/
+last-actor columns, bidirectional closure collision checks, delete/transition/history guards, and
+database-generated appointment audit events. See [appointments.md](appointments.md). Migration
+`0003_backend_scheduling.sql` is additive; no legacy appointment data is deleted or imported.
 
 Intervals use half-open ranges `[starts_at, ends_at)`, allowing one appointment to begin exactly when
 another ends. Active appointments reserve their patient, provider, and operatory. `cancelled` and
@@ -115,8 +126,11 @@ the seed twice to verify idempotency, exercises constraints, and drops the datab
 2. Select the canonical tooth-numbering vocabulary (FDI, Universal, or a normalized code system) before
    production clinical migration.
 3. Define patient deduplication, medical-record-number allocation, and optional portal-account linking.
-4. Define daylight-saving behavior for recurring working hours and future recurrence expansion.
-5. Choose the authentication/session provider and then design PostgreSQL row-level-security policies.
+4. Phase 7 skips ambiguous/nonexistent DST slots and offset-crossing durations. Define future
+   recurrence expansion and overnight working-hours behavior before extending that policy.
+5. Better Auth is selected in Phase 6. Application membership/tenant enforcement is implemented;
+   PostgreSQL row-level-security defense-in-depth and a least-privilege deployment DB role still need
+   a separate deployment design/review.
 6. Set legal retention, correction, archival, and erasure rules per deployment jurisdiction.
 7. Decide whether insurance claims, payer adjustments, and split tender need first-class models.
 8. Decide whether legacy simulated AI/anesthetic JSON is discarded or retained in a quarantined audit

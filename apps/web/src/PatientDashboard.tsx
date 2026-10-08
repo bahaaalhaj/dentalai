@@ -1,33 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
-import type { Profile, Appointment, ToothStatus, XrayImage } from './lib/supabase';
+import { apiClient } from './lib/api-client';
+import type { Profile, ToothStatus, XrayImage } from './lib/supabase';
 import { TeethChart } from './components/TeethChart';
-import { Calendar, Clock, User, LogOut, Plus, X, Trash2, FileText, Brain } from 'lucide-react';
+import { Calendar, Clock, User, LogOut, FileText, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from './lib/utils';
-
-// تم تعديل المواعيد لتصبح من 8:00 AM حتى 5:00 PM
-const TIME_SLOTS = [
-  '08:00',
-  '08:30',
-  '09:00',
-  '09:30',
-  '10:00',
-  '10:30',
-  '11:00',
-  '11:30',
-  '12:00',
-  '12:30',
-  '13:00',
-  '13:30',
-  '14:00',
-  '14:30',
-  '15:00',
-  '15:30',
-  '16:00',
-  '16:30',
-  '17:00',
-];
 
 export function PatientDashboard() {
   const [activeTab, setActiveTab] = useState(() => {
@@ -43,32 +21,12 @@ export function PatientDashboard() {
   }, [activeTab]);
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [teethStatus, setTeethStatus] = useState<ToothStatus>({});
   const [doctorAdvice, setDoctorAdvice] = useState<string | null>(null);
   const [patientXrays, setPatientXrays] = useState<XrayImage[]>([]);
 
-  // Modal and Booking States
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [bookingLoading, setBookingLoading] = useState(false);
-
-  // Custom Time Selector States
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-
-  // Fetch booked slots whenever the date changes
-  useEffect(() => {
-    if (selectedDate) {
-      checkBookedSlots(selectedDate);
-      setSelectedTime(''); // Reset time when date changes
-    }
-  }, [selectedDate]);
-
   const loadData = React.useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user } = await apiClient.me();
     if (user) {
       const { data: profileData } = await supabase
         .from('profiles')
@@ -76,38 +34,6 @@ export function PatientDashboard() {
         .eq('id', user.id)
         .single();
       setProfile(profileData);
-
-      const { data: apptData } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('patient_id', user.id)
-        .order('date', { ascending: true });
-
-      // Auto-cleanup past booked appointments
-      const now = new Date();
-      const todayString = format(now, 'yyyy-MM-dd');
-      const currentTime = format(now, 'HH:mm');
-
-      const pastBooked =
-        apptData?.filter(
-          (a) =>
-            a.status === 'booked' &&
-            (a.date < todayString || (a.date === todayString && a.time < currentTime)),
-        ) || [];
-
-      if (pastBooked.length > 0) {
-        await supabase
-          .from('appointments')
-          .delete()
-          .in(
-            'id',
-            pastBooked.map((a) => a.id),
-          );
-      }
-
-      const validAppts = apptData?.filter((a) => !pastBooked.find((p) => p.id === a.id)) || [];
-
-      setAppointments(validAppts);
 
       const { data: recordData } = await supabase
         .from('medical_records')
@@ -139,9 +65,6 @@ export function PatientDashboard() {
 
     const updatesChannel = supabase
       .channel('patient_dashboard_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () =>
-        loadData(),
-      )
       .on('postgres_changes', { event: '*', schema: 'public', table: 'medical_records' }, () =>
         loadData(),
       )
@@ -155,66 +78,10 @@ export function PatientDashboard() {
     };
   }, [loadData]);
 
-  async function checkBookedSlots(date: string) {
-    const { data } = await supabase.from('appointments').select('time').eq('date', date);
-
-    if (data) {
-      const times = data.map((appt) => appt.time.slice(0, 5));
-      setBookedSlots(times);
-    }
-  }
-
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await apiClient.logout();
     window.location.href = '/';
   };
-
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this appointment?')) {
-      const { error } = await supabase.from('appointments').delete().eq('id', id);
-      if (!error) setAppointments(appointments.filter((a) => a.id !== id));
-      else alert('Error deleting appointment: ' + error.message);
-    }
-  };
-
-  const handleBook = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedDate || !selectedTime) return alert('Please select a date and time slot.');
-
-    // Check if Friday (Holiday)
-    const dateObj = new Date(selectedDate);
-    if (dateObj.getDay() === 5) {
-      return alert('The clinic is closed on Fridays. Please select another day.');
-    }
-
-    setBookingLoading(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      const { error } = await supabase.from('appointments').insert([
-        {
-          patient_id: user.id,
-          date: selectedDate,
-          time: selectedTime,
-          status: 'booked',
-          confirmation_status: 'pending',
-        },
-      ]);
-
-      if (!error) {
-        setIsModalOpen(false);
-        setSelectedDate('');
-        setSelectedTime('');
-        await loadData();
-      } else {
-        alert('Error booking appointment: ' + error.message);
-      }
-    }
-    setBookingLoading(false);
-  };
-  const nextBookedAppointment = appointments.find((appointment) => appointment.status === 'booked');
 
   return (
     <div className="min-h-screen bg-slate-50 flex relative">
@@ -292,56 +159,10 @@ export function PatientDashboard() {
                   )}
 
                   <section className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-bold text-slate-900">Upcoming Appointments</h2>
-                      <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 text-indigo-600 font-semibold text-sm hover:underline"
-                      >
-                        <Plus className="w-4 h-4" /> Book New
-                      </button>
-                    </div>
-
-                    {appointments.filter((a) => a.status === 'booked').length > 0 ? (
-                      <div className="space-y-4">
-                        {appointments
-                          .filter((a) => a.status === 'booked')
-                          .map((appt) => (
-                            <div
-                              key={appt.id}
-                              className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-indigo-100 transition-colors"
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-slate-50 rounded-xl flex flex-col items-center justify-center text-slate-600">
-                                  <span className="text-[10px] font-bold uppercase">
-                                    {format(new Date(appt.date), 'MMM')}
-                                  </span>
-                                  <span className="text-lg font-bold leading-none">
-                                    {format(new Date(appt.date), 'dd')}
-                                  </span>
-                                </div>
-                                <div>
-                                  <p className="font-bold text-slate-900">{appt.time}</p>
-                                  <p className="text-sm text-slate-500 capitalize">{appt.status}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <button
-                                  onClick={() => handleDelete(appt.id)}
-                                  className="text-slate-400 hover:text-red-600 transition-colors p-2"
-                                >
-                                  <Trash2 className="w-5 h-5" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                        <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-500">No upcoming appointments.</p>
-                      </div>
-                    )}
+                    <h2 className="text-xl font-bold text-slate-900 mb-4">Appointments</h2>
+                    <a href="/appointments" className="text-indigo-600 font-semibold">
+                      Book, reschedule, cancel, and view appointment history
+                    </a>
                   </section>
 
                   <section>
@@ -413,9 +234,7 @@ export function PatientDashboard() {
                   <div className="bg-white/10 p-3 rounded-xl">
                     <p className="text-[10px] uppercase font-bold text-indigo-200">Next Visit</p>
                     <p className="text-xl font-bold">
-                      {nextBookedAppointment
-                        ? format(new Date(nextBookedAppointment.date), 'dd MMM')
-                        : 'Soon'}
+                      <a href="/appointments">View calendar</a>
                     </p>
                   </div>
                 </div>
@@ -455,108 +274,6 @@ export function PatientDashboard() {
           </div>
         </div>
       </main>
-
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-900">Book New Appointment</h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-2"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleBook} className="p-6 flex flex-col md:flex-row gap-8">
-              <div className="md:w-1/3 border-r border-slate-100 pr-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-4">
-                  1. Select Date
-                </label>
-                <input
-                  type="date"
-                  required
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                />
-                {selectedDate &&
-                  (new Date(selectedDate).getDay() === 5 ? (
-                    <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold border border-red-100 flex items-center gap-2">
-                      <X className="w-4 h-4" /> Clinic Holiday (Friday)
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-500 mt-4 text-center">
-                      Fetching availability...
-                    </p>
-                  ))}
-              </div>
-
-              <div className="md:w-2/3">
-                <label className="block text-sm font-semibold text-slate-700 mb-4">
-                  2. Select Time (8 AM - 5 PM)
-                </label>
-
-                {!selectedDate ? (
-                  <div className="h-48 flex items-center justify-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <p className="text-slate-400">Please select a date first</p>
-                  </div>
-                ) : new Date(selectedDate).getDay() === 5 ? (
-                  <div className="h-48 flex flex-col items-center justify-center bg-red-50 rounded-xl border border-dashed border-red-200 text-center px-4">
-                    <X className="w-12 h-12 text-red-300 mb-2" />
-                    <p className="text-red-600 font-bold">Closed on Fridays</p>
-                    <p className="text-red-500 text-xs">
-                      The clinic is on weekly holiday. Please choose another day.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                    {TIME_SLOTS.map((time) => {
-                      const isBooked = bookedSlots.includes(time);
-                      const isSelected = selectedTime === time;
-
-                      return (
-                        <button
-                          key={time}
-                          type="button"
-                          disabled={isBooked}
-                          onClick={() => setSelectedTime(time)}
-                          className={cn(
-                            'py-2 px-1 rounded-lg text-sm font-semibold transition-all border',
-                            isBooked
-                              ? 'bg-slate-100 text-slate-300 border-slate-100 cursor-not-allowed opacity-60'
-                              : isSelected
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
-                                : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:text-indigo-600',
-                          )}
-                        >
-                          {time}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <div className="mt-8 pt-6 border-t border-slate-100">
-                  <button
-                    type="submit"
-                    disabled={bookingLoading || !selectedTime}
-                    className="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {bookingLoading
-                      ? 'Confirming...'
-                      : selectedTime
-                        ? `Confirm ${selectedTime} Appointment`
-                        : 'Select a time to confirm'}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
