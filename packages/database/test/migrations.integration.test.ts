@@ -49,7 +49,32 @@ afterAll(async () => {
 });
 
 describe('migrations from zero', () => {
-  it('creates the complete schema and records all four reviewed migrations', async () => {
+  it('rejects changed migration history without applying SQL or altering retained data', async () => {
+    const row = (
+      await testPool.query<{ id: number; hash: string }>(
+        'SELECT id,hash FROM drizzle.__drizzle_migrations ORDER BY created_at LIMIT 1',
+      )
+    ).rows[0]!;
+    await testPool.query(
+      "UPDATE drizzle.__drizzle_migrations SET hash='unreviewed-history' WHERE id=$1",
+      [row.id],
+    );
+    try {
+      await expect(migrateDatabase(testUrl.toString())).rejects.toThrow(
+        'Migration history differs',
+      );
+      expect(
+        (await testPool.query('SELECT 1 FROM patients WHERE id=$1', [ids.patient])).rowCount,
+      ).toBe(1);
+    } finally {
+      await testPool.query('UPDATE drizzle.__drizzle_migrations SET hash=$1 WHERE id=$2', [
+        row.hash,
+        row.id,
+      ]);
+    }
+    await expect(migrateDatabase(testUrl.toString())).resolves.toBeUndefined();
+  });
+  it('creates the complete schema and records all five reviewed migrations', async () => {
     const tables = await testPool.query<{ count: string }>(
       `SELECT count(*)::text AS count
        FROM information_schema.tables
@@ -60,7 +85,7 @@ describe('migrations from zero', () => {
     );
 
     expect(Number(tables.rows[0]?.count)).toBeGreaterThanOrEqual(45);
-    expect(migrations.rows[0]?.count).toBe('4');
+    expect(migrations.rows[0]?.count).toBe('5');
   });
 
   it('loads only explicitly fictional development identities and is idempotent', async () => {
@@ -135,6 +160,64 @@ describe('tenant and scheduling constraints', () => {
 });
 
 describe('money and clinical constraints', () => {
+  it('rejects an encounter attached to another patient appointment in the same clinic', async () => {
+    await expectPgError(
+      testPool.query(
+        `INSERT INTO encounters(clinic_id,patient_id,appointment_id,provider_id,started_at)
+       VALUES($1,$2,'10000000-0000-4000-8000-000000000016',$3,now())`,
+        [ids.clinic, ids.secondPatient, ids.provider],
+      ),
+      '23503',
+    );
+  });
+  it.each(['note', 'finding', 'procedure', 'study', 'assessment'])(
+    'rejects a %s attached to another patient encounter in the same clinic',
+    async (kind) => {
+      const encounterId = randomUUID();
+      await testPool.query(
+        'INSERT INTO encounters(id,clinic_id,patient_id,provider_id,started_at) VALUES($1,$2,$3,$4,now())',
+        [encounterId, ids.clinic, ids.patient, ids.provider],
+      );
+      const statements: Record<string, { sql: string; values: unknown[] }> = {
+        note: {
+          sql: "INSERT INTO clinical_notes(clinic_id,patient_id,encounter_id,note_group_id,version,status,note_type,body,authored_by_membership_id) VALUES($1,$2,$3,$4,1,'draft','progress','Fictional test',$5)",
+          values: [ids.clinic, ids.secondPatient, encounterId, randomUUID(), ids.membership],
+        },
+        finding: {
+          sql: "INSERT INTO odontogram_findings(clinic_id,patient_id,encounter_id,tooth_code,dentition,finding_code,recorded_by_membership_id) VALUES($1,$2,$3,'11','permanent','fictional',$4)",
+          values: [ids.clinic, ids.secondPatient, encounterId, ids.membership],
+        },
+        procedure: {
+          sql: "INSERT INTO procedures(clinic_id,patient_id,encounter_id,provider_id,procedure_code,description) VALUES($1,$2,$3,$4,'fictional','Fictional test')",
+          values: [ids.clinic, ids.secondPatient, encounterId, ids.provider],
+        },
+        study: {
+          sql: "INSERT INTO xray_studies(clinic_id,patient_id,encounter_id,study_type) VALUES($1,$2,$3,'fictional')",
+          values: [ids.clinic, ids.secondPatient, encounterId],
+        },
+        assessment: {
+          sql: "INSERT INTO anesthesia_assessments(clinic_id,patient_id,encounter_id,provider_id,rule_set_version,inputs) VALUES($1,$2,$3,$4,'fictional-no-clinical-use','{}')",
+          values: [ids.clinic, ids.secondPatient, encounterId, ids.provider],
+        },
+      };
+      const statement = statements[kind]!;
+      await expectPgError(testPool.query(statement.sql, statement.values), '23503');
+    },
+  );
+  it('rejects AI metadata attached to another patient study; no inference is performed', async () => {
+    const studyId = randomUUID();
+    await testPool.query(
+      "INSERT INTO xray_studies(id,clinic_id,patient_id,study_type) VALUES($1,$2,$3,'fictional')",
+      [studyId, ids.clinic, ids.patient],
+    );
+    await expectPgError(
+      testPool.query(
+        "INSERT INTO ai_analysis_runs(clinic_id,patient_id,xray_study_id,requested_by_membership_id,input_manifest) VALUES($1,$2,$3,$4,'{}'::jsonb)",
+        [ids.clinic, ids.secondPatient, studyId, ids.membership],
+      ),
+      '23503',
+    );
+  });
   it('rejects non-positive money and non-ISO currency casing', async () => {
     await expectPgError(
       testPool.query(

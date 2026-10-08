@@ -91,6 +91,16 @@ export const xrayStudies = pgTable(
   },
   (table) => [
     uniqueIndex('xray_studies_clinic_id_uidx').on(table.clinicId, table.id),
+    uniqueIndex('xray_studies_clinic_id_patient_uidx').on(
+      table.clinicId,
+      table.id,
+      table.patientId,
+    ),
+    foreignKey({
+      columns: [table.clinicId, table.encounterId, table.patientId],
+      foreignColumns: [encounters.clinicId, encounters.id, encounters.patientId],
+      name: 'xray_studies_encounter_patient_fk',
+    }).onDelete('restrict'),
     index('xray_studies_patient_idx').on(table.clinicId, table.patientId, table.createdAt),
     foreignKey({
       columns: [table.clinicId, table.patientId],
@@ -163,6 +173,11 @@ export const aiAnalysisRuns = pgTable(
   },
   (table) => [
     uniqueIndex('ai_analysis_runs_clinic_id_uidx').on(table.clinicId, table.id),
+    foreignKey({
+      columns: [table.clinicId, table.xrayStudyId, table.patientId],
+      foreignColumns: [xrayStudies.clinicId, xrayStudies.id, xrayStudies.patientId],
+      name: 'ai_analysis_runs_study_patient_fk',
+    }).onDelete('restrict'),
     index('ai_analysis_runs_study_idx').on(table.clinicId, table.xrayStudyId, table.createdAt),
     foreignKey({
       columns: [table.clinicId, table.patientId],
@@ -244,6 +259,11 @@ export const anesthesiaAssessments = pgTable(
   },
   (table) => [
     uniqueIndex('anesthesia_assessments_clinic_id_uidx').on(table.clinicId, table.id),
+    foreignKey({
+      columns: [table.clinicId, table.encounterId, table.patientId],
+      foreignColumns: [encounters.clinicId, encounters.id, encounters.patientId],
+      name: 'anesthesia_assessments_encounter_patient_fk',
+    }).onDelete('restrict'),
     index('anesthesia_assessments_patient_idx').on(
       table.clinicId,
       table.patientId,

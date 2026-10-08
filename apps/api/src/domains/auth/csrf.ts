@@ -16,10 +16,17 @@ export function csrfProtection(
   origin: string,
 ): { issue: RequestHandler; verify: RequestHandler } {
   const signature = (value: string) => createHmac('sha256', secret).update(value).digest('hex');
+  const validToken = (token: string | undefined): token is string => {
+    if (!token || !/^[a-f0-9]{64}\.[a-f0-9]{64}$/.test(token)) return false;
+    const [nonce, mac] = token.split('.');
+    return !!nonce && !!mac && timingSafeEqual(Buffer.from(mac), Buffer.from(signature(nonce)));
+  };
   return {
-    issue: (_request, response) => {
+    issue: (request, response) => {
       const nonce = randomBytes(32).toString('hex');
-      const token = `${nonce}.${signature(nonce)}`;
+      const existing = readCookie(request, cookieName);
+      // Refresh the cookie lifetime without invalidating another in-flight mutation in this browser.
+      const token = validToken(existing) ? existing : `${nonce}.${signature(nonce)}`;
       response.setHeader('cache-control', 'no-store');
       response.cookie(cookieName, token, {
         secure: true,
@@ -37,16 +44,9 @@ export function csrfProtection(
       }
       const token = request.header('x-csrf-token');
       const cookie = readCookie(request, cookieName);
-      const [nonce, mac] = token?.split('.') ?? [];
-      const expected = nonce ? signature(nonce) : '';
-      if (
-        request.header('origin') !== origin ||
-        !token ||
-        cookie !== token ||
-        !mac ||
-        !/^[a-f0-9]{64}$/.test(mac) ||
-        !timingSafeEqual(Buffer.from(mac), Buffer.from(expected))
-      ) {
+      // Validate both fixed-length components before constant-time comparison. An empty nonce
+      // otherwise creates unequal buffers and turns a rejected request into a RangeError/500.
+      if (request.header('origin') !== origin || !token || cookie !== token || !validToken(token)) {
         next(new DomainError('CSRF_REJECTED', 'Refresh the page and try again.', 403));
         return;
       }

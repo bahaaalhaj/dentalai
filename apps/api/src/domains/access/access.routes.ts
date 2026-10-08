@@ -101,13 +101,6 @@ export function createAccessRouter(
     asyncHandler(async (_request, response) => {
       const access = context(response);
       await repository.revoke(access, getValidated<{ id: string }>(response, 'params').id);
-      await repository.security(
-        'auth.session_revoked',
-        true,
-        access.userId,
-        access.requestId,
-        access.membership?.clinicId,
-      );
       sendValidated(response, SuccessSchema, { success: true });
     }),
   );
@@ -130,7 +123,6 @@ export function createAccessRouter(
         );
         throw error;
       }
-      await repository.security('auth.clinic_selected', true, access.userId, access.requestId);
       sendValidated(response, SuccessSchema, { success: true });
     }),
   );
@@ -166,13 +158,6 @@ export function createAccessRouter(
         options.sendMail,
         options.origin,
       );
-      await repository.security(
-        'auth.invitation_created',
-        true,
-        access.userId,
-        access.requestId,
-        access.membership?.clinicId,
-      );
       sendValidated(response, InvitationSchema, invitation);
     }),
   );
@@ -180,18 +165,11 @@ export function createAccessRouter(
     '/invitations/:id',
     validateRequest({ params: IdParamsSchema }),
     asyncHandler(async (_request, response) => {
-      const membership = await clinic(response, administrators);
+      await clinic(response, administrators);
       const access = context(response);
       await repository.revokeInvitation(
-        membership.clinicId,
+        access,
         getValidated<{ id: string }>(response, 'params').id,
-      );
-      await repository.security(
-        'auth.invitation_revoked',
-        true,
-        access.userId,
-        access.requestId,
-        membership.clinicId,
       );
       sendValidated(response, SuccessSchema, { success: true });
     }),
@@ -201,17 +179,7 @@ export function createAccessRouter(
     validateRequest({ body: InvitationAcceptSchema }),
     asyncHandler(async (_request, response) => {
       const access = context(response);
-      const clinicId = await repository.accept(
-        access,
-        getValidated<{ token: string }>(response, 'body').token,
-      );
-      await repository.security(
-        'auth.invitation_accepted',
-        true,
-        access.userId,
-        access.requestId,
-        clinicId,
-      );
+      await repository.accept(access, getValidated<{ token: string }>(response, 'body').token);
       sendValidated(response, SuccessSchema, { success: true });
     }),
   );

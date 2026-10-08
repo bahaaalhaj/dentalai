@@ -1,5 +1,5 @@
 import { createHash, createHmac, randomBytes } from 'node:crypto';
-import type { Pool } from 'pg';
+import type { Pool, PoolClient } from 'pg';
 import { schema, type DentalDatabase } from '@dentalai/database';
 import { AuthIdentitySchema, type AuthIdentity, type ClinicRole } from '@dentalai/contracts';
 import { DomainError } from '../../errors/domain-errors.js';
@@ -19,6 +19,58 @@ export class AccessRepository {
     private readonly database: DentalDatabase,
   ) {}
 
+  private async transaction<T>(operation: (client: PoolClient) => Promise<T>): Promise<T> {
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      const result = await operation(client);
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505')
+        throw new DomainError('INVITATION_CONFLICT', 'A pending invitation already exists.', 409);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  private async administrativeAccess(client: PoolClient, context: AccessContext): Promise<void> {
+    const membership = context.membership;
+    if (!membership) throw new DomainError('ACCESS_DENIED', 'Select a clinic first.', 403);
+    const result = await client.query(
+      `SELECT m.id FROM memberships m JOIN users u ON u.id=m.user_id AND u.disabled_at IS NULL
+       JOIN clinics c ON c.id=m.clinic_id AND c.active
+       JOIN auth_sessions s ON s.id=$3 AND s.user_id=u.id AND s.expires_at>now()
+       JOIN membership_roles mr ON mr.clinic_id=m.clinic_id AND mr.membership_id=m.id
+       JOIN roles r ON r.clinic_id=mr.clinic_id AND r.id=mr.role_id
+       WHERE m.id=$1 AND m.clinic_id=$2 AND m.user_id=$4 AND m.status='active'
+       AND r.key IN ('clinic_owner','clinic_admin') FOR SHARE OF m,u,c,s,mr,r`,
+      [membership.id, membership.clinicId, context.sessionId, context.userId],
+    );
+    if (!result.rowCount) throw new DomainError('ACCESS_DENIED', 'Clinic access denied.', 403);
+  }
+
+  private async transactionalSecurity(
+    client: PoolClient,
+    context: AccessContext,
+    clinicId: string,
+    action: string,
+    entityType: string,
+    entityId: string,
+  ): Promise<void> {
+    await client.query(
+      'INSERT INTO security_events(clinic_id,user_id,action,success,request_id) VALUES($1,$2,$3,true,$4)',
+      [clinicId, context.userId, action, context.requestId],
+    );
+    await client.query(
+      `INSERT INTO audit_events(clinic_id,actor_user_id,action,entity_type,entity_id,request_id,data)
+       VALUES($1,$2,$3,$4,$5,$6,'{"success":true}'::jsonb)`,
+      [clinicId, context.userId, action, entityType, entityId, context.requestId],
+    );
+  }
+
   async security(
     action: string,
     success: boolean,
@@ -26,23 +78,25 @@ export class AccessRepository {
     requestId?: string,
     clinicId?: string,
   ): Promise<void> {
-    await this.database.insert(schema.securityEvents).values({
-      action,
-      success,
-      ...(userId ? { userId } : {}),
-      ...(requestId ? { requestId } : {}),
-      ...(clinicId ? { clinicId } : {}),
-    });
-    if (clinicId) {
-      await this.database.insert(schema.auditEvents).values({
-        clinicId,
+    await this.database.transaction(async (transaction) => {
+      await transaction.insert(schema.securityEvents).values({
         action,
-        entityType: 'security',
-        ...(userId ? { actorUserId: userId } : {}),
+        success,
+        ...(userId ? { userId } : {}),
         ...(requestId ? { requestId } : {}),
-        data: { success },
+        ...(clinicId ? { clinicId } : {}),
       });
-    }
+      if (clinicId) {
+        await transaction.insert(schema.auditEvents).values({
+          clinicId,
+          action,
+          entityType: 'security',
+          ...(userId ? { actorUserId: userId } : {}),
+          ...(requestId ? { requestId } : {}),
+          data: { success },
+        });
+      }
+    });
   }
 
   async identity(userId: string, sessionId: string): Promise<AuthIdentity> {
@@ -88,13 +142,26 @@ export class AccessRepository {
   }
 
   async select(context: AccessContext, membershipId: string): Promise<void> {
-    const result = await this.pool.query(
-      `UPDATE auth_sessions s SET active_membership_id=m.id,clinic_id=m.clinic_id
+    await this.transaction(async (client) => {
+      const result = await client.query(
+        `UPDATE auth_sessions s SET active_membership_id=m.id,clinic_id=m.clinic_id
        FROM memberships m JOIN clinics c ON c.id=m.clinic_id AND c.active
-       WHERE s.id=$1 AND s.user_id=$2 AND m.id=$3 AND m.user_id=s.user_id AND m.status='active'`,
-      [context.sessionId, context.userId, membershipId],
-    );
-    if (result.rowCount !== 1) throw new DomainError('ACCESS_DENIED', 'Clinic access denied.', 403);
+       JOIN users u ON u.id=m.user_id AND u.disabled_at IS NULL
+       WHERE s.id=$1 AND s.user_id=$2 AND s.expires_at>now() AND m.id=$3 AND m.user_id=s.user_id AND m.status='active'
+       RETURNING m.clinic_id`,
+        [context.sessionId, context.userId, membershipId],
+      );
+      if (result.rowCount !== 1)
+        throw new DomainError('ACCESS_DENIED', 'Clinic access denied.', 403);
+      await this.transactionalSecurity(
+        client,
+        context,
+        String(result.rows[0]?.clinic_id),
+        'auth.clinic_selected',
+        'membership',
+        membershipId,
+      );
+    });
   }
 
   async sessions(context: AccessContext) {
@@ -111,11 +178,27 @@ export class AccessRepository {
   }
 
   async revoke(context: AccessContext, sessionId: string): Promise<void> {
-    const result = await this.pool.query('DELETE FROM auth_sessions WHERE id=$1 AND user_id=$2', [
-      sessionId,
-      context.userId,
-    ]);
-    if (result.rowCount !== 1) throw new DomainError('NOT_FOUND', 'Session not found.', 404);
+    await this.transaction(async (client) => {
+      const result = await client.query('DELETE FROM auth_sessions WHERE id=$1 AND user_id=$2', [
+        sessionId,
+        context.userId,
+      ]);
+      if (result.rowCount !== 1) throw new DomainError('NOT_FOUND', 'Session not found.', 404);
+      if (context.membership)
+        await this.transactionalSecurity(
+          client,
+          context,
+          context.membership.clinicId,
+          'auth.session_revoked',
+          'session',
+          sessionId,
+        );
+      else
+        await client.query(
+          "INSERT INTO security_events(user_id,action,success,request_id) VALUES($1,'auth.session_revoked',true,$2)",
+          [context.userId, context.requestId],
+        );
+    });
   }
 
   async invitationList(clinicId: string) {
@@ -149,14 +232,31 @@ export class AccessRepository {
     if (!membership) throw new DomainError('ACCESS_DENIED', 'Select a clinic first.', 403);
     const token = randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 48 * 3_600_000);
-    const result = await this.pool.query<{ id: string }>(
-      `INSERT INTO invitations(clinic_id,email,role_id,token_hash,invited_by_membership_id,expires_at)
+    const row = await this.transaction(async (client) => {
+      await this.administrativeAccess(client, context);
+      // Expired pending rows must not permanently occupy the unique pending-email key.
+      await client.query(
+        "UPDATE invitations SET status='expired' WHERE clinic_id=$1 AND lower(email)=lower($2) AND status='pending' AND expires_at<=now()",
+        [membership.clinicId, email],
+      );
+      const result = await client.query<{ id: string }>(
+        `INSERT INTO invitations(clinic_id,email,role_id,token_hash,invited_by_membership_id,expires_at)
        SELECT $1,$2,r.id,$3,$4,$5 FROM roles r WHERE r.clinic_id=$1 AND r.key=$6 RETURNING id`,
-      [membership.clinicId, email.toLowerCase(), digest(token), membership.id, expiresAt, role],
-    );
-    const row = result.rows[0];
-    if (!row)
-      throw new DomainError('ROLE_NOT_CONFIGURED', 'The clinic role is not configured.', 409);
+        [membership.clinicId, email.toLowerCase(), digest(token), membership.id, expiresAt, role],
+      );
+      const invitation = result.rows[0];
+      if (!invitation)
+        throw new DomainError('ROLE_NOT_CONFIGURED', 'The clinic role is not configured.', 409);
+      await this.transactionalSecurity(
+        client,
+        context,
+        membership.clinicId,
+        'auth.invitation_created',
+        'invitation',
+        invitation.id,
+      );
+      return invitation;
+    });
     try {
       await sendMail({
         to: email,
@@ -164,7 +264,20 @@ export class AccessRepository {
         text: `Sign in or create a patient account with this email, verify it, then accept your clinic invitation: ${origin}/invitation#token=${token}`,
       });
     } catch {
-      await this.pool.query("UPDATE invitations SET status='revoked' WHERE id=$1", [row.id]);
+      await this.transaction(async (client) => {
+        await client.query(
+          "UPDATE invitations SET status='revoked' WHERE id=$1 AND status='pending'",
+          [row.id],
+        );
+        await this.transactionalSecurity(
+          client,
+          context,
+          membership.clinicId,
+          'auth.invitation_delivery_failed',
+          'invitation',
+          row.id,
+        );
+      });
       throw new DomainError(
         'EMAIL_UNAVAILABLE',
         'The invitation could not be delivered. Try again later.',
@@ -180,18 +293,38 @@ export class AccessRepository {
     };
   }
 
-  async revokeInvitation(clinicId: string, id: string): Promise<void> {
-    const result = await this.pool.query(
-      "UPDATE invitations SET status='revoked' WHERE id=$1 AND clinic_id=$2 AND status='pending'",
-      [id, clinicId],
-    );
-    if (result.rowCount !== 1) throw new DomainError('NOT_FOUND', 'Invitation not found.', 404);
+  async revokeInvitation(context: AccessContext, id: string): Promise<void> {
+    await this.transaction(async (client) => {
+      await this.administrativeAccess(client, context);
+      const clinicId = context.membership!.clinicId;
+      const result = await client.query(
+        "UPDATE invitations SET status='revoked' WHERE id=$1 AND clinic_id=$2 AND status='pending'",
+        [id, clinicId],
+      );
+      if (result.rowCount !== 1) throw new DomainError('NOT_FOUND', 'Invitation not found.', 404);
+      await this.transactionalSecurity(
+        client,
+        context,
+        clinicId,
+        'auth.invitation_revoked',
+        'invitation',
+        id,
+      );
+    });
   }
 
   async accept(context: AccessContext, token: string): Promise<string> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
+      // Keep the authenticated recipient/session live for the entire privilege-changing transaction.
+      const session = await client.query(
+        `SELECT s.id FROM auth_sessions s JOIN users u ON u.id=s.user_id
+         WHERE s.id=$1 AND u.id=$2 AND s.expires_at>now() AND u.disabled_at IS NULL
+         AND u.email_verified FOR SHARE OF s,u`,
+        [context.sessionId, context.userId],
+      );
+      if (!session.rowCount) throw new DomainError('SESSION_EXPIRED', 'Sign in again.', 401);
       const invitation = await client.query<{
         id: string;
         clinic_id: string;
@@ -214,7 +347,9 @@ export class AccessRepository {
         `SELECT 1 FROM invitations i JOIN memberships m ON m.id=i.invited_by_membership_id AND m.clinic_id=i.clinic_id
          JOIN membership_roles mr ON mr.membership_id=m.id AND mr.clinic_id=m.clinic_id
          JOIN roles r ON r.id=mr.role_id AND r.clinic_id=mr.clinic_id
-         WHERE i.id=$1 AND m.status='active' AND r.key IN ('clinic_owner','clinic_admin')`,
+         JOIN users u ON u.id=m.user_id AND u.disabled_at IS NULL
+         WHERE i.id=$1 AND m.status='active' AND r.key IN ('clinic_owner','clinic_admin')
+         FOR SHARE OF m,mr,r,u`,
         [row.id],
       );
       if (!issuer.rowCount)
@@ -225,10 +360,15 @@ export class AccessRepository {
         );
       const member = await client.query<{ id: string }>(
         `INSERT INTO memberships(clinic_id,user_id,status,joined_at) VALUES ($1,$2,'active',now())
-         ON CONFLICT(clinic_id,user_id) DO UPDATE SET status='active' RETURNING id`,
+         ON CONFLICT(clinic_id,user_id) DO UPDATE SET status='active'
+         WHERE memberships.status IN ('active','invited') RETURNING id`,
         [row.clinic_id, context.userId],
       );
       const memberId = member.rows[0]?.id;
+      // Invitations add only their specified role; they are not an account-restoration mechanism.
+      // Reactivating a suspended/revoked row would silently restore all its historical roles.
+      if (!memberId)
+        throw new DomainError('ACCESS_DENIED', 'Clinic membership is suspended or revoked.', 403);
       await client.query(
         'INSERT INTO membership_roles(clinic_id,membership_id,role_id) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING',
         [row.clinic_id, memberId, row.role_id],
@@ -250,9 +390,13 @@ export class AccessRepository {
         'UPDATE auth_sessions SET clinic_id=$1,active_membership_id=$2 WHERE id=$3 AND user_id=$4',
         [row.clinic_id, memberId, context.sessionId, context.userId],
       );
-      await client.query(
-        `INSERT INTO audit_events(clinic_id,actor_user_id,actor_membership_id,action,entity_type,entity_id,request_id) VALUES ($1,$2,$3,'auth.invitation_accepted','invitation',$4,$5)`,
-        [row.clinic_id, context.userId, memberId, row.id, context.requestId],
+      await this.transactionalSecurity(
+        client,
+        context,
+        row.clinic_id,
+        'auth.invitation_accepted',
+        'invitation',
+        row.id,
       );
       await client.query('COMMIT');
       return row.clinic_id;

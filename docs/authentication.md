@@ -117,6 +117,16 @@ current schema. `npm run db:snapshot --workspace @dentalai/database` generates n
 metadata after a custom reviewed migration; it does not create or apply SQL. SQL-only triggers remain
 in the reviewed migrations, not ORM snapshots.
 
+Invitation acceptance rechecks and locks the live recipient session, enabled issuer account,
+administrative membership and role rows in its transaction. Invitations cannot reactivate suspended
+or revoked memberships (which would otherwise restore historical roles); restoration requires a
+separately reviewed operator policy. Invitation creation/revocation, acceptance, membership selection
+and explicit session revocation commit their security/audit records atomically. Expired pending
+invitations can be reissued; live duplicates return a safe conflict. SMTP remains an external side
+effect, not part of the database transaction: failed invitation delivery is explicitly revoked and
+audited, but durable email delivery is not claimed. Library lifecycle hooks are not a distributed
+transaction with SMTP.
+
 Better Auth stores opaque session tokens in its server-only table; database/backups must therefore
 be access-restricted and encrypted at rest. OAuth fields are library-compatible but OAuth endpoints
 are not exposed. Global security-event identity is intentionally not tenant-owned (login can precede

@@ -51,6 +51,7 @@ export interface ApiClientOptions {
 export class DentalAiApiClient {
   private readonly baseUrl: string;
   private readonly fetchImplementation: typeof globalThis.fetch;
+  private csrfRequest: Promise<{ token: string }> | undefined;
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = (options.baseUrl ?? '').replace(/\/$/, '');
@@ -223,7 +224,13 @@ export class DentalAiApiClient {
   ): Promise<T> {
     const headers: Record<string, string> = { accept: 'application/json' };
     if (method !== 'GET') {
-      const csrf = await this.get('/api/v1/access/csrf', z.object({ token: z.string() }));
+      // Coalesce the first token fetch: concurrent GETs without a cookie would rotate each other.
+      this.csrfRequest ??= this.get('/api/v1/access/csrf', z.object({ token: z.string() })).finally(
+        () => {
+          this.csrfRequest = undefined;
+        },
+      );
+      const csrf = await this.csrfRequest;
       headers['x-csrf-token'] = csrf.token;
       headers['content-type'] = 'application/json';
     }

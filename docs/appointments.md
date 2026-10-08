@@ -126,6 +126,11 @@ an offset. Multi-day/overnight hours and recurrence are not implemented; use exp
 rows and absolute closure intervals. Existing booked instants are not shifted after timezone/hour
 configuration changes.
 
+Provider hours are intersected as time intervals, not as a second independently anchored slot grid:
+for example, clinic hours starting at 09:00 and provider hours starting at 09:10 allow a 09:15 clinic
+slot that fits completely inside both windows. Cancellation/no-show reasons are retained in the
+append-only transition audit; terminal cancellation and creation provenance cannot be rewritten.
+
 ## Verification
 
 ```bash

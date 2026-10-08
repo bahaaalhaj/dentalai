@@ -14,6 +14,7 @@ import { OutboxWorker } from './workers/outbox.worker.js';
 import { createAuthProvider } from './domains/auth/auth.provider.js';
 import { smtpMailSender } from './domains/auth/mail.js';
 import { AccessRepository } from './domains/access/access.repository.js';
+import { drainServer } from './infrastructure/shutdown.js';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -32,7 +33,10 @@ function listen(application: Express, port: number, host: string): Promise<Serve
   });
 }
 
-function frontendMount(args: readonly string[]) {
+function frontendMount(
+  args: readonly string[],
+  registerClose: (close: () => Promise<void>) => void,
+) {
   if (args.includes('--api-only')) return undefined;
 
   const webRoot = path.resolve(currentDirectory, '../../web');
@@ -45,6 +49,7 @@ function frontendMount(args: readonly string[]) {
         server: { middlewareMode: true },
         appType: 'spa',
       });
+      registerClose(() => vite.close());
       application.use(vite.middlewares);
     };
   }
@@ -86,23 +91,36 @@ async function startServer(): Promise<void> {
   const worker = new OutboxWorker(pool, logger, new Map(), {
     pollIntervalMs: environment.outboxPollIntervalMs,
   });
-  const mountFrontend = frontendMount(process.argv.slice(2));
-
-  const application = await createApplication({
-    logger,
-    systemService,
-    authentication: { provider, repository: new AccessRepository(pool, db), options: authOptions },
-    options: {
-      bodyLimit: environment.bodyLimit,
-      corsOrigins: environment.corsOrigins,
-      trustProxy: environment.trustProxy,
-      rateLimitWindowMs: environment.rateLimitWindowMs,
-      rateLimitMax: environment.rateLimitMax,
-    },
-    ...(mountFrontend ? { mountFrontend } : {}),
+  let closeFrontend = async () => {};
+  const mountFrontend = frontendMount(process.argv.slice(2), (close) => {
+    closeFrontend = close;
   });
 
-  const server = await listen(application, environment.port, environment.host);
+  let server: Server;
+  try {
+    const application = await createApplication({
+      logger,
+      systemService,
+      authentication: {
+        provider,
+        repository: new AccessRepository(pool, db),
+        options: authOptions,
+      },
+      options: {
+        bodyLimit: environment.bodyLimit,
+        corsOrigins: environment.corsOrigins,
+        trustProxy: environment.trustProxy,
+        rateLimitWindowMs: environment.rateLimitWindowMs,
+        rateLimitMax: environment.rateLimitMax,
+      },
+      ...(mountFrontend ? { mountFrontend } : {}),
+    });
+
+    server = await listen(application, environment.port, environment.host);
+  } catch (error) {
+    await Promise.allSettled([closeFrontend(), worker.stop(), pool.end()]);
+    throw error;
+  }
   logger.info(
     { host: environment.host, port: environment.port, apiVersion: 'v1' },
     'DentalAI API started',
@@ -117,30 +135,19 @@ async function startServer(): Promise<void> {
     lifecycle.beginShutdown();
     logger.info({ signal }, 'Graceful shutdown started');
 
-    const closeServer = new Promise<void>((resolve, reject) => {
-      server.close((error) => (error ? reject(error) : resolve()));
-    });
-    const timeout = new Promise<never>((_resolve, reject) => {
-      const timer = setTimeout(
-        () => reject(new Error('Graceful shutdown timed out.')),
-        environment.shutdownTimeoutMs,
-      );
-      timer.unref();
-    });
-
-    const shutdownWork = async () => {
-      await closeServer;
+    const closeResources = async () => {
       await worker.stop();
       await pool.end();
     };
 
     try {
-      await Promise.race([shutdownWork(), timeout]);
+      await drainServer(server, closeResources, environment.shutdownTimeoutMs, closeFrontend);
       logger.info('Graceful shutdown completed');
       process.exitCode = 0;
-    } catch (error) {
-      logger.error({ error }, 'Graceful shutdown failed');
-      process.exitCode = 1;
+    } catch {
+      logger.error('Graceful shutdown failed');
+      // Setting exitCode alone leaves hung handlers/watchers alive indefinitely.
+      process.exit(1);
     }
   };
 

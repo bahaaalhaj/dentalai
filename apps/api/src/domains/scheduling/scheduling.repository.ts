@@ -19,6 +19,7 @@ import {
   canTransition,
   calendarDateDistance,
   dateInZone,
+  localWallTimeToInstant,
   weekday,
   wallClockSlots,
   type AppointmentState,
@@ -318,6 +319,23 @@ export class SchedulingRepository {
     const general = hours.filter((row) => row.provider_id === null && valid(row));
     const specific = hours.filter((row) => row.provider_id === candidate.provider_id && valid(row));
     const hasProviderSchedule = hours.some((row) => row.provider_id === candidate.provider_id);
+    const providerWindows = specific.flatMap((row) => {
+      try {
+        return [
+          {
+            startsAt: Date.parse(
+              localWallTimeToInstant(`${date}T${row.opens_at_local}`, candidate.timezone),
+            ),
+            endsAt: Date.parse(
+              localWallTimeToInstant(`${date}T${row.closes_at_local}`, candidate.timezone),
+            ),
+          },
+        ];
+      } catch (error) {
+        if (!(error instanceof RangeError)) throw error;
+        return []; // Ambiguous/nonexistent DST boundaries are conservatively unavailable.
+      }
+    });
     return general
       .flatMap((row) =>
         wallClockSlots(
@@ -331,14 +349,10 @@ export class SchedulingRepository {
       .filter(
         (slot) =>
           !hasProviderSchedule ||
-          specific.some((row) =>
-            wallClockSlots(
-              date,
-              candidate.timezone,
-              row.opens_at_local,
-              row.closes_at_local,
-              candidate.duration,
-            ).some((value) => value.startsAt === slot.startsAt && value.endsAt === slot.endsAt),
+          providerWindows.some(
+            (window) =>
+              Date.parse(slot.startsAt) >= window.startsAt &&
+              Date.parse(slot.endsAt) <= window.endsAt,
           ),
       );
   }

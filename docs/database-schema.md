@@ -11,6 +11,31 @@ global append-only security events. `auth_sessions` binds its optional clinic co
 membership **and user** through a composite FK. The older `sessions` table is not used for new login.
 See [authentication.md](authentication.md) for tenant authorization and operator provisioning.
 
+The independent review adds `0004_review_integrity.sql`: patient identity now participates in
+appointment/encounter, encounter/clinical-record and study/analysis foreign keys. It also preserves
+appointment creation/cancellation provenance and includes transition reasons in append-only audit.
+No clinical feature or inference endpoint is introduced. SQL-only history triggers remain authoritative.
+
+## Deployment and rollback warning
+
+The completed Phase 5–7 commit edited `0000_lovely_tombstone.sql` to create tenant reference keys before
+foreign keys. This repairs creation from zero, but an already-applied earlier baseline must not be
+assumed equivalent. The runner now serializes migrations and verifies every recorded hash/timestamp
+against reviewed files (equivalent LF/CRLF checkouts are accepted). Drift stops deployment; never
+blindly replace stored hashes, reset the database, or force a destructive replay.
+
+Before upgrading an existing deployment, make and restore-test an encrypted backup, compare its
+applied migration history and schema with the release, and reconcile any drift explicitly. The repair
+validates existing patient links and rolls back entirely on inconsistencies; it never deletes or
+reassigns clinical data to make constraints pass. Upgrade tests cover the current reviewed Phase 6
+baseline with retained signed notes, sessions, appointments and audit, plus failed-repair rollback.
+They do not prove compatibility with unknown/manual deployments of the original Phase 4 SQL.
+
+There is no automated destructive down migration. Prefer an additive forward repair; reverting the
+application can retain additive constraints only after compatibility testing. Database rollback needs
+a separately rehearsed point-in-time/backup restore to a new instance and preservation of writes made
+after the backup. Do not claim zero-data-loss rollback without that operational rehearsal.
+
 ## Identifier, tenancy, time, and money rules
 
 - Primary identifiers are UUIDs generated with PostgreSQL `gen_random_uuid()`. Imports may retain a

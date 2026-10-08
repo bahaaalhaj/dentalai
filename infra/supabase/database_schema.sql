@@ -100,10 +100,15 @@ DROP POLICY IF EXISTS "Doctors manage all records" ON public.medical_records;
 CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Doctors can view all profiles" ON public.profiles FOR SELECT USING (public.is_doctor());
 
-CREATE POLICY "Anyone can view appts for availability" ON public.appointments FOR SELECT USING (true);
-CREATE POLICY "Patients insert own appointments" ON public.appointments FOR INSERT WITH CHECK (patient_id = auth.uid());
-CREATE POLICY "Patients delete own appointments" ON public.appointments FOR DELETE USING (patient_id = auth.uid());
-CREATE POLICY "Doctors view all appointments" ON public.appointments FOR ALL USING (public.is_doctor());
+-- Phase 7 retires this browser-accessible table. Never recreate the former full-row public
+-- availability policy or patient DELETE policy. The backend/PostgreSQL API owns scheduling.
+-- This reference file does not change an existing hosted database; see the operator cutover script.
+DROP POLICY IF EXISTS "Anyone can view appts for availability" ON public.appointments;
+DROP POLICY IF EXISTS "Patients insert own appointments" ON public.appointments;
+DROP POLICY IF EXISTS "Patients delete own appointments" ON public.appointments;
+DROP POLICY IF EXISTS "Doctors view all appointments" ON public.appointments;
+DROP POLICY IF EXISTS "Patients view own appointments" ON public.appointments;
+REVOKE ALL ON public.appointments FROM PUBLIC, anon, authenticated;
 
 CREATE POLICY "Patients view own records" ON public.medical_records FOR SELECT USING (patient_id = auth.uid());
 CREATE POLICY "Doctors manage all records" ON public.medical_records FOR ALL USING (public.is_doctor());

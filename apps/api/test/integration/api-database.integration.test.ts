@@ -11,6 +11,7 @@ import { AuditEventWriter } from '../../src/domains/audit/audit-event.writer.js'
 import { PostgresSystemRepository } from '../../src/domains/system/system.repository.js';
 import { SystemService } from '../../src/domains/system/system.service.js';
 import { ApplicationLifecycle } from '../../src/infrastructure/lifecycle.js';
+import { OutboxWorker } from '../../src/workers/outbox.worker.js';
 
 const adminUrl = process.env['DATABASE_URL'];
 if (!adminUrl) {
@@ -52,6 +53,151 @@ afterAll(async () => {
 });
 
 describe('API PostgreSQL integration', () => {
+  it('reclaims expired outbox leases, but never steals a live lease', async () => {
+    const oldJob = randomUUID();
+    const liveJob = randomUUID();
+    await database.pool.query(
+      `INSERT INTO outbox_jobs(id,clinic_id,topic,aggregate_type,status,locked_at,locked_by,attempts,idempotency_key,payload)
+       VALUES($1::uuid,$3,'review.test','review','processing',now()-interval '10 minutes','crashed',1,$1::uuid::text,'{}'),
+             ($2::uuid,$3,'review.test','review','processing',now(),'live',1,$2::uuid::text,'{}')`,
+      [oldJob, liveJob, clinicId],
+    );
+    const handled: string[] = [];
+    const worker = new OutboxWorker(
+      database.pool,
+      logger,
+      new Map([
+        [
+          'review.test',
+          async (job) => {
+            handled.push(job.id);
+          },
+        ],
+      ]),
+      { pollIntervalMs: 1000 },
+    );
+    await worker.runOnce();
+    await worker.runOnce();
+    expect(handled).toEqual([oldJob]);
+    const jobs = await database.pool.query<{ id: string; status: string; attempts: number }>(
+      'SELECT id,status,attempts FROM outbox_jobs WHERE id=ANY($1::uuid[])',
+      [[oldJob, liveJob]],
+    );
+    expect(jobs.rows.find((job) => job.id === oldJob)).toMatchObject({
+      status: 'completed',
+      attempts: 2,
+    });
+    expect(jobs.rows.find((job) => job.id === liveJob)).toMatchObject({
+      status: 'processing',
+      attempts: 1,
+    });
+  });
+  it('lets only one concurrent worker claim a ready outbox job', async () => {
+    const jobId = randomUUID();
+    await database.pool.query(
+      "INSERT INTO outbox_jobs(id,clinic_id,topic,aggregate_type,payload,idempotency_key) VALUES($1::uuid,$2,'review.concurrent','review','{}',$1::uuid::text)",
+      [jobId, clinicId],
+    );
+    const handled: string[] = [];
+    const handlers = new Map([
+      [
+        'review.concurrent',
+        async (job: { id: string }) => {
+          handled.push(job.id);
+        },
+      ],
+    ]);
+    await Promise.all([
+      new OutboxWorker(database.pool, logger, handlers, { pollIntervalMs: 100_000 }).runOnce(),
+      new OutboxWorker(database.pool, logger, handlers, { pollIntervalMs: 100_000 }).runOnce(),
+    ]);
+    expect(handled).toEqual([jobId]);
+    expect(
+      (await database.pool.query('SELECT status,attempts FROM outbox_jobs WHERE id=$1', [jobId]))
+        .rows[0],
+    ).toEqual({ status: 'completed', attempts: 1 });
+  });
+  it('does not let a stale worker acknowledge a reclaimed and failed attempt', async () => {
+    const jobId = randomUUID();
+    await database.pool.query(
+      "INSERT INTO outbox_jobs(id,clinic_id,topic,aggregate_type,payload,idempotency_key) VALUES($1::uuid,$2,'review.stale','review','{}',$1::uuid::text)",
+      [jobId, clinicId],
+    );
+    const second = new OutboxWorker(
+      database.pool,
+      logger,
+      new Map([
+        [
+          'review.stale',
+          async () => {
+            throw new Error('fictional second-attempt failure');
+          },
+        ],
+      ]),
+      { workerId: 'same-identity-for-regression', pollIntervalMs: 100_000 },
+    );
+    const first = new OutboxWorker(
+      database.pool,
+      logger,
+      new Map([
+        [
+          'review.stale',
+          async () => {
+            await database.pool.query(
+              "UPDATE outbox_jobs SET locked_at=now()-interval '10 minutes' WHERE id=$1",
+              [jobId],
+            );
+            await second.runOnce();
+          },
+        ],
+      ]),
+      { workerId: 'same-identity-for-regression', pollIntervalMs: 100_000 },
+    );
+    await first.runOnce();
+    expect(
+      (await database.pool.query('SELECT status,attempts FROM outbox_jobs WHERE id=$1', [jobId]))
+        .rows[0],
+    ).toEqual({ status: 'failed', attempts: 2 });
+  });
+  it('does not persist or log secret or patient content from an outbox handler error', async () => {
+    const jobId = randomUUID();
+    const sensitive = 'fictional-patient-token-and-password-marker';
+    await database.pool.query(
+      "INSERT INTO outbox_jobs(id,clinic_id,topic,aggregate_type,payload,idempotency_key) VALUES($1::uuid,$2,'review.failure','review',jsonb_build_object('sensitive',$3::text),$1::uuid::text)",
+      [jobId, clinicId, sensitive],
+    );
+    const logs: string[] = [];
+    const worker = new OutboxWorker(
+      database.pool,
+      pino(
+        { level: 'info' },
+        {
+          write: (message) => {
+            logs.push(message);
+          },
+        },
+      ),
+      new Map([
+        [
+          'review.failure',
+          async () => {
+            throw new Error(sensitive);
+          },
+        ],
+      ]),
+      { pollIntervalMs: 1000 },
+    );
+    await worker.runOnce();
+    const row = (
+      await database.pool.query<{ status: string; last_error: string }>(
+        'SELECT status,last_error FROM outbox_jobs WHERE id=$1',
+        [jobId],
+      )
+    ).rows[0];
+    expect(row).toEqual({ status: 'failed', last_error: 'HANDLER_FAILED' });
+    expect(logs.join('')).not.toContain(sensitive);
+    expect(logs.join('')).toContain('Outbox handler failed');
+  });
   it('proves database connectivity through the readiness repository', async () => {
     const repository = new PostgresSystemRepository(database.pool);
     await expect(repository.ping()).resolves.toBeUndefined();

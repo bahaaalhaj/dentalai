@@ -61,6 +61,43 @@ async function action(role: string, id: string, revision: number, name: string) 
 }
 
 describe('PostgreSQL appointment API integrity', () => {
+  it('intersects provider hours with the clinic grid even when opening times are misaligned', async () => {
+    const hours = await f.database.pool.query<{ id: string }>(
+      "INSERT INTO working_hours(clinic_id,location_id,provider_id,weekday,opens_at_local,closes_at_local) VALUES($1,$2,$3,1,'09:10','10:40') RETURNING id",
+      [f.clinicId, f.locationId, f.providerId],
+    );
+    try {
+      const available = await slots('patient', '2030-02-11');
+      expect(available.length).toBeGreaterThan(0);
+      expect(available[0]?.startsAt).toBe('2030-02-11T06:15:00Z');
+      expect(available.every((slot) => slot.endsAt <= '2030-02-11T07:40:00Z')).toBe(true);
+      await book('patient', 0, '2030-02-11');
+    } finally {
+      await f.database.pool.query('DELETE FROM working_hours WHERE id=$1', [hours.rows[0]!.id]);
+    }
+  });
+  it('retains cancellation reasons and rejects rewriting terminal or creation provenance', async () => {
+    const booked = await book('patient', 0, '2030-02-12');
+    expect((await action('patient', booked.id, 0, 'cancel')).status).toBe(200);
+    const event = (
+      await f.database.pool.query<{ data: { after: { reason: string } } }>(
+        "SELECT data FROM audit_events WHERE entity_id=$1 AND action='appointment.cancelled'",
+        [booked.id],
+      )
+    ).rows[0];
+    expect(event?.data.after.reason).toBe('Fictional test reason');
+    await expect(
+      f.database.pool.query("UPDATE appointments SET cancellation_reason='rewritten' WHERE id=$1", [
+        booked.id,
+      ]),
+    ).rejects.toMatchObject({ code: '23514' });
+    await expect(
+      f.database.pool.query('UPDATE appointments SET created_by_membership_id=$1 WHERE id=$2', [
+        user('receptionist').membershipId,
+        booked.id,
+      ]),
+    ).rejects.toMatchObject({ code: '23514' });
+  });
   it('requires authentication and hides private scheduling configuration from patients', async () => {
     await request(f.app).get('/api/v1/appointments').expect(401);
     await request(f.app).get('/api/v1/scheduling/catalog').expect(401);

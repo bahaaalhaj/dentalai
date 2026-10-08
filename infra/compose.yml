@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in infra/.env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in infra/.env}
     ports:
-      - '${POSTGRES_PORT:-5432}:5432'
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -29,8 +29,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER in infra/.env}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD in infra/.env}
     ports:
-      - '${MINIO_API_PORT:-9000}:9000'
-      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+      - '127.0.0.1:${MINIO_API_PORT:-9000}:9000'
+      - '127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001'
     volumes:
       - minio_data:/data
     healthcheck:
@@ -68,7 +68,7 @@ services:
       context: ../services/ai
     restart: unless-stopped
     ports:
-      - '${AI_PORT:-8000}:8000'
+      - '127.0.0.1:${AI_PORT:-8000}:8000'
     healthcheck:
       test:
         [

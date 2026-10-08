@@ -67,6 +67,7 @@ function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
   const [diseases, setDiseases] = useState<string[]>([]);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Load last calculation for this patient
   useEffect(() => {
@@ -108,8 +109,30 @@ function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
   };
 
   const calculate = async () => {
-    const w = parseFloat(weight);
-    const a = parseInt(age);
+    const w = Number(weight);
+    const a = Number(age);
+    const pressure = /^\s*(\d+)\s*\/\s*(\d+)\s*$/.exec(bp);
+    if (
+      !age.trim() ||
+      !weight.trim() ||
+      !Number.isFinite(a) ||
+      !Number.isInteger(a) ||
+      !Number.isFinite(w) ||
+      a <= 0 ||
+      w <= 0 ||
+      !pressure ||
+      !Number.isFinite(Number(pressure[1])) ||
+      !Number.isFinite(Number(pressure[2])) ||
+      Number(pressure[1]) <= 0 ||
+      Number(pressure[2]) <= 0
+    ) {
+      setResult(null);
+      setValidationError(
+        'Enter a positive whole-number age, positive weight, and blood pressure as systolic/diastolic.',
+      );
+      return;
+    }
+    setValidationError(null);
     const anesthetic =
       ANESTHETICS.find((item) => item.id === selectedAnesthetic) ?? DEFAULT_ANESTHETIC;
 
@@ -143,11 +166,7 @@ function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
       warnings.push('Smoker: Risk of delayed wound healing');
     }
 
-    const systolic = parseInt(bp.split('/')[0] ?? '');
-    if (systolic <= 0) {
-      alert('Error: Age and Weight must be valid positive numbers.');
-      return; // هذا الأمر يوقف تنفيذ الكود فوراً ولن يظهر أي نتيجة
-    }
+    const systolic = Number(pressure[1]);
     if (systolic > 160) {
       status = 'danger';
       warnings.push('Critical Hypertension: Avoid epinephrine');
@@ -158,6 +177,11 @@ function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
 
     const recommendedDose = maxDose * 0.7;
     const cartridges = Math.floor(recommendedDose / anesthetic.mgPerCartridge);
+    if (![maxDose, recommendedDose, cartridges].every(Number.isFinite)) {
+      setResult(null);
+      setValidationError('The experimental calculation cannot represent these inputs.');
+      return;
+    }
 
     const newResult: CalculationResult = {
       status: status === 'safe' ? 'safe' : 'danger', // Strictly Green or Red
@@ -232,7 +256,6 @@ function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
               type="number"
               min="0"
               onKeyDown={(e) => {
-                // منع كتابة إشارة الناقص '-' وحرف 'e'
                 if (e.key === '-' || e.key === 'e') e.preventDefault();
               }}
               value={weight}
@@ -266,12 +289,7 @@ function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
               Blood Pressure
             </label>
             <input
-              type="number"
-              min="0"
-              onKeyDown={(e) => {
-                // منع كتابة إشارة الناقص '-' وحرف 'e'
-                if (e.key === '-' || e.key === 'e') e.preventDefault();
-              }}
+              type="text"
               value={bp}
               onChange={(e) => setBp(e.target.value)}
               className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold text-slate-700"
@@ -315,6 +333,11 @@ function EnabledAnestheticCalculator({ patientId }: { patientId: string }) {
           </div>
         </div>
 
+        {validationError && (
+          <p role="alert" className="text-sm text-red-700">
+            {validationError}
+          </p>
+        )}
         <button
           onClick={calculate}
           className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl"

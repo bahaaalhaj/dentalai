@@ -76,6 +76,13 @@ topic-handler map, and marks completion or a retryable failure. It is disabled b
 or fake clinical jobs are registered in Phase 5. Enablement requires `OUTBOX_WORKER_ENABLED=true` and
 real handlers in a later feature phase.
 
+Review repairs add a five-minute default claim lease and reclaim expired processing rows. Attempt
+numbers fence stale acknowledgments; worker identities are globally unique. Delivery is **at least
+once**, not exactly once: real handlers must be idempotent and finish within their lease (there is no
+heartbeat, dead-letter policy, or production handler yet). Errors are recorded as safe fixed codes;
+raw handler/driver messages and payloads are not logged. Shutdown closes Vite resources, drains HTTP
+requests before ending the database pool, and enforces its deadline even when a handler hangs.
+
 ## Configuration
 
 All server settings are validated before listening. `DATABASE_URL` is required and must use a PostgreSQL

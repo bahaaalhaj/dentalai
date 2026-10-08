@@ -5,11 +5,14 @@ import { Pool } from 'pg';
 import pino from 'pino';
 import request, { type Response } from 'supertest';
 import type { Express } from 'express';
-import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApplication } from '../../src/app.js';
 import { createAuthProvider } from '../../src/domains/auth/auth.provider.js';
 import type { AuthMail } from '../../src/domains/auth/mail.js';
-import { AccessRepository } from '../../src/domains/access/access.repository.js';
+import {
+  AccessRepository,
+  type AccessContext,
+} from '../../src/domains/access/access.repository.js';
 import { PostgresSystemRepository } from '../../src/domains/system/system.repository.js';
 import { SystemService } from '../../src/domains/system/system.service.js';
 import { ApplicationLifecycle } from '../../src/infrastructure/lifecycle.js';
@@ -187,6 +190,244 @@ afterAll(async () => {
 });
 
 describe('backend authentication and tenancy', () => {
+  it('does not invalidate an in-flight mutation when the browser refreshes its CSRF token', async () => {
+    const first = await request(app).get('/api/v1/access/csrf').expect(200);
+    const second = await request(app)
+      .get('/api/v1/access/csrf')
+      .set('cookie', cookies(first).join('; '))
+      .expect(200);
+    expect(second.body.token).toBe(first.body.token);
+    await request(app)
+      .post('/api/v1/auth/request-password-reset')
+      .set('origin', origin)
+      .set('cookie', cookies(second).join('; '))
+      .set('x-csrf-token', String(first.body.token))
+      .send({ email: 'nonexistent-fictional@example.test' })
+      .expect(200);
+  });
+  it('rechecks administrative access inside invitation creation rather than trusting a stale context', async () => {
+    const person = await fixture('clinic_admin', clinicA);
+    const repository = new AccessRepository(database.pool, database.db);
+    const list = SessionListSchema.parse(
+      (await request(app).get('/api/v1/access/sessions').set('cookie', person.cookie)).body,
+    );
+    const sessionId = list.find((session) => session.current)!.id;
+    const identity = await repository.identity(person.userId, sessionId);
+    const context: AccessContext = {
+      userId: person.userId,
+      sessionId,
+      membership: identity.activeMembership,
+      requestId: randomUUID(),
+    };
+    await database.pool.query("UPDATE memberships SET status='revoked' WHERE id=$1", [
+      person.membershipId,
+    ]);
+    const email = `${randomUUID()}@example.test`;
+    await expect(
+      repository.invite(context, email, 'dentist', options.sendMail, origin),
+    ).rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    expect(
+      (await database.pool.query('SELECT 1 FROM invitations WHERE email=$1', [email])).rowCount,
+    ).toBe(0);
+  });
+  it('rolls back invitation creation and session revocation if their audit write fails', async () => {
+    const person = await fixture('clinic_admin', clinicA);
+    const repository = new AccessRepository(database.pool, database.db);
+    const list = SessionListSchema.parse(
+      (await request(app).get('/api/v1/access/sessions').set('cookie', person.cookie)).body,
+    );
+    const sessionId = list.find((session) => session.current)!.id;
+    const identity = await repository.identity(person.userId, sessionId);
+    const context: AccessContext = {
+      userId: person.userId,
+      sessionId,
+      membership: identity.activeMembership,
+      requestId: 'review-force-audit-failure',
+    };
+    const email = `${randomUUID()}@example.test`;
+    await database.pool
+      .query(`CREATE FUNCTION review_fail_audit() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN IF NEW.request_id='review-force-audit-failure' THEN RAISE EXCEPTION 'fictional audit failure'; END IF; RETURN NEW; END $$;
+      CREATE TRIGGER review_fail_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION review_fail_audit()`);
+    try {
+      await expect(
+        repository.invite(context, email, 'dentist', options.sendMail, origin),
+      ).rejects.toThrow();
+      expect(
+        (await database.pool.query('SELECT 1 FROM invitations WHERE email=$1', [email])).rowCount,
+      ).toBe(0);
+      await expect(repository.revoke(context, sessionId)).rejects.toThrow();
+      expect(
+        (await database.pool.query('SELECT 1 FROM auth_sessions WHERE id=$1', [sessionId]))
+          .rowCount,
+      ).toBe(1);
+      expect(
+        (
+          await database.pool.query('SELECT 1 FROM security_events WHERE request_id=$1', [
+            context.requestId,
+          ])
+        ).rowCount,
+      ).toBe(0);
+    } finally {
+      await database.pool.query(
+        'DROP TRIGGER review_fail_audit ON audit_events; DROP FUNCTION review_fail_audit()',
+      );
+    }
+  });
+  it('rejects acceptance racing with issuer revocation, after waiting for its database lock', async () => {
+    const issuer = await fixture('clinic_admin', clinicA);
+    const recipient = await fixture('patient', clinicA);
+    const invitation = await mutate(
+      '/api/v1/access/invitations',
+      { email: recipient.email, role: 'dentist' },
+      issuer.cookie,
+    );
+    expect(invitation.status).toBe(200);
+    const token = new URL(
+      mail
+        .findLast((value) => value.to === recipient.email && value.subject.includes('invitation'))
+        ?.text.split(' ')
+        .at(-1) ?? '',
+    ).hash.slice(7);
+    const repository = new AccessRepository(database.pool, database.db);
+    const list = SessionListSchema.parse(
+      (await request(app).get('/api/v1/access/sessions').set('cookie', recipient.cookie)).body,
+    );
+    const sessionId = list.find((session) => session.current)!.id;
+    const context: AccessContext = {
+      userId: recipient.userId,
+      sessionId,
+      membership: null,
+      requestId: randomUUID(),
+    };
+    const lock = await database.pool.connect();
+    let accepting: Promise<unknown> | undefined;
+    try {
+      await lock.query('BEGIN');
+      await lock.query("UPDATE memberships SET status='revoked' WHERE id=$1", [
+        issuer.membershipId,
+      ]);
+      // Attach the rejection assertion immediately, then wait until the real authorization query blocks.
+      accepting = expect(repository.accept(context, token)).rejects.toMatchObject({
+        code: 'INVALID_INVITATION',
+      });
+      await vi.waitFor(
+        async () => {
+          const waiting = await database.pool.query(
+            "SELECT 1 FROM pg_stat_activity WHERE datname=current_database() AND wait_event_type='Lock' AND query LIKE '%FOR SHARE OF m,mr,r,u%'",
+          );
+          expect(waiting.rowCount).toBe(1);
+        },
+        { timeout: 5000 },
+      );
+      await lock.query('COMMIT');
+      await accepting;
+      expect(
+        (
+          await database.pool.query('SELECT status FROM invitations WHERE id=$1', [
+            invitation.body.id,
+          ])
+        ).rows[0]?.status,
+      ).toBe('pending');
+    } finally {
+      await lock.query('ROLLBACK');
+      lock.release();
+      if (accepting) await accepting;
+    }
+  });
+  it.each([`.${'a'.repeat(64)}`, 'bad.signature', `${'a'.repeat(64)}.${'b'.repeat(64)}.extra`])(
+    'rejects malformed signed CSRF tokens without a server error: %s',
+    async (token) => {
+      const response = await request(app)
+        .post('/api/v1/auth/sign-in/email')
+        .set('origin', origin)
+        .set('cookie', `__Host-dentalai.csrf=${token}`)
+        .set('x-csrf-token', token)
+        .send({ email: 'fictional@example.test', password });
+      expect(response.status).toBe(403);
+      expect(response.body.error.code).toBe('CSRF_REJECTED');
+    },
+  );
+  it('persists the Zod-normalized registration name, not the raw request', async () => {
+    const email = `${randomUUID()}@example.test`;
+    expect(
+      (
+        await mutate('/api/v1/auth/sign-up/email', {
+          name: `${' '.repeat(200)}Fictional trimmed name${' '.repeat(200)}`,
+          email,
+          password,
+        })
+      ).status,
+    ).toBe(200);
+    const result = await database.pool.query<{ display_name: string }>(
+      'SELECT display_name FROM users WHERE email=$1',
+      [email],
+    );
+    expect(result.rows[0]?.display_name).toBe('Fictional trimmed name');
+  });
+  it.each(['disabled issuer', 'suspended recipient'] as const)(
+    'does not accept an invitation with a %s or restore historical privileges',
+    async (scenario) => {
+      const issuer = await fixture('clinic_admin', clinicA);
+      const recipient = await fixture('clinic_owner', clinicA);
+      expect(
+        (
+          await mutate(
+            '/api/v1/access/invitations',
+            { email: recipient.email, role: 'dentist' },
+            issuer.cookie,
+          )
+        ).status,
+      ).toBe(200);
+      const token = new URL(
+        mail
+          .findLast((value) => value.to === recipient.email && value.subject.includes('invitation'))
+          ?.text.split(' ')
+          .at(-1) ?? '',
+      ).hash.slice(7);
+      if (scenario === 'disabled issuer')
+        await database.pool.query('UPDATE users SET disabled_at=now() WHERE id=$1', [
+          issuer.userId,
+        ]);
+      else
+        await database.pool.query("UPDATE memberships SET status='suspended' WHERE id=$1", [
+          recipient.membershipId,
+        ]);
+      const response = await mutate(
+        '/api/v1/access/invitations/accept',
+        { token },
+        recipient.cookie,
+      );
+      expect(response.status).toBe(403);
+      const result = await database.pool.query<{ status: string }>(
+        "SELECT status FROM invitations WHERE token_hash=encode(sha256($1::bytea),'hex')",
+        [Buffer.from(token)],
+      );
+      expect(result.rows[0]?.status).toBe('pending');
+      if (scenario === 'suspended recipient') {
+        const membership = await database.pool.query<{ status: string }>(
+          'SELECT status FROM memberships WHERE id=$1',
+          [recipient.membershipId],
+        );
+        expect(membership.rows[0]?.status).toBe('suspended');
+      }
+    },
+  );
+  it('returns a safe conflict for duplicate pending invitations and permits reissue after expiry', async () => {
+    const email = `${randomUUID()}@example.test`;
+    const body = { email, role: 'receptionist' };
+    const cookie = people.get('clinic_owner')!.cookie;
+    const first = await mutate('/api/v1/access/invitations', body, cookie);
+    expect(first.status).toBe(200);
+    expect((await mutate('/api/v1/access/invitations', body, cookie)).status).toBe(409);
+    await database.pool.query(
+      "UPDATE invitations SET expires_at=now()-interval '1 minute' WHERE id=$1",
+      [first.body.id],
+    );
+    const reissued = await mutate('/api/v1/access/invitations', body, cookie);
+    expect(reissued.status).toBe(200);
+    expect(reissued.body.id).not.toBe(first.body.id);
+  });
   it.each(['clinic_owner', 'clinic_admin', 'dentist', 'receptionist', 'patient'] as const)(
     'authorizes %s using live membership and prevents cross-clinic resources',
     async (role) => {

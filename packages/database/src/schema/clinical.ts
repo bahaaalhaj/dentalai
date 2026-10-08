@@ -49,6 +49,12 @@ export const encounters = pgTable(
   },
   (table) => [
     uniqueIndex('encounters_clinic_id_uidx').on(table.clinicId, table.id),
+    uniqueIndex('encounters_clinic_id_patient_uidx').on(table.clinicId, table.id, table.patientId),
+    foreignKey({
+      columns: [table.clinicId, table.appointmentId, table.patientId],
+      foreignColumns: [appointments.clinicId, appointments.id, appointments.patientId],
+      name: 'encounters_appointment_patient_fk',
+    }).onDelete('restrict'),
     uniqueIndex('encounters_clinic_appointment_uidx')
       .on(table.clinicId, table.appointmentId)
       .where(sql`${table.appointmentId} is not null`),
@@ -101,6 +107,11 @@ export const clinicalNotes = pgTable(
   },
   (table) => [
     uniqueIndex('clinical_notes_clinic_id_uidx').on(table.clinicId, table.id),
+    foreignKey({
+      columns: [table.clinicId, table.encounterId, table.patientId],
+      foreignColumns: [encounters.clinicId, encounters.id, encounters.patientId],
+      name: 'clinical_notes_encounter_patient_fk',
+    }).onDelete('restrict'),
     uniqueIndex('clinical_notes_group_version_uidx').on(
       table.clinicId,
       table.noteGroupId,
@@ -241,6 +252,11 @@ export const odontogramFindings = pgTable(
   },
   (table) => [
     uniqueIndex('odontogram_findings_clinic_id_uidx').on(table.clinicId, table.id),
+    foreignKey({
+      columns: [table.clinicId, table.encounterId, table.patientId],
+      foreignColumns: [encounters.clinicId, encounters.id, encounters.patientId],
+      name: 'odontogram_findings_encounter_patient_fk',
+    }).onDelete('restrict'),
     index('odontogram_findings_patient_tooth_idx').on(
       table.clinicId,
       table.patientId,
@@ -301,6 +317,11 @@ export const procedures = pgTable(
   },
   (table) => [
     uniqueIndex('procedures_clinic_id_uidx').on(table.clinicId, table.id),
+    foreignKey({
+      columns: [table.clinicId, table.encounterId, table.patientId],
+      foreignColumns: [encounters.clinicId, encounters.id, encounters.patientId],
+      name: 'procedures_encounter_patient_fk',
+    }).onDelete('restrict'),
     index('procedures_patient_idx').on(table.clinicId, table.patientId, table.createdAt),
     foreignKey({
       columns: [table.clinicId, table.patientId],

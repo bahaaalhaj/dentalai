@@ -3,7 +3,7 @@ import { Router, type Request as ExpressRequest } from 'express';
 import { fromNodeHeaders } from 'better-auth/node';
 import { asyncHandler } from '../../middleware/async-handler.js';
 import { DomainError } from '../../errors/domain-errors.js';
-import { sendValidated, validateRequest } from '../../middleware/validation.js';
+import { getValidated, sendValidated, validateRequest } from '../../middleware/validation.js';
 import type { AuthOptions, AuthProvider } from './auth.provider.js';
 import type { AccessRepository } from '../access/access.repository.js';
 
@@ -36,7 +36,7 @@ export function createAuthRouter(
       path,
       validateRequest({ body: contract.body }),
       asyncHandler(async (request, response) => {
-        const body = request.body as Record<string, unknown>;
+        const body = getValidated<Record<string, unknown>>(response, 'body');
         const headers = authHeaders(request);
         headers.set('content-type', 'application/json');
         const prior = await auth.api.getSession({ headers });

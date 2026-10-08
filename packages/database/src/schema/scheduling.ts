@@ -71,6 +71,11 @@ export const appointments = pgTable(
   },
   (table) => [
     uniqueIndex('appointments_clinic_id_uidx').on(table.clinicId, table.id),
+    uniqueIndex('appointments_clinic_id_patient_uidx').on(
+      table.clinicId,
+      table.id,
+      table.patientId,
+    ),
     index('appointments_clinic_start_idx').on(table.clinicId, table.startsAt),
     index('appointments_patient_start_idx').on(table.clinicId, table.patientId, table.startsAt),
     index('appointments_provider_start_idx').on(table.clinicId, table.providerId, table.startsAt),

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { Logger } from 'pino';
 import type { Pool } from 'pg';
 
@@ -24,6 +25,7 @@ export type OutboxHandler = (job: {
 export interface OutboxWorkerOptions {
   pollIntervalMs: number;
   workerId?: string;
+  leaseMs?: number;
 }
 
 export class OutboxWorker {
@@ -38,7 +40,7 @@ export class OutboxWorker {
     private readonly handlers: ReadonlyMap<string, OutboxHandler>,
     private readonly options: OutboxWorkerOptions,
   ) {
-    this.workerId = options.workerId ?? `api-${process.pid}`;
+    this.workerId = options.workerId ?? `api-${randomUUID()}`;
   }
 
   start(): void {
@@ -61,8 +63,9 @@ export class OutboxWorker {
     this.timer = setTimeout(() => {
       this.timer = undefined;
       this.activeRun = this.runOnce()
-        .catch((error: unknown) => {
-          this.logger.error({ error }, 'Outbox polling failed');
+        .catch(() => {
+          // Driver/handler errors can embed credentials, tokens or clinical payloads.
+          this.logger.error('Outbox polling failed');
         })
         .finally(() => {
           this.activeRun = undefined;
@@ -72,7 +75,7 @@ export class OutboxWorker {
     this.timer.unref();
   }
 
-  private async runOnce(): Promise<void> {
+  async runOnce(): Promise<void> {
     const result = await this.pool.query<OutboxJob>(
       `UPDATE outbox_jobs
        SET status = 'processing',
@@ -82,13 +85,14 @@ export class OutboxWorker {
        WHERE id = (
          SELECT id
          FROM outbox_jobs
-         WHERE status IN ('pending', 'failed') AND available_at <= now()
+         WHERE (status IN ('pending', 'failed') AND available_at <= now())
+            OR (status = 'processing' AND locked_at <= now() - make_interval(secs => $2))
          ORDER BY available_at, created_at
          FOR UPDATE SKIP LOCKED
          LIMIT 1
        )
        RETURNING id, clinic_id, topic, aggregate_type, aggregate_id, payload, attempts`,
-      [this.workerId],
+      [this.workerId, (this.options.leaseMs ?? 300_000) / 1_000],
     );
 
     const row = result.rows[0];
@@ -112,20 +116,24 @@ export class OutboxWorker {
         `UPDATE outbox_jobs
          SET status = 'completed', completed_at = now(), locked_at = NULL, locked_by = NULL,
              last_error = NULL
-         WHERE id = $1 AND locked_by = $2`,
-        [row.id, this.workerId],
+         WHERE id = $1 AND locked_by = $2 AND attempts = $3`,
+        [row.id, this.workerId, row.attempts],
       );
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message.slice(0, 1_000) : 'Unknown handler error';
+    } catch {
       await this.pool.query(
         `UPDATE outbox_jobs
          SET status = 'failed', available_at = now() + make_interval(secs => $3),
              locked_at = NULL, locked_by = NULL, last_error = $4
-         WHERE id = $1 AND locked_by = $2`,
-        [row.id, this.workerId, this.options.pollIntervalMs / 1_000, message],
+         WHERE id = $1 AND locked_by = $2 AND attempts = $5`,
+        [
+          row.id,
+          this.workerId,
+          this.options.pollIntervalMs / 1_000,
+          'HANDLER_FAILED',
+          row.attempts,
+        ],
       );
-      this.logger.warn({ error, outboxJobId: row.id, topic: row.topic }, 'Outbox handler failed');
+      this.logger.warn({ outboxJobId: row.id, attempt: row.attempts }, 'Outbox handler failed');
     }
   }
 }

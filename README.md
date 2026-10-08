@@ -149,6 +149,11 @@ Do not enable them in production or for patient care.
 
 ## ML repository hygiene
 
+See [the independent phase review](docs/phase7-verification.md#independent-review) for acceptance gaps, corrective migrations,
+actual verification results and outstanding deployment decisions. Passing local checks does not mean
+the existing Supabase deployment, clinical modules or training datasets are validated or safe for
+patient data.
+
 Historical datasets, training outputs, and model weights remain tracked so valuable content is not
 lost. New artifacts are ignored. Follow
 [docs/ml-artifact-migration.md](docs/ml-artifact-migration.md) before removing historical content.
