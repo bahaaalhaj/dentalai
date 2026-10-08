@@ -31,7 +31,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Prevent new training data, runs, caches and model artifacts
+        env:
+          ARTIFACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/check-artifacts.mjs
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -53,6 +59,17 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+
+      - name: Set up private inference test runtime
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install inference runtime and run nonclinical fixture tests
+        run: |
+          python -m pip install uv==0.12.23
+          uv sync --project services/ai --frozen --extra test
+          uv run --project services/ai --frozen --extra test python -m pytest services/ai/tests -q
 
       - name: Rebuild PostgreSQL from zero and test constraints
         run: npm run test:db

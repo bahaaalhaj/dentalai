@@ -134,6 +134,11 @@ export function AccountDashboard({
           Clinical patients
         </Link>
       )}
+      {member?.roles.includes('dentist') && (
+        <Link to="/imaging" className={buttonStyle}>
+          Private X-ray studies (experimental)
+        </Link>
+      )}
       {member?.roles.includes('patient') && (
         <Link to="/clinical/history" className={buttonStyle}>
           Approved clinical history

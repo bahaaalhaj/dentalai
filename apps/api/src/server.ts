@@ -15,6 +15,9 @@ import { createAuthProvider } from './domains/auth/auth.provider.js';
 import { smtpMailSender } from './domains/auth/mail.js';
 import { AccessRepository } from './domains/access/access.repository.js';
 import { drainServer } from './infrastructure/shutdown.js';
+import { S3Client } from '@aws-sdk/client-s3';
+import { S3PrivateStorage } from './domains/imaging/storage.js';
+import { PrivateInferenceClient } from './domains/imaging/inference.js';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -88,6 +91,32 @@ async function startServer(): Promise<void> {
   };
   const provider = createAuthProvider(db, authOptions);
   const systemService = new SystemService(new PostgresSystemRepository(pool), lifecycle);
+  const storage =
+    environment.clinicalStorageEnabled &&
+    environment.s3Endpoint &&
+    environment.s3Bucket &&
+    environment.s3AccessKey &&
+    environment.s3SecretKey
+      ? new S3PrivateStorage(
+          new S3Client({
+            endpoint: environment.s3Endpoint,
+            region: 'us-east-1',
+            forcePathStyle: true,
+            credentials: {
+              accessKeyId: environment.s3AccessKey,
+              secretAccessKey: environment.s3SecretKey,
+            },
+          }),
+          environment.s3Bucket,
+        )
+      : undefined;
+  const inference =
+    environment.xrayInferenceEnabled && environment.aiServiceUrl && environment.aiServiceToken
+      ? new PrivateInferenceClient(
+          environment.aiServiceUrl.replace(/\/$/, ''),
+          environment.aiServiceToken,
+        )
+      : undefined;
   const worker = new OutboxWorker(pool, logger, new Map(), {
     pollIntervalMs: environment.outboxPollIntervalMs,
   });
@@ -101,6 +130,7 @@ async function startServer(): Promise<void> {
     const application = await createApplication({
       logger,
       systemService,
+      imaging: { ...(storage ? { storage } : {}), ...(inference ? { inference } : {}) },
       authentication: {
         provider,
         repository: new AccessRepository(pool, db),

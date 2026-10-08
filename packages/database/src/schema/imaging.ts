@@ -47,6 +47,7 @@ export const files = pgTable(
   },
   (table) => [
     uniqueIndex('files_clinic_id_uidx').on(table.clinicId, table.id),
+    uniqueIndex('files_clinic_id_patient_id_uidx').on(table.clinicId, table.id, table.patientId),
     uniqueIndex('files_storage_object_uidx').on(
       table.clinicId,
       table.storageProvider,

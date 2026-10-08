@@ -9,12 +9,17 @@ Authentication and appointments now use the backend API and self-hosted PostgreS
 **Appointments and calendar** from the account dashboard. See [docs/appointments.md](docs/appointments.md)
 for scheduling setup, permissions, timezone policy, and operator prerequisites.
 
+Phase 10 adds dentist-only private X-ray studies at `/imaging` and a fail-closed, versioned ONNX
+runtime. Both storage and inference require explicit server configuration. No approved dental
+artifact or measured clinical evaluation is bundled. See [private imaging](docs/private-imaging.md)
+and [inference setup/evaluation](services/ai/README.md). Do not use for patient-care decisions.
+
 ## Repository layout
 
 ```text
 apps/web/             React and Vite frontend
 apps/api/             Express API and web host
-services/ai/          FastAPI health-only inference-service boundary
+services/ai/          Private, versioned experimental YOLOv8 ONNX inference
 packages/contracts/   Shared Zod transport schemas
 packages/domain/      Framework-independent business rules
 packages/database/    Drizzle schema, reviewed SQL migrations, seed, and database tests
@@ -32,7 +37,7 @@ See [docs/architecture.md](docs/architecture.md) and
 - npm 11 or a compatible npm version supplied with Node.js 22+
 - Docker with Compose for local PostgreSQL and object storage
 - SMTP delivery/capture and PostgreSQL for backend-owned authentication; Supabase is retained only for unmigrated features
-- Python 3.12+ only when running the optional AI-service placeholder directly
+- Python 3.12+ when running or testing the private inference service
 
 ## Application setup
 
@@ -86,7 +91,7 @@ npm run infra:up
 
 This starts PostgreSQL and private S3-compatible MinIO storage with health checks and named volumes.
 No default database or object-storage credentials are committed. Use `npm run infra:down` to stop the
-stack. `npm run infra:up:ai` additionally starts the health-only Python service.
+stack. `npm run infra:up:ai` additionally starts the private inference service; an external model directory is required. The existing MinIO image pull was denied during Phase 10 verification; use an approved reachable private S3-compatible deployment before enabling storage.
 
 To create the self-hosted schema, set the server-only `DATABASE_URL` (never a `VITE_` variable), then
 run:

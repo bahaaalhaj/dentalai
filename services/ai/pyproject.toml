@@ -5,12 +5,19 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "dentalai-ai"
 version = "0.0.0"
-description = "DentalAI inference-service boundary without an inference implementation"
+description = "Private experimental versioned YOLOv8 ONNX inference"
 requires-python = ">=3.12"
 dependencies = [
-  "fastapi>=0.115,<1",
-  "uvicorn[standard]>=0.34,<1",
+  "fastapi==0.143.0",
+  "uvicorn[standard]==0.54.0",
+  "numpy==2.5.3",
+  "Pillow==12.3.0",
+  "onnxruntime==1.30.0",
+  "onnx==1.23.2",
 ]
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1", "httpx==0.28.1"]
 
 [tool.setuptools.packages.find]
 where = ["."]

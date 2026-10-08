@@ -38,6 +38,12 @@ import {
   EncounterSchema,
   PatientSummarySchema,
   type ClinicalWrite,
+  ImagingHistorySchema,
+  ImagingCapabilitiesSchema,
+  ImagingImageSchema,
+  ImagingRunSchema,
+  ImagingReasonSchema,
+  ImagingReviewSchema,
 } from '@dentalai/contracts';
 import { z } from 'zod';
 import {
@@ -95,6 +101,38 @@ export class DentalAiApiClient {
 
   me() {
     return this.get('/api/v1/access/me', AuthIdentitySchema);
+  }
+  imagingHistory(patientId: string) {
+    return this.get(`/api/v1/imaging/patients/${z.uuid().parse(patientId)}`, ImagingHistorySchema);
+  }
+  imagingCapabilities() {
+    return this.get('/api/v1/imaging/capabilities', ImagingCapabilitiesSchema);
+  }
+  uploadClinicalImage(patientId: string, file: File, reason: string, studyId?: string) {
+    const query = studyId ? `?studyId=${z.uuid().parse(studyId)}` : '';
+    return this.request(
+      `/api/v1/imaging/patients/${z.uuid().parse(patientId)}/images${query}`,
+      ImagingImageSchema,
+      'POST',
+      file,
+      { mime: file.type, reason: ImagingReasonSchema.parse({ reason }).reason },
+    );
+  }
+  analyzeClinicalImage(imageId: string, reason: string) {
+    return this.request(
+      `/api/v1/imaging/images/${z.uuid().parse(imageId)}/analyses`,
+      ImagingRunSchema,
+      'POST',
+      ImagingReasonSchema.parse({ reason }),
+    );
+  }
+  reviewClinicalImage(runId: string, decision: 'confirmed' | 'rejected', reason: string) {
+    return this.request(
+      `/api/v1/imaging/analyses/${z.uuid().parse(runId)}/review`,
+      SuccessSchema,
+      'POST',
+      ImagingReviewSchema.parse({ decision, reason }),
+    );
   }
   billingCatalog() {
     return this.get('/api/v1/billing/catalog', BillingCatalogSchema);
@@ -369,6 +407,7 @@ export class DentalAiApiClient {
     schema: z.ZodType<T>,
     method: string,
     payload?: unknown,
+    binary?: { mime: string; reason: string },
   ): Promise<T> {
     const headers: Record<string, string> = { accept: 'application/json' };
     if (method !== 'GET') {
@@ -381,12 +420,18 @@ export class DentalAiApiClient {
       const csrf = await this.csrfRequest;
       headers['x-csrf-token'] = csrf.token;
       headers['content-type'] = 'application/json';
+      if (binary) {
+        headers['content-type'] = binary.mime;
+        headers['x-imaging-reason'] = encodeURIComponent(binary.reason);
+      }
     }
     const response = await this.fetchImplementation(`${this.baseUrl}${path}`, {
       method,
       headers,
       credentials: 'same-origin',
-      ...(payload === undefined ? {} : { body: JSON.stringify(payload) }),
+      ...(payload === undefined
+        ? {}
+        : { body: binary ? (payload as File) : JSON.stringify(payload) }),
     });
     const body: unknown = await response.json().catch(() => undefined);
     if (!response.ok) {
@@ -396,7 +441,8 @@ export class DentalAiApiClient {
           path.startsWith('/api/v1/appointments') ||
           path.startsWith('/api/v1/scheduling/') ||
           path.startsWith('/api/v1/clinical/') ||
-          path.startsWith('/api/v1/billing/')) &&
+          path.startsWith('/api/v1/billing/') ||
+          path.startsWith('/api/v1/imaging/')) &&
         typeof window !== 'undefined'
       )
         window.dispatchEvent(new Event('dentalai:session-expired'));

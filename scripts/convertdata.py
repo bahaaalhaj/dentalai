@@ -1,14 +1,24 @@
 import os
 import pandas as pd
 import shutil
+from pathlib import Path
 from PIL import Image
 
 # -------- CONFIG --------
 # Added 'r' to fix the SyntaxWarning (raw string)
-BASE_DATASET = r"scripts\dataset"
+def external_path(name):
+    value=os.environ.get(name)
+    if not value or not Path(value).is_absolute():
+        raise RuntimeError(f'{name} requires an external absolute path')
+    path=Path(value).resolve();root=Path(__file__).resolve().parents[1]
+    if path==root or root in path.parents:
+        raise RuntimeError('Dataset conversion must use external data/output paths')
+    return str(path)
+
+BASE_DATASET = external_path('ML_SOURCE_DATASET_DIRECTORY')
 IMAGES_SRC = os.path.join(BASE_DATASET, "Images")
 LABELS_SRC = os.path.join(BASE_DATASET, "labels")
-OUTPUT_DIR = "dataset_yolo"
+OUTPUT_DIR = external_path('ML_CONVERTED_DATASET_DIRECTORY')
 
 # --- DEFINE YOUR CLASSES HERE ---
 # YOLO needs numbers. Map your text labels to integers starting at 0.

@@ -19,6 +19,9 @@ const PatientClinicalHistory = lazy(() =>
 const BillingPage = lazy(() =>
   import('./billing/BillingPage').then((m) => ({ default: m.BillingPage })),
 );
+const ImagingPage = lazy(() =>
+  import('./imaging/ImagingPage').then((m) => ({ default: m.ImagingPage })),
+);
 
 export default function App() {
   const [identity, setIdentity] = useState<AuthIdentity | null>(null);
@@ -59,6 +62,16 @@ export default function App() {
       <Router>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
+            <Route
+              path="/imaging"
+              element={
+                identity?.activeMembership?.roles.includes('dentist') ? (
+                  <ImagingPage key={identity.activeMembership.id} />
+                ) : (
+                  <Navigate to={identity ? '/dashboard' : '/login?expired=1'} replace />
+                )
+              }
+            />
             <Route
               path="/billing"
               element={

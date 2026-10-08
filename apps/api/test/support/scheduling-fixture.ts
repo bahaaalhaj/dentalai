@@ -6,6 +6,7 @@ import pino from 'pino';
 import request, { type Response } from 'supertest';
 import type { Express } from 'express';
 import { createApplication } from '../../src/app.js';
+import type { ApiApplicationDependencies } from '../../src/app.js';
 import { createAuthProvider } from '../../src/domains/auth/auth.provider.js';
 import { AccessRepository } from '../../src/domains/access/access.repository.js';
 import { PostgresSystemRepository } from '../../src/domains/system/system.repository.js';
@@ -39,6 +40,7 @@ export async function createSchedulingFixture(
   adminUrl: string,
   origin = 'https://scheduling.example.test',
   mountFrontend?: (app: Express) => void,
+  imaging?: ApiApplicationDependencies['imaging'],
 ) {
   const databaseName = `dentalai_scheduling_${randomUUID().replaceAll('-', '')}`;
   const admin = new Pool({ connectionString: adminUrl });
@@ -118,6 +120,7 @@ export async function createSchedulingFixture(
       options: { secret: randomUUID() + randomUUID(), origin, sendMail: async () => undefined },
     },
     ...(mountFrontend ? { mountFrontend } : {}),
+    ...(imaging ? { imaging } : {}),
   });
   // Auth and CSRF signing secrets need not be identical for this injected fixture; neither leaves the server.
   const members: Record<

@@ -13,6 +13,8 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.venv/
+*.egg-info/
 .cache/
 wandb/
 
@@ -21,6 +23,7 @@ wandb/
 dataset_yolo/
 scripts/dataset/
 runs/
+dental_training/
 *.pt
 *.pth
 *.ckpt

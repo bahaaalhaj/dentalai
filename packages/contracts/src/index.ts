@@ -4,3 +4,4 @@ export * from './appointments.js';
 export * from './health.js';
 export * from './clinical.js';
 export * from './billing.js';
+export * from './imaging.js';

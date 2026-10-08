@@ -69,6 +69,20 @@ services:
     restart: unless-stopped
     ports:
       - '127.0.0.1:${AI_PORT:-8000}:8000'
+    environment:
+      AI_ENV: production
+      AI_SERVICE_TOKEN: ${AI_SERVICE_TOKEN:-}
+      AI_MODEL_MANIFEST: /models/manifest.json
+    volumes:
+      - type: bind
+        source: ${AI_MODEL_DIRECTORY:-./models-unconfigured}
+        target: /models
+        read_only: true
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,noexec,nosuid
     healthcheck:
       test:
         [

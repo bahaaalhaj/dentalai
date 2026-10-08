@@ -3,6 +3,7 @@ import { accessContracts } from './auth.js';
 import { appointmentContracts } from './appointments.js';
 import { clinicalContracts } from './clinical.js';
 import { billingContracts } from './billing.js';
+import { imagingContracts } from './imaging.js';
 import {
   HealthCheckRequestSchema,
   LivenessResponseSchema,
@@ -68,6 +69,7 @@ export function createOpenApiDocument() {
     ...appointmentContracts,
     ...clinicalContracts,
     ...billingContracts,
+    ...imagingContracts,
   ]) {
     const operation = {
       security: contract.public ? [] : [{ cookieSession: [] }],

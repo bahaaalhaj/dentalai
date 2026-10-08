@@ -1,22 +1,61 @@
-from typing import Literal
-
-from fastapi import FastAPI
-from pydantic import BaseModel
-
-
-class HealthResponse(BaseModel):
-    service: Literal["ai"] = "ai"
-    status: Literal["ok"] = "ok"
-    inference_available: Literal[False] = False
+"""Private endpoint; safe errors do not expose paths, patient data or tokens."""
+import asyncio
+import hmac
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.concurrency import run_in_threadpool
+from .runtime import Runtime
 
 
-app = FastAPI(
-    title="DentalAI AI Service",
-    description="Reserved service boundary. No inference endpoint is available.",
-    version="0.0.0",
-)
+def create_app(runtime_factory=Runtime):
+    @asynccontextmanager
+    async def lifespan(app):
+        app.state.runtime = None
+        app.state.lock = asyncio.Lock()
+        path = os.environ.get("AI_MODEL_MANIFEST")
+        if path and len(os.environ.get("AI_SERVICE_TOKEN", "")) >= 32:
+            try:
+                app.state.runtime = await run_in_threadpool(runtime_factory, path)
+            except Exception:
+                pass
+        yield
+        app.state.runtime = None
+
+    app = FastAPI(title="DentalAI private experimental inference", version="1.0.0", lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+
+    @app.get("/health")
+    async def health():
+        return {"service": "ai", "status": "ok", "inference_available": app.state.runtime is not None}
+
+    @app.get("/ready")
+    async def ready():
+        if app.state.runtime is None:
+            raise HTTPException(503, "INFERENCE_UNAVAILABLE")
+        return {"status": "ready"}
+
+    @app.post("/v1/infer")
+    async def infer(request: Request):
+        token = os.environ.get("AI_SERVICE_TOKEN", "")
+        if len(token) < 32 or not hmac.compare_digest(request.headers.get("authorization", "").encode('utf-8'), ("Bearer " + token).encode('utf-8')):
+            raise HTTPException(401, "UNAUTHORIZED")
+        if app.state.runtime is None:
+            raise HTTPException(503, "INFERENCE_UNAVAILABLE")
+        if request.headers.get("content-type") not in ("image/png", "image/jpeg"):
+            raise HTTPException(415, "UNSUPPORTED_IMAGE")
+        if app.state.lock.locked():
+            raise HTTPException(503, "INFERENCE_BUSY")
+        async with app.state.lock:
+            data = bytearray()
+            async for chunk in request.stream():
+                data.extend(chunk)
+                if len(data) > 10 * 1024 * 1024:
+                    raise HTTPException(413, "IMAGE_TOO_LARGE")
+            try:
+                return await run_in_threadpool(app.state.runtime.infer, bytes(data))
+            except Exception:
+                raise HTTPException(503, "INFERENCE_FAILED") from None
+    return app
 
 
-@app.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
-    return HealthResponse()
+app = create_app()

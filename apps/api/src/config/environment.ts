@@ -40,6 +40,14 @@ const EnvironmentSchema = z
     RATE_LIMIT_MAX: emptyToUndefined(z.coerce.number().int().min(1).default(120)),
     SHUTDOWN_TIMEOUT_MS: emptyToUndefined(z.coerce.number().int().min(1_000).default(10_000)),
     OUTBOX_WORKER_ENABLED: booleanString,
+    CLINICAL_STORAGE_ENABLED: booleanString,
+    XRAY_INFERENCE_ENABLED: booleanString,
+    S3_ENDPOINT: emptyToUndefined(z.url().optional()),
+    S3_BUCKET: emptyToUndefined(z.string().min(3).optional()),
+    S3_ACCESS_KEY: emptyToUndefined(z.string().min(1).optional()),
+    S3_SECRET_KEY: emptyToUndefined(z.string().min(16).optional()),
+    AI_SERVICE_URL: emptyToUndefined(z.url().optional()),
+    AI_SERVICE_TOKEN: emptyToUndefined(z.string().min(32).optional()),
     AUTH_SECRET: emptyToUndefined(z.string().min(32).optional()),
     APP_ORIGIN: emptyToUndefined(
       z
@@ -63,6 +71,27 @@ const EnvironmentSchema = z
     OUTBOX_POLL_INTERVAL_MS: emptyToUndefined(z.coerce.number().int().min(250).default(5_000)),
   })
   .transform((environment, context) => {
+    if (
+      environment.CLINICAL_STORAGE_ENABLED &&
+      (!environment.S3_ENDPOINT ||
+        !environment.S3_BUCKET ||
+        !environment.S3_ACCESS_KEY ||
+        !environment.S3_SECRET_KEY)
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Private clinical storage requires all S3 configuration fields.',
+      });
+    if (
+      environment.XRAY_INFERENCE_ENABLED &&
+      (!environment.CLINICAL_STORAGE_ENABLED ||
+        !environment.AI_SERVICE_URL ||
+        !environment.AI_SERVICE_TOKEN)
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Inference requires private storage, AI_SERVICE_URL and AI_SERVICE_TOKEN.',
+      });
     const corsOrigins = environment.CORS_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean);
@@ -93,6 +122,14 @@ const EnvironmentSchema = z
 
     return {
       nodeEnv: environment.NODE_ENV,
+      clinicalStorageEnabled: environment.CLINICAL_STORAGE_ENABLED,
+      xrayInferenceEnabled: environment.XRAY_INFERENCE_ENABLED,
+      s3Endpoint: environment.S3_ENDPOINT,
+      s3Bucket: environment.S3_BUCKET,
+      s3AccessKey: environment.S3_ACCESS_KEY,
+      s3SecretKey: environment.S3_SECRET_KEY,
+      aiServiceUrl: environment.AI_SERVICE_URL,
+      aiServiceToken: environment.AI_SERVICE_TOKEN,
       authSecret: environment.AUTH_SECRET,
       appOrigin: environment.APP_ORIGIN,
       smtpUrl: environment.SMTP_URL,

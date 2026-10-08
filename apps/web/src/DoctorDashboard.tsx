@@ -4,7 +4,6 @@ import { apiClient } from './lib/api-client';
 import type { Profile, XrayImage } from './lib/supabase';
 import { AnestheticCalculator } from './components/AnestheticCalculator';
 import { BillingSection } from './components/BillingSection';
-import { ClinicalProcessor } from './lib/clinical-cv';
 import type { DetectionBox, XrayAnalysisResult } from './lib/clinical-cv';
 import { clinicalFeatureFlags, CLINICAL_FEATURE_UNAVAILABLE_MESSAGE } from './lib/feature-flags';
 import {
@@ -98,120 +97,21 @@ export function DoctorDashboard() {
     }
   }, []);
 
-  const loadPatientXrays = React.useCallback(async (patientId: string) => {
-    if (!clinicalFeatureFlags.xrayAnalysis) {
-      setPatientXrays([]);
-      return;
-    }
-
-    const { data } = await supabase
-      .from('xray_images')
-      .select('*')
-      .eq('patient_id', patientId)
-      .order('created_at', { ascending: false });
-
-    setPatientXrays(data || []);
+  const loadPatientXrays = React.useCallback(async (_patientId: string) => {
+    // Historical Supabase reports are not treated as clinical truth.
+    setPatientXrays([]);
   }, []);
 
   useEffect(() => {
-    fetchInitialData();
-
-    // Centralized real-time subscription
-    const dashboardSubscription = supabase
-      .channel('doctor_dashboard_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'xray_images' }, (payload) => {
-        if (
-          selectedPatient &&
-          'patient_id' in payload.new &&
-          payload.new['patient_id'] === selectedPatient.id
-        ) {
-          loadPatientXrays(selectedPatient.id);
-        }
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(dashboardSubscription);
-    };
+    void fetchInitialData();
+    if (selectedPatient) void loadPatientXrays(selectedPatient.id);
   }, [fetchInitialData, loadPatientXrays, selectedPatient]);
 
-  useEffect(() => {
-    if (selectedPatient) {
-      loadPatientXrays(selectedPatient.id);
-    }
-  }, [selectedPatient, loadPatientXrays]);
-
-  const analyzeXray = async (file: File) => {
-    if (!clinicalFeatureFlags.xrayAnalysis) {
-      alert(CLINICAL_FEATURE_UNAVAILABLE_MESSAGE);
-      return;
-    }
-
-    if (!selectedPatient) return;
-    setIsXrayAnalyzing(true);
+  const analyzeXray = async (_file: File) => {
+    // The legacy browser/Supabase path is permanently retired. Use /imaging.
+    setIsXrayAnalyzing(false);
     setAiResult(null);
-
-    try {
-      // 0. Show local preview
-      const reader = new FileReader();
-      reader.onload = (e) => setPreviewImage(e.target?.result as string);
-      reader.readAsDataURL(file);
-
-      // 1. Run local clinical analysis
-      const result = await ClinicalProcessor.analyze(file);
-
-      const analysisData = {
-        cavities_detected: result.cavities.length > 0,
-        infected_teeth: result.cavities,
-        missing_teeth: result.missingTeeth,
-        bone_loss: result.boneLossLevel,
-        confidence: `${Math.round(result.confidence * 100)}%`,
-        detections: result.detections,
-        other_findings: result.detections.filter((d) => !['Caries', 'Cavity'].includes(d.label)),
-      };
-
-      setAiResult(analysisData);
-
-      // 2. Upload image to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${selectedPatient.id}/${Math.random()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('xrays')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('xrays').getPublicUrl(uploadData.path);
-
-      // 3. Clear previous X-rays for this patient
-      await supabase.from('xray_images').delete().eq('patient_id', selectedPatient.id);
-
-      // 4. Save Record to Database
-      const { error: dbError } = await supabase.from('xray_images').insert([
-        {
-          patient_id: selectedPatient.id,
-          image_url: publicUrl,
-          ai_report: analysisData,
-        },
-      ]);
-
-      if (dbError) throw dbError;
-
-      // 5. Refresh Xray History
-      await loadPatientXrays(selectedPatient.id);
-    } catch (error) {
-      console.error('Clinical Processor/Save Error:', error);
-      alert('Error saving X-ray: ' + (error instanceof Error ? error.message : 'Unknown error'));
-
-      // --- التعديل: مسح الصورة غير الصالحة والنتائج من الشاشة ---
-      setPreviewImage(null);
-      setAiResult(null);
-      // ---------------------------------------------------------
-    } finally {
-      setIsXrayAnalyzing(false);
-    }
+    setPreviewImage(null);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

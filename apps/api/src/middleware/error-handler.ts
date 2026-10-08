@@ -1,6 +1,7 @@
 import { ApiErrorResponseSchema, type ApiErrorResponse } from '@dentalai/contracts';
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import type { Logger } from 'pino';
+import { ZodError } from 'zod';
 import { DomainError, RouteNotFoundError, type ErrorDetail } from '../errors/domain-errors.js';
 
 interface HttpBodyError extends Error {
@@ -28,6 +29,10 @@ export function createErrorHandler(logger: Logger): ErrorRequestHandler {
       code = error.code;
       message = error.message;
       details = error.details;
+    } else if (error instanceof ZodError) {
+      statusCode = 422;
+      code = 'VALIDATION_FAILED';
+      message = 'The request does not satisfy the API contract.';
     } else if (isBodyError(error) && error.type === 'entity.too.large') {
       statusCode = 413;
       code = 'PAYLOAD_TOO_LARGE';

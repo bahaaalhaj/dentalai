@@ -1,11 +1,28 @@
 import os
+from pathlib import Path
+
+# Legacy training recipe retained for provenance, but all data/output/model paths must be external.
+def external_path(name):
+    value=os.environ.get(name)
+    if not value or not Path(value).is_absolute():
+        raise RuntimeError(f'{name} must name an explicitly configured absolute external path')
+    resolved=Path(value).resolve()
+    root=Path(__file__).resolve().parents[1]
+    if resolved==root or root in resolved.parents:
+        raise RuntimeError(f'{name} must be outside the application repository')
+    return str(resolved)
+
 from ultralytics import YOLO
 
 def setup_and_train():
     print("--- 1. Setting Up Paths ---")
     # Path to the dataset we converted in the previous step
     # Use absolute path if possible, or ensure this matches your folder name
-    dataset_path = os.path.abspath("dataset_yolo") 
+    dataset_path = external_path('ML_DATASET_DIRECTORY')
+    output_path = external_path('ML_OUTPUT_DIRECTORY')
+    initial_model = external_path('ML_INITIAL_MODEL')
+    if os.environ.get('ML_LICENSE_AND_PATIENT_SPLITS_REVIEWED') != 'true':
+        raise RuntimeError('Licensing, de-identification and patient-level splits must be reviewed before training')
     
     print(f"Using YOLO formatted dataset at: {dataset_path}")
 
@@ -26,7 +43,8 @@ names: [
   'Impacted Tooth'
 ]
 """
-    yaml_filename = 'dental_data.yaml'
+    os.makedirs(output_path,exist_ok=True)
+    yaml_filename = os.path.join(output_path,'dental_data.yaml')
     with open(yaml_filename, 'w') as f:
         f.write(data_yaml_content)
     print(f"Created {yaml_filename}")
@@ -35,7 +53,7 @@ names: [
     print("--- 3. Starting YOLOv8 Training ---")
     # Using 'yolov8n.pt' (Nano) is great for DentalAI testing. 
     # For better accuracy on X-rays, consider 'yolov8s.pt' (Small) if your GPU allows.
-    model = YOLO('yolov8n.pt') 
+    model = YOLO(initial_model)
     import torch
 
 # ... inside your setup_and_train function ...
@@ -50,9 +68,11 @@ names: [
         imgsz=640,
         batch=16,
         name='dental_ai_run',
-        project='dental_training',
+        project=output_path,
         device=device_to_use,  # <--- Use the auto-detected device
-        exist_ok=True
+        seed=20261008,
+        deterministic=True,
+        exist_ok=False
     )
   
 

@@ -32,30 +32,13 @@ export function PatientDashboard() {
         .single();
       setProfile(profileData);
 
-      // Fetch X-rays
-      const { data: xrayData } = await supabase
-        .from('xray_images')
-        .select('*')
-        .eq('patient_id', user.id)
-        .order('created_at', { ascending: false });
-
-      setPatientXrays(xrayData || []);
+      // Legacy public image URLs and unreviewed reports are retired, not imported as truth.
+      setPatientXrays([]);
     }
   }, []);
 
   useEffect(() => {
-    loadData();
-
-    const updatesChannel = supabase
-      .channel('patient_dashboard_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'xray_images' }, () =>
-        loadData(),
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(updatesChannel);
-    };
+    void loadData();
   }, [loadData]);
 
   const handleLogout = async () => {

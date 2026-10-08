@@ -20,6 +20,7 @@
     "dev:api": "npm run build:packages && npm run dev --workspace @dentalai/api",
     "auth:bootstrap-owner": "npm run auth:bootstrap-owner --workspace @dentalai/api --",
     "dev:ai": "python -m uvicorn app.main:app --reload --app-dir services/ai --port 8000",
+    "test:ai": "uv run --project services/ai --frozen --extra test python -m pytest services/ai/tests -q",
     "start": "npm run start --workspace @dentalai/api",
     "build:packages": "npm run build --workspace @dentalai/domain && npm run build --workspace @dentalai/contracts && npm run build --workspace @dentalai/database && npm run build --workspace @dentalai/ui",
     "build": "npm run build:packages && npm run build --workspace @dentalai/web && npm run build --workspace @dentalai/api",

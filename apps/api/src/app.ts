@@ -18,6 +18,9 @@ import { csrfProtection } from './domains/auth/csrf.js';
 import { createSchedulingRouter } from './domains/scheduling/scheduling.routes.js';
 import { createClinicalRouter } from './domains/clinical/clinical.routes.js';
 import { createBillingRouter } from './domains/billing/billing.routes.js';
+import { createImagingRouter } from './domains/imaging/imaging.routes.js';
+import type { PrivateStorage } from './domains/imaging/storage.js';
+import type { InferenceClient } from './domains/imaging/inference.js';
 
 export interface ApiApplicationOptions {
   bodyLimit: string;
@@ -33,6 +36,7 @@ export interface ApiApplicationDependencies {
   options: ApiApplicationOptions;
   authentication?: { provider: AuthProvider; repository: AccessRepository; options: AuthOptions };
   mountFrontend?: (application: Express) => Promise<void> | void;
+  imaging?: { storage?: PrivateStorage; inference?: InferenceClient };
 }
 
 export async function createApplication({
@@ -41,6 +45,7 @@ export async function createApplication({
   options,
   authentication,
   mountFrontend,
+  imaging,
 }: ApiApplicationDependencies): Promise<Express> {
   const application = express();
   application.disable('x-powered-by');
@@ -74,7 +79,7 @@ export async function createApplication({
       },
       credentials: true,
       methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['content-type', 'x-request-id', 'x-csrf-token'],
+      allowedHeaders: ['content-type', 'x-request-id', 'x-csrf-token', 'x-imaging-reason'],
       exposedHeaders: ['x-request-id', 'ratelimit', 'ratelimit-policy'],
       maxAge: 600,
     }),
@@ -103,6 +108,16 @@ export async function createApplication({
   if (authentication) {
     const csrf = csrfProtection(authentication.options.secret, authentication.options.origin);
     application.get('/api/v1/access/csrf', csrf.issue);
+    application.use(
+      '/api/v1',
+      csrf.verify,
+      createImagingRouter(
+        authentication.provider,
+        authentication.repository,
+        imaging?.storage,
+        imaging?.inference,
+      ),
+    );
     application.use(
       '/api/v1/auth',
       csrf.verify,
@@ -146,7 +161,8 @@ export async function createApplication({
         request.path.startsWith('/api/v1/appointments') ||
         request.path.startsWith('/api/v1/scheduling/') ||
         request.path.startsWith('/api/v1/clinical/') ||
-        request.path.startsWith('/api/v1/billing/')
+        request.path.startsWith('/api/v1/billing/') ||
+        request.path.startsWith('/api/v1/imaging/')
       ) {
         void authentication.repository
           .security('auth.request_rejected', false, undefined, request.requestId)

@@ -1,5 +1,25 @@
 # ML Artifact Migration Proposal
 
+## Phase 10 provenance and licensing gate
+
+No dataset license/source evidence, trustworthy patient-level split manifest or de-identification
+review was supplied. Licensing and permission to train are **unverified**, not granted by possession.
+Existing weights are not activated, deserialized or claimed to be validated. Patient-identifiable
+data must not enter the ML destination. Quarantine legacy artifacts privately until source terms,
+consent/retention and identifier review are documented. Never upload them to public registries.
+
+The destination proposal below remains applicable; no valuable content was deleted. Before copying,
+generate a private inventory of relative paths, sizes and SHA-256 hashes; record source/version/license,
+taxonomy, pseudonymous patient-level splits, training commit/dependency lock, seed, hardware, export
+flags and model checksum. Copy into a private versioned artifact store/dedicated ML repository,
+verify every hash and test restore before requesting separate Git-history cleanup approval.
+
+The retained training recipe requires external absolute data/output/base-model paths and an explicit
+licensing/split review attestation. Original five classes, 50 epochs, 640-pixel input and batch 16 are
+preserved, with seed 20261008 and deterministic training. Conversion remains a legacy recipe, not
+proof of patient separation. The new evaluation harness requires eligible patient-disjoint manifests;
+there is currently no measured dental performance report. Base model/code licenses need review too.
+
 ## Current inventory
 
 The application repository currently contains:
