@@ -1,5 +1,10 @@
 # Local deployment, reset and backup
 
+Phase 13 remains local/pre-deployment. Enable the outbox worker for queued invitations.
+Owner exports omit authentication secrets and need separate private-file downloads.
+Offboarding disables access but retains history/objects; it is not erasure or a backup.
+See [administration](saas-administration.md) for limits, retention and additive rollback.
+
 Follow the root README's generated configuration and `infra:up:local` / `dev:seed` flow.
 The offline Compose stack has PostgreSQL only; private filesystem storage/mail are explicitly
 selected by generated configuration. The separate existing `infra:up` S3/MinIO stack remains an

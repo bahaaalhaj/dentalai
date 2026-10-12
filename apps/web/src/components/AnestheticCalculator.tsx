@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { ANESTHESIA_RULE_SET } from '@dentalai/domain';
 import { CLINICAL_FEATURE_UNAVAILABLE_MESSAGE } from '../lib/feature-flags';
 
@@ -9,26 +10,21 @@ export function AnestheticCalculator({ patientId }: { patientId: string }) {
       key={patientId}
       className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-4"
     >
-      <h3 className="text-xl font-black text-slate-900">
-        Experimental Anesthetic Decision Support
-      </h3>
+      <h3 className="text-xl font-black text-slate-900">{t('ui.4f68ceb6677d7c34')}</h3>
       <div
         role="status"
         className="p-5 rounded-2xl border border-amber-200 bg-amber-50 text-amber-900"
       >
         {CLINICAL_FEATURE_UNAVAILABLE_MESSAGE}
-        <p>
-          No approved clinical references or formulary are available. Recommendations and clinician
-          confirmation are disabled, including in development/demo environments.
-        </p>
+        <p>{t('ui.e6c0e584995730b3')}</p>
       </div>
-      <p>
-        This is decision support, not a prescription. The dentist remains responsible for the final
-        decision. No dose or contraindication assessment has been calculated.
-      </p>
+      <p>{t('ui.e1d61cc5a38cf797')}</p>
       <p className="text-sm text-slate-500">
-        Rule set: {ANESTHESIA_RULE_SET.version}. Formulary: {ANESTHESIA_RULE_SET.formularyVersion}.
-        Clinical approval: pending.
+        {t('ui.564f511cc6e83af6')}
+        {ANESTHESIA_RULE_SET.version}
+        {t('ui.ad0e031390722825')}
+        {ANESTHESIA_RULE_SET.formularyVersion}
+        {t('ui.0bd6808146a5be64')}
       </p>
     </section>
   );

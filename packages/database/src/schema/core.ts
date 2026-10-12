@@ -14,6 +14,7 @@ import {
   time,
   timestamp,
   uniqueIndex,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { invitationStatus, membershipStatus, staffKind } from './enums.js';
@@ -210,6 +211,7 @@ export const invitations = pgTable(
   },
   (table) => [
     uniqueIndex('invitations_token_hash_uidx').on(table.tokenHash),
+    unique('invitations_clinic_id_id_key').on(table.clinicId, table.id),
     uniqueIndex('invitations_pending_email_uidx')
       .on(table.clinicId, sql`lower(${table.email})`)
       .where(sql`${table.status} = 'pending'`),

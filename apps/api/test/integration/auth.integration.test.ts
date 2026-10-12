@@ -16,6 +16,11 @@ import {
 import { PostgresSystemRepository } from '../../src/domains/system/system.repository.js';
 import { SystemService } from '../../src/domains/system/system.service.js';
 import { ApplicationLifecycle } from '../../src/infrastructure/lifecycle.js';
+import { OutboxWorker } from '../../src/workers/outbox.worker.js';
+import {
+  notificationHandlers,
+  emailNotificationProvider,
+} from '../../src/domains/notifications/notification.service.js';
 
 const adminUrl = process.env['DATABASE_URL'];
 if (!adminUrl) throw new Error('DATABASE_URL must point to a disposable PostgreSQL instance.');
@@ -59,12 +64,25 @@ async function mutate(
   method: 'post' | 'delete' = 'post',
 ) {
   const csrf = await request(app).get('/api/v1/access/csrf').expect(200);
-  return request(app)
+  const response = await request(app)
     [method](path)
     .set('origin', origin)
     .set('cookie', [cookie, ...cookies(csrf)].filter(Boolean).join('; '))
     .set('x-csrf-token', String(csrf.body.token))
     .send(body);
+  if (path === '/api/v1/access/invitations' && method === 'post' && response.status === 200) {
+    await new OutboxWorker(
+      database.pool,
+      pino({ level: 'silent' }),
+      notificationHandlers(
+        database.pool,
+        emailNotificationProvider(options.sendMail),
+        options.secret,
+      ),
+      { pollIntervalMs: 1000 },
+    ).runOnce();
+  }
+  return response;
 }
 async function clearRateLimits() {
   await database.pool.query('DELETE FROM auth_rate_limits');
@@ -251,7 +269,7 @@ describe('backend authentication and tenancy', () => {
       CREATE TRIGGER review_fail_audit BEFORE INSERT ON audit_events FOR EACH ROW EXECUTE FUNCTION review_fail_audit()`);
     try {
       await expect(
-        repository.invite(context, email, 'dentist', options.sendMail, origin),
+        repository.invite(context, email, 'dentist', origin, options.secret),
       ).rejects.toThrow();
       expect(
         (await database.pool.query('SELECT 1 FROM invitations WHERE email=$1', [email])).rowCount,

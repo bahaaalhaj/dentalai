@@ -26,6 +26,7 @@ export interface OutboxWorkerOptions {
   pollIntervalMs: number;
   workerId?: string;
   leaseMs?: number;
+  maxAttempts?: number;
 }
 
 export class OutboxWorker {
@@ -85,14 +86,14 @@ export class OutboxWorker {
        WHERE id = (
          SELECT id
          FROM outbox_jobs
-         WHERE (status IN ('pending', 'failed') AND available_at <= now())
-            OR (status = 'processing' AND locked_at <= now() - make_interval(secs => $2))
+         WHERE attempts<$3 AND ((status IN ('pending', 'failed') AND available_at <= now())
+            OR (status = 'processing' AND locked_at <= now() - make_interval(secs => $2)))
          ORDER BY available_at, created_at
          FOR UPDATE SKIP LOCKED
          LIMIT 1
        )
        RETURNING id, clinic_id, topic, aggregate_type, aggregate_id, payload, attempts`,
-      [this.workerId, (this.options.leaseMs ?? 300_000) / 1_000],
+      [this.workerId, (this.options.leaseMs ?? 300_000) / 1_000, this.options.maxAttempts ?? 8],
     );
 
     const row = result.rows[0];

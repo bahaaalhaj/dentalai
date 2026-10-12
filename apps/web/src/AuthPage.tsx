@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { apiClient } from './lib/api-client';
@@ -35,9 +36,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       if (mode === 'register') {
         const fullPhone = `${countryCode}${phone}`;
         await apiClient.register({ email, password, name: fullName, phone: fullPhone });
-        setNotice(
-          'Check your email to verify your patient account before signing in. Staff access requires a clinic invitation.',
-        );
+        setNotice(t('ui.60d2c68db7c43fa2'));
       } else {
         await apiClient.login({ email, password });
         window.location.href = '/dashboard';
@@ -57,15 +56,15 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-indigo-200">
               <Shield className="text-white w-7 h-7" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-slate-900">DentalAi</span>
+            <span className="text-2xl font-bold tracking-tight text-slate-900">
+              {t('ui.9ffbc5261ff3b471')}
+            </span>
           </Link>
           <h1 className="text-3xl font-bold text-slate-900">
-            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+            {mode === 'login' ? t('ui.0c3310a647b03717') : t('ui.0dffe234b44793b6')}
           </h1>
           <p className="text-slate-500 mt-2">
-            {mode === 'login'
-              ? 'Enter your credentials to access your portal'
-              : 'Join DentalAi for smart dental care management'}
+            {mode === 'login' ? t('ui.94a128b3847b0011') : t('ui.7ae90138029674cb')}
           </p>
         </div>
 
@@ -78,7 +77,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             )}
             {mode === 'login' && new URLSearchParams(window.location.search).has('expired') && (
               <p role="status" className="text-slate-600 text-sm">
-                Your session expired or was revoked. Sign in again.
+                {t('ui.e6a804a1b7c1764b')}
               </p>
             )}
             {error && (
@@ -91,24 +90,24 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
               <>
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                    Full Name
+                    {t('ui.8e00cdf71fa7cc76')}
                   </label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <User className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="text"
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                      placeholder="John Doe"
+                      className="w-full ps-12 pe-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                      placeholder={t('ui.6cea57c2fb6cbc2a')}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                    Phone Number
+                    {t('ui.72dba9aeed897e53')}
                   </label>
                   <div className="flex gap-2">
                     <div className="w-1/3 min-w-25">
@@ -125,14 +124,14 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                       </select>
                     </div>
                     <div className="relative flex-1">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <Phone className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                       <input
                         type="tel"
                         required
                         value={phone}
                         onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                        placeholder="9XX XXX XXX"
+                        className="w-full ps-12 pe-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                        placeholder={t('ui.d10f2c4597b6a025')}
                       />
                     </div>
                   </div>
@@ -142,27 +141,27 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
 
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Email Address
+                {t('ui.09bf25ef30833633')}
               </label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Mail className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                  placeholder="name@example.com"
+                  className="w-full ps-12 pe-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  placeholder={t('ui.7b17fb0bd173f625')}
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
-                Password
+                {t('ui.e7cf3ef4f17c3999')}
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Lock className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
                   type="password"
                   required
@@ -171,7 +170,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
                   autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full ps-12 pe-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -182,7 +181,11 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
               disabled={loading}
               className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 group"
             >
-              {loading ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+              {loading
+                ? t('ui.f40a853e58a18759')
+                : mode === 'login'
+                  ? t('ui.bcc0bcc9140b0c97')
+                  : t('ui.0dffe234b44793b6')}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
@@ -191,17 +194,17 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             {mode === 'login' && (
               <p className="mb-4 text-sm">
                 <Link to="/forgot-password" className="text-indigo-600">
-                  Reset password or resend verification
+                  {t('ui.a7195190dedf59df')}
                 </Link>
               </p>
             )}
             <p className="text-slate-500 text-sm">
-              {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
+              {mode === 'login' ? t('ui.1b545b23fae3997a') : t('ui.e77fea936d3e0118')}{' '}
               <Link
                 to={mode === 'login' ? '/register' : '/login'}
                 className="text-indigo-600 font-bold hover:underline"
               >
-                {mode === 'login' ? 'Sign Up' : 'Sign In'}
+                {mode === 'login' ? t('ui.47de23586e49d833') : t('ui.bcc0bcc9140b0c97')}
               </Link>
             </p>
           </div>

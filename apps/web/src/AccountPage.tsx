@@ -10,6 +10,8 @@ import type {
 import type { z } from 'zod';
 import { apiClient } from './lib/api-client';
 import { getErrorMessage } from './lib/errors';
+import { t } from './i18n';
+import { NotificationPreference } from './administration/NotificationPreference';
 
 function Frame({ children }: { children: ReactNode }) {
   return (
@@ -17,7 +19,7 @@ function Frame({ children }: { children: ReactNode }) {
       <div className="max-w-3xl mx-auto space-y-6">
         <Link to="/" className="flex gap-2 text-indigo-600 text-2xl font-bold">
           <Shield />
-          DentalAi
+          {t('ui.9ffbc5261ff3b471')}
         </Link>
         <section className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl space-y-5">
           {children}
@@ -60,7 +62,7 @@ export function AccountDashboard({
   const run = async (action: () => Promise<unknown>) => {
     try {
       await action();
-      setMessage('Saved.');
+      setMessage(t('ui.fca046ccd586c67f'));
     } catch (error) {
       setMessage(getErrorMessage(error));
     }
@@ -68,7 +70,10 @@ export function AccountDashboard({
   return (
     <Frame>
       <div className="flex justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Welcome, {identity.user.name}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">
+          {t('ui.7f95b16f05f5d976')}
+          {identity.user.name}
+        </h1>
         <button
           onClick={() =>
             void run(async () => {
@@ -77,17 +82,28 @@ export function AccountDashboard({
             })
           }
         >
-          Sign out
+          {t('ui.48f0d3d397d49f13')}
         </button>
       </div>
       <p>
         {member
-          ? `${member.clinicName} · ${member.roles.join(', ')}`
-          : 'Patient account · no clinic access assigned'}
+          ? t('ui.6a5b166856cbece0', { v0: member.clinicName, v1: member.roles.join(', ') })
+          : t('ui.45e5254085eb0ad8')}
       </p>
+      {admin && (
+        <Link to="/administration" className={buttonStyle}>
+          {t('admin.title')}
+        </Link>
+      )}
+      {member && <NotificationPreference key={member.id} />}
+      {!identity.memberships.some((m) => m.roles.includes('clinic_owner')) && (
+        <Link to="/onboarding" className={buttonStyle}>
+          {t('admin.onboard')}
+        </Link>
+      )}
       {identity.memberships.length > 1 && (
         <select
-          aria-label="Active clinic"
+          aria-label={t('ui.fd077f7c65f5f772')}
           className={inputStyle}
           value={member?.id ?? ''}
           onChange={(event) =>
@@ -98,7 +114,7 @@ export function AccountDashboard({
           }
         >
           <option value="" disabled>
-            Select clinic
+            {t('ui.499d3091addb65cb')}
           </option>
           {identity.memberships.map((item) => (
             <option key={item.id} value={item.id}>
@@ -107,50 +123,46 @@ export function AccountDashboard({
           ))}
         </select>
       )}
-      <p className="p-4 bg-amber-50 rounded-xl text-slate-700">
-        Clinical records use clinician-authored versions and explicit approval. Experimental X-ray
-        and anesthetic tools remain frozen. Billing uses server-owned invoices and ledger events;
-        other unmigrated screens remain unavailable.
-      </p>
+      <p className="p-4 bg-amber-50 rounded-xl text-slate-700">{t('ui.cb0ab6de3bb912c4')}</p>
       {member && (
         <Link to="/appointments" className={buttonStyle}>
-          Appointments and calendar
+          {t('ui.a1164b91bb0b2fad')}
         </Link>
       )}
       {member?.roles.some((r) =>
         ['clinic_owner', 'clinic_admin', 'receptionist', 'dentist'].includes(r),
       ) && (
         <Link to="/billing" className={buttonStyle}>
-          Clinic billing
+          {t('ui.334a67136be1afb3')}
         </Link>
       )}
       {member?.roles.includes('patient') && (
         <Link to="/billing/portal" className={buttonStyle}>
-          Your invoices and receipts
+          {t('ui.e0d166dca6b8ae62')}
         </Link>
       )}
       {member?.roles.includes('dentist') && (
         <Link to="/clinical/patients" className={buttonStyle}>
-          Clinical patients
+          {t('ui.794807d3934392d8')}
         </Link>
       )}
       {member?.roles.includes('dentist') && (
         <Link to="/imaging" className={buttonStyle}>
-          Private X-ray studies (experimental)
+          {t('ui.ac45840cdc7d09ee')}
         </Link>
       )}
       {member?.roles.includes('patient') && (
         <Link to="/clinical/history" className={buttonStyle}>
-          Approved clinical history
+          {t('ui.4db883d983b471bb')}
         </Link>
       )}
       {message && <p role="status">{message}</p>}
-      <h2 className="font-bold">Active sessions</h2>
+      <h2 className="font-bold">{t('ui.61ad990902e7bc32')}</h2>
       {sessions.map((session) => (
         <div className="flex justify-between" key={session.id}>
           <span>
-            {session.current ? 'This session' : 'Other session'} · expires{' '}
-            {new Date(session.expiresAt).toLocaleString()}
+            {session.current ? t('ui.6da6530a0728728e') : t('ui.d862a5b820acbe98')}{' '}
+            {t('ui.1de5fe01e955da22')} {new Date(session.expiresAt).toLocaleString()}
           </span>
           <button
             onClick={() =>
@@ -161,13 +173,13 @@ export function AccountDashboard({
               })
             }
           >
-            Revoke
+            {t('ui.87e6d00bbf53ec5a')}
           </button>
         </div>
       ))}
       {admin && (
         <>
-          <h2 className="font-bold">Invite clinic staff</h2>
+          <h2 className="font-bold">{t('ui.33039a27b719f968')}</h2>
           <form
             className="space-y-3"
             onSubmit={(event) => {
@@ -180,7 +192,7 @@ export function AccountDashboard({
             }}
           >
             <input
-              aria-label="Invite email"
+              aria-label={t('ui.acb03ba6d22b1075')}
               type="email"
               required
               className={inputStyle}
@@ -188,16 +200,17 @@ export function AccountDashboard({
               onChange={(event) => setEmail(event.target.value)}
             />
             <select
-              aria-label="Invited role"
+              aria-label={t('ui.bbde62ad1c2d3b72')}
               className={inputStyle}
               value={role}
               onChange={(event) => setRole(event.target.value as typeof role)}
             >
-              <option value="dentist">Dentist</option>
-              <option value="receptionist">Receptionist</option>
-              <option value="clinic_admin">Clinic admin</option>
+              <option value="dentist">{t('ui.7de3e38e73038666')}</option>
+              <option value="receptionist">{t('ui.ab63c0d065704040')}</option>
+              <option value="clinic_admin">{t('ui.81a1682944e2e2d9')}</option>
             </select>
-            <button className={buttonStyle}>Send invitation</button>
+            <p>{t('ui.d709ec0406a6abbd')}</p>
+            <button className={buttonStyle}>{t('ui.dba4038b651b7bf1')}</button>
           </form>
           {invitations.map((invitation) => (
             <div key={invitation.id}>
@@ -211,7 +224,7 @@ export function AccountDashboard({
                     })
                   }
                 >
-                  Revoke
+                  {t('ui.87e6d00bbf53ec5a')}
                 </button>
               )}
             </div>
@@ -239,10 +252,10 @@ export function RecoveryPage({ reset = false }: { reset?: boolean }) {
     try {
       if (reset) {
         await apiClient.resetPassword(token, password);
-        setMessage('Password reset. All previous sessions are revoked. Sign in again.');
+        setMessage(t('ui.0659ae06bd750610'));
       } else {
         await (verification ? apiClient.resendVerification(email) : apiClient.requestReset(email));
-        setMessage('If the account is eligible, an email will be sent.');
+        setMessage(t('ui.16824002ed69eaf3'));
       }
     } catch (error) {
       setMessage(getErrorMessage(error));
@@ -252,11 +265,13 @@ export function RecoveryPage({ reset = false }: { reset?: boolean }) {
   }
   return (
     <Frame>
-      <h1 className="text-2xl font-bold">{reset ? 'Reset password' : 'Account recovery'}</h1>
+      <h1 className="text-2xl font-bold">
+        {reset ? t('ui.e0edfeb3a71a1002') : t('ui.2b291cd5cd2fb9bc')}
+      </h1>
       <form className="space-y-4" onSubmit={(event) => void submit(event)}>
         {reset ? (
           <input
-            aria-label="New password"
+            aria-label={t('ui.3dd9df4441fb348f')}
             type="password"
             autoComplete="new-password"
             minLength={12}
@@ -268,7 +283,7 @@ export function RecoveryPage({ reset = false }: { reset?: boolean }) {
           />
         ) : (
           <input
-            aria-label="Email"
+            aria-label={t('ui.969ccbd3cf6300ec')}
             type="email"
             required
             className={inputStyle}
@@ -277,16 +292,16 @@ export function RecoveryPage({ reset = false }: { reset?: boolean }) {
           />
         )}
         <button disabled={busy || (reset && !token)} className={buttonStyle}>
-          {reset ? 'Set password' : 'Send reset email'}
+          {reset ? t('ui.4e4116871bf1515d') : t('ui.dcdb5ecb61530dd1')}
         </button>
         {!reset && (
           <button disabled={busy} type="button" onClick={(event) => void submit(event, true)}>
-            Resend verification
+            {t('ui.1eedf1ae24597927')}
           </button>
         )}
       </form>
       <p role="status">{message}</p>
-      <Link to="/login">Sign in</Link>
+      <Link to="/login">{t('ui.bfd402b2f6f38125')}</Link>
     </Frame>
   );
 }
@@ -299,17 +314,18 @@ export function InvitationPage({ identity }: { identity: AuthIdentity | null }) 
   const [busy, setBusy] = useState(false);
   return (
     <Frame>
-      <h1 className="text-2xl font-bold">Clinic invitation</h1>
+      <h1 className="text-2xl font-bold">{t('ui.1a939796739d7798')}</h1>
       {!identity ? (
         <p>
-          Sign in or register and verify the invited email, then reopen the link from your email.{' '}
-          <Link to="/login">Sign in</Link> · <Link to="/register">Register</Link>
+          {t('ui.0950d9c775275283')} <Link to="/login">{t('ui.bfd402b2f6f38125')}</Link> ·{' '}
+          <Link to="/register">{t('ui.bb7234ec12451361')}</Link>
         </p>
       ) : (
         <>
           <p>
-            Accepting as {identity.user.email}. Your access is determined by the clinic invitation,
-            not account registration.
+            {t('ui.bfbeb8b09e554bba')}
+            {identity.user.email}
+            {t('ui.2294212ae80e7f2f')}
           </p>
           <button
             className={buttonStyle}
@@ -326,7 +342,7 @@ export function InvitationPage({ identity }: { identity: AuthIdentity | null }) 
                 .finally(() => setBusy(false));
             }}
           >
-            Accept invitation
+            {t('ui.7e17aadc3039da77')}
           </button>
         </>
       )}

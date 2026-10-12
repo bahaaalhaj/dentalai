@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { uiMessages } from './messages';
 
 interface Props {
   children?: ReactNode;
@@ -21,7 +22,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    // Do not expose error payloads, component props, patient content or tokens.
+    void error;
+    void errorInfo;
+    console.error('Uncaught application rendering error');
   }
 
   public override render() {
@@ -32,20 +36,15 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">Something went wrong</h1>
-            <p className="text-slate-600 mb-8">
-              We encountered an unexpected error. Don't worry, your data is safe.
-            </p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">{uiMessages().errorTitle}</h1>
+            <p className="text-slate-600 mb-8">{uiMessages().errorBody}</p>
             <button
               onClick={() => window.location.reload()}
               className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
             >
               <RefreshCcw className="w-5 h-5" />
-              Refresh Application
+              {uiMessages().refresh}
             </button>
-            <p className="mt-6 text-xs text-slate-400 font-mono overflow-auto max-h-24">
-              {this.state.error?.message}
-            </p>
           </div>
         </div>
       );

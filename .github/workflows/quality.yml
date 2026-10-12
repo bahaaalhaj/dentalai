@@ -54,6 +54,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check UI literal extraction
+        run: npm run i18n:check
+
       - name: Check formatting
         run: npm run format:check
 
@@ -77,10 +80,10 @@ jobs:
       - name: Build production bundle
         run: npm run build
 
-      - name: Install browser for appointment, clinical, billing and private imaging E2E
+      - name: Install browser for administration, appointment, clinical, billing and imaging E2E
         run: npx playwright install --with-deps --no-shell chromium
 
-      - name: Appointment, approved clinical-history, billing-ledger and offline private-imaging E2E
+      - name: Bilingual administration, onboarding, appointments, clinical, billing and private imaging
         run: npm run test:e2e
 
       - name: Validate local infrastructure configuration

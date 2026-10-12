@@ -65,6 +65,7 @@ export class ClinicalRepository {
       await db.query('BEGIN');
       const m = context.membership;
       if (!m) throw denied();
+      await db.query('SELECT saas_lock($1)', [m.clinicId]);
       const rows = await db.query<{ key: string }>(
         `SELECT r.key FROM memberships m
         JOIN users u ON u.id=m.user_id AND u.disabled_at IS NULL JOIN clinics c ON c.id=m.clinic_id AND c.active

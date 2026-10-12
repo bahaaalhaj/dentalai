@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import type { ClinicalContent, ClinicalRecord } from '@dentalai/contracts';
 import { Field, SelectField } from './ClinicalFields';
 
@@ -15,7 +16,7 @@ export function SurfacePicker({
     toothCode && Number(toothCode[1]) <= 3 ? ['M', 'D', 'I', 'F', 'L'] : ['M', 'D', 'O', 'B', 'L'];
   return (
     <fieldset className="flex flex-wrap gap-4">
-      <legend className="mb-2">Tooth surfaces (optional)</legend>
+      <legend className="mb-2">{t('ui.826dd9340074fa74')}</legend>
       {allowed.map((s) => (
         <label key={s}>
           <input
@@ -45,7 +46,7 @@ export function OdontogramEditor({
   return (
     <>
       <Field
-        label="FDI tooth number"
+        label={t('ui.6833382609f30ccd')}
         required={value.kind === 'finding' || value.procedureCode !== 'other'}
         value={value.toothCode ?? ''}
         onChange={(v) =>
@@ -64,9 +65,9 @@ export function OdontogramEditor({
       {value.kind === 'finding' ? (
         <>
           <SelectField
-            label="Finding action"
+            label={t('ui.36f5412836df27fd')}
             value={actionChosen ? value.findingCode : ''}
-            placeholder="Select a finding action"
+            placeholder={t('ui.cd06f79c2c0a5124')}
             values={[
               'healthy',
               'caries',
@@ -81,13 +82,13 @@ export function OdontogramEditor({
             }}
           />
           <SelectField
-            label="Finding status"
+            label={t('ui.8305745743d971ee')}
             value={value.status}
             values={['active', 'resolved', 'entered_in_error']}
             onChange={(v) => change({ ...value, status: v as typeof value.status })}
           />
           <Field
-            label="Finding details"
+            label={t('ui.0d59110897709f34')}
             value={value.details ?? ''}
             onChange={(v) => change({ ...value, details: v || null })}
           />
@@ -95,9 +96,9 @@ export function OdontogramEditor({
       ) : (
         <>
           <SelectField
-            label="Procedure action"
+            label={t('ui.38d9804acb4c2c9d')}
             value={actionChosen ? value.procedureCode : ''}
-            placeholder="Select a procedure action"
+            placeholder={t('ui.532f70b4f3d85cd9')}
             values={['restoration', 'extraction', 'root_canal', 'crown', 'implant', 'other']}
             onChange={(v) => {
               chooseAction();
@@ -105,13 +106,13 @@ export function OdontogramEditor({
             }}
           />
           <SelectField
-            label="Procedure status"
+            label={t('ui.7ada488b2b391916')}
             value={value.status}
             values={['planned', 'in_progress', 'completed', 'cancelled', 'entered_in_error']}
             onChange={(v) => change({ ...value, status: v as typeof value.status })}
           />
           <Field
-            label="Procedure description"
+            label={t('ui.364a3ebcee4bb09c')}
             value={value.description}
             required
             onChange={(description) => change({ ...value, description })}
@@ -135,14 +136,14 @@ export function Odontogram({
     [8, 7, 5],
   ] as const;
   return (
-    <section aria-label="FDI odontogram" className="rounded-2xl border bg-white p-5 space-y-3">
-      <h2 className="font-bold">Odontogram — FDI two-digit notation</h2>
-      <p className="text-sm text-slate-500">
-        Unrecorded teeth are unknown, not healthy. Selecting a tooth only selects it; saving
-        requires an explicit action.
-      </p>
+    <section
+      aria-label={t('ui.d27a92a5853e6770')}
+      className="rounded-2xl border bg-white p-5 space-y-3"
+    >
+      <h2 className="font-bold">{t('ui.16afbf9956d84ea5')}</h2>
+      <p className="text-sm text-slate-500">{t('ui.807d7b25f46bfb23')}</p>
       {rows.map(([right, left, count]) => (
-        <div key={right} className="flex flex-wrap gap-1">
+        <div dir="ltr" key={right} className="flex flex-wrap gap-1">
           {[
             ...Array.from({ length: count }, (_, i) => `${right}${count - i}`),
             ...Array.from({ length: count }, (_, i) => `${left}${i + 1}`),

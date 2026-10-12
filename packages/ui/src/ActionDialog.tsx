@@ -1,4 +1,5 @@
 import { useEffect, useRef, useId, type ReactNode } from 'react';
+import { uiMessages } from './messages';
 export function ActionDialog({
   title,
   children,
@@ -40,7 +41,7 @@ export function ActionDialog({
         <button
           type="button"
           disabled={busy}
-          aria-label="Close dialog"
+          aria-label={uiMessages().close}
           onClick={() => dialog.current?.close()}
         >
           ×

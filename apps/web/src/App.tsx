@@ -4,6 +4,8 @@ import type { AuthIdentity } from '@dentalai/contracts';
 import { ErrorBoundary, LoadingScreen } from '@dentalai/ui';
 import { apiClient, ApiClientError } from './lib/api-client';
 import { AccountDashboard, RecoveryPage, InvitationPage } from './AccountPage';
+import { hasLocalePreference, setLocale, t, useLocale } from './i18n';
+import { LanguageControl } from './i18n/LanguageControl';
 
 const LandingPage = lazy(() => import('./LandingPage').then((m) => ({ default: m.LandingPage })));
 const AuthPage = lazy(() => import('./AuthPage').then((m) => ({ default: m.AuthPage })));
@@ -22,9 +24,23 @@ const BillingPage = lazy(() =>
 const ImagingPage = lazy(() =>
   import('./imaging/ImagingPage').then((m) => ({ default: m.ImagingPage })),
 );
+const AdministrationPage = lazy(() =>
+  import('./administration/AdministrationPage').then((m) => ({ default: m.AdministrationPage })),
+);
+const OnboardingPage = lazy(() =>
+  import('./administration/OnboardingPage').then((m) => ({ default: m.OnboardingPage })),
+);
 
 export default function App() {
+  const locale = useLocale();
+  useEffect(() => {
+    setLocale(locale, false);
+  }, [locale]);
   const [identity, setIdentity] = useState<AuthIdentity | null>(null);
+  useEffect(() => {
+    if (identity && !hasLocalePreference())
+      setLocale(identity.activeMembership?.locale ?? 'en', false);
+  }, [identity]);
   const [loading, setLoading] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   useEffect(() => {
@@ -36,7 +52,9 @@ export default function App() {
     apiClient
       .me()
       .then((value) => {
-        if (active) setIdentity(value);
+        if (active) {
+          setIdentity(value);
+        }
       })
       .catch((error: unknown) => {
         if (active && !(error instanceof ApiClientError && error.status === 401))
@@ -54,14 +72,47 @@ export default function App() {
   if (unavailable)
     return (
       <main className="p-10 text-slate-700">
-        Account service unavailable. <button onClick={() => window.location.reload()}>Retry</button>
+        {t('ui.0345a7cc26fc8760')}
+        <button onClick={() => window.location.reload()}>{t('ui.942087cc2d41e013')}</button>
       </main>
     );
   return (
     <ErrorBoundary>
       <Router>
+        <LanguageControl />
+        {locale === 'ar' && (
+          <p role="note" className="bg-amber-50 p-2 text-sm">
+            {t('admin.terminology')}
+          </p>
+        )}
         <Suspense fallback={<LoadingScreen />}>
           <Routes>
+            <Route
+              path="/onboarding"
+              element={
+                identity ? (
+                  <OnboardingPage refresh={async () => setIdentity(await apiClient.me())} />
+                ) : (
+                  <Navigate to="/login?expired=1" replace />
+                )
+              }
+            />
+            <Route
+              path="/administration"
+              element={
+                identity?.activeMembership?.roles.some((role) =>
+                  ['clinic_owner', 'clinic_admin'].includes(role),
+                ) ? (
+                  <AdministrationPage
+                    key={identity.activeMembership.id}
+                    identity={identity}
+                    refreshIdentity={async () => setIdentity(await apiClient.me())}
+                  />
+                ) : (
+                  <Navigate to={identity ? '/dashboard' : '/login?expired=1'} replace />
+                )
+              }
+            />
             <Route
               path="/imaging"
               element={

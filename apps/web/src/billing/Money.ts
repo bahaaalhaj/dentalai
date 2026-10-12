@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { parseMoney } from '@dentalai/domain';
 export function currencyScale(currency: string) {
   return (
@@ -9,7 +10,7 @@ export function inputMinor(value: string, currency: string) {
   return parseMoney(value, currencyScale(currency));
 }
 export function showMoney(minor: number, currency: string) {
-  if (!Number.isSafeInteger(minor)) throw new Error('Invalid minor amount.');
+  if (!Number.isSafeInteger(minor)) throw new Error(t('ui.e413c69bcdf24003'));
   const scale = currencyScale(currency),
     factor = 10n ** BigInt(scale);
   const amount = BigInt(minor),

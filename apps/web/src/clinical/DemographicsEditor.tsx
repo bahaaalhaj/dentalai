@@ -1,4 +1,5 @@
 import type { ClinicalContent } from '@dentalai/contracts';
+import { t } from '../i18n';
 import { Field } from './ClinicalFields';
 type Demographics = Extract<ClinicalContent, { kind: 'demographics' }>;
 export function DemographicsEditor({
@@ -14,16 +15,7 @@ export function DemographicsEditor({
         (key) => (
           <Field
             key={key}
-            label={
-              {
-                givenName: 'Given name',
-                familyName: 'Family name',
-                preferredName: 'Preferred name',
-                dateOfBirth: 'Date of birth',
-                phone: 'Phone',
-                email: 'Email',
-              }[key]
-            }
+            label={t(`demographics.${key}`)}
             type={key === 'dateOfBirth' ? 'date' : key === 'email' ? 'email' : 'text'}
             required={key === 'givenName' || key === 'familyName'}
             value={value[key] ?? ''}

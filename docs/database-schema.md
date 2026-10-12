@@ -1,5 +1,12 @@
 # PostgreSQL schema
 
+Phase 13 adds `clinic_profiles`, `clinic_subscriptions`, append-only `subscription_events`
+and `clinic_exports`, `clinic_offboarding`, `notification_preferences` and encrypted
+`notification_deliveries`. All have `clinic_id` and tenant foreign keys; `saas_plans` is a
+global catalog. Migration 0009 initializes new-clinic trials and preserves existing clinics
+with documented administrative grants. SQL capacity triggers and tenant advisory locks
+guard seats/locations/appointment creation/storage. See [administration](saas-administration.md).
+
 The server-only schema lives in `packages/database`. Drizzle supplies SQL-visible types and migration
 execution; committed reviewed SQL is authoritative. The Express API is the only browser data boundary.
 All runtime features now use local PostgreSQL. See [the Phase 12 reset report](phase12-test-data-reset.md)

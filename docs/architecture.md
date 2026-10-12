@@ -1,5 +1,9 @@
 # Architecture
 
+Phase 13 adds tenant administration, subscription capacity triggers and a PostgreSQL
+notification outbox inside the modular monolith, not payment processing/new services.
+See [administration](saas-administration.md).
+
 Phase 12: all routed workflows use the local `/api/v1` boundary and self-hosted PostgreSQL.
 The approved disposable-test-data reset is not a legacy import. See
 [the reset report](phase12-test-data-reset.md), [authentication](authentication.md) and

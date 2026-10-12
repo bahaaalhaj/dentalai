@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import {
@@ -76,7 +77,7 @@ export function InvoiceEditor({
   const references = invoice ? links : patientLinks;
   return (
     <form
-      aria-label="Invoice draft"
+      aria-label={t('ui.cb52180db8ec24e7')}
       className="bg-white border rounded-2xl p-5 space-y-4"
       onSubmit={async (e) => {
         e.preventDefault();
@@ -115,18 +116,13 @@ export function InvoiceEditor({
         }
       }}
     >
-      <h2 className="font-bold">{invoice ? 'Replace draft lines' : 'New invoice draft'}</h2>
-      {invoice && (
-        <p>
-          The current lines remain in audit history. Replace the entire draft explicitly; issued
-          invoices cannot be edited.
-        </p>
-      )}
+      <h2 className="font-bold">{invoice ? t('ui.66ef630a6f03c5f5') : t('ui.a03c1bf1c31ec25f')}</h2>
+      {invoice && <p>{t('ui.8234a10f43d9b352')}</p>}
       <fieldset disabled={busy || locked} className="space-y-4">
         <label>
-          Invoice patient
+          {t('ui.5546233a5f6ef106')}
           <select
-            aria-label="Invoice patient"
+            aria-label={t('ui.5546233a5f6ef106')}
             disabled={!!invoice || busy}
             className="w-full border p-3 rounded-xl"
             value={patientId}
@@ -135,7 +131,7 @@ export function InvoiceEditor({
               setLines(lines.map((l) => ({ ...l, procedureId: '', treatmentPlanItemId: '' })));
             }}
           >
-            <option value="">Select patient</option>
+            <option value="">{t('ui.36512653e9fdc43c')}</option>
             {catalog.patients.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.givenName} {p.familyName} · {p.medicalRecordNumber}
@@ -144,9 +140,9 @@ export function InvoiceEditor({
           </select>
         </label>
         <label>
-          Price list
+          {t('ui.577b5c6442537dcb')}
           <select
-            aria-label="Price list"
+            aria-label={t('ui.577b5c6442537dcb')}
             className="w-full border p-3 rounded-xl"
             value={listId}
             onChange={(e) => {
@@ -154,7 +150,7 @@ export function InvoiceEditor({
               setLines([empty()]);
             }}
           >
-            <option value="">Select price snapshot</option>
+            <option value="">{t('ui.70bab3d67b89686d')}</option>
             {catalog.priceLists
               .filter((l) => !invoice || l.currency === invoice.currency)
               .map((l) => (
@@ -164,16 +160,17 @@ export function InvoiceEditor({
               ))}
           </select>
         </label>
-        {!catalog.priceLists.length && (
-          <p>No published prices. An owner/admin must publish a price list first.</p>
-        )}
+        {!catalog.priceLists.length && <p>{t('ui.32c8ddca764c6adc')}</p>}
         {lines.map((l, index) => (
           <fieldset key={index} className="border rounded-xl p-3 space-y-3">
-            <legend>Invoice line {index + 1}</legend>
+            <legend>
+              {t('ui.dffd370b53aad452')}
+              {index + 1}
+            </legend>
             <label>
-              Service
+              {t('ui.d677190e0a9990e7')}
               <select
-                aria-label={`Line ${index + 1} service`}
+                aria-label={t('ui.f64c8c18ac7b4797', { v0: index + 1 })}
                 value={l.priceItemId}
                 className="w-full border p-3"
                 onChange={(e) =>
@@ -182,7 +179,7 @@ export function InvoiceEditor({
                   )
                 }
               >
-                <option value="">Select service price</option>
+                <option value="">{t('ui.f1cde6e8a1f9a1d5')}</option>
                 {list?.items.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.serviceName} · {showMoney(p.amountMinor, list.currency)}
@@ -193,7 +190,10 @@ export function InvoiceEditor({
             {(['quantity', 'discount', 'tax'] as const).map((field) => (
               <Field
                 key={field}
-                label={`Line ${index + 1} ${field === 'quantity' ? 'quantity in hundredths' : `${field} in minor units`}`}
+                label={t('ui.7ee8b33a67ec4f74', {
+                  v0: index + 1,
+                  v1: field === 'quantity' ? 'quantity in hundredths' : `${field} in minor units`,
+                })}
                 value={l[field]}
                 required
                 type="text"
@@ -204,10 +204,15 @@ export function InvoiceEditor({
             ))}
             {(['procedureId', 'treatmentPlanItemId'] as const).map((field) => (
               <label key={field}>
-                Line {index + 1}{' '}
-                {field === 'procedureId' ? 'performed procedure' : 'treatment-plan item'} (optional)
+                {t('ui.adc6295a3f2de663')}
+                {index + 1}{' '}
+                {field === 'procedureId' ? t('ui.cbdf6bd0124e9275') : t('ui.dbe752b2fa2f213b')}{' '}
+                {t('ui.0059798b7f7023e4')}
                 <select
-                  aria-label={`Line ${index + 1} ${field === 'procedureId' ? 'performed procedure' : 'treatment-plan item'} (optional)`}
+                  aria-label={t('ui.72ca7a9cce317895', {
+                    v0: index + 1,
+                    v1: field === 'procedureId' ? 'performed procedure' : 'treatment-plan item',
+                  })}
                   value={l[field]}
                   className="w-full border p-3"
                   onChange={(e) =>
@@ -218,7 +223,7 @@ export function InvoiceEditor({
                     )
                   }
                 >
-                  <option value="">No clinical link</option>
+                  <option value="">{t('ui.7a7f7dadad755457')}</option>
                   {references
                     .filter(
                       (ref) => ref.kind === (field === 'procedureId' ? 'procedure' : 'plan_item'),
@@ -233,23 +238,24 @@ export function InvoiceEditor({
             ))}
             {lines.length > 1 && (
               <button type="button" onClick={() => setLines(lines.filter((_, i) => i !== index))}>
-                Remove draft line {index + 1}
+                {t('ui.6051442d201e4745')}
+                {index + 1}
               </button>
             )}
           </fieldset>
         ))}
-        {linkLoading && <p role="status">Loading approved link references…</p>}
+        {linkLoading && <p role="status">{t('ui.6a3a953f24964555')}</p>}
         {linkError && (
           <p role="alert">
             {linkError}{' '}
             <button type="button" onClick={() => setLinkRetry((v) => v + 1)}>
-              Retry clinical references
+              {t('ui.03e675a5956411e2')}
             </button>
           </p>
         )}
         {!!references.length && (
           <details>
-            <summary>Approved billing link references for selected invoice</summary>
+            <summary>{t('ui.470901ae90dc7d0f')}</summary>
             {references.map((l) => (
               <p key={l.id}>
                 {l.kind}: {l.description} · {l.id}
@@ -257,26 +263,23 @@ export function InvoiceEditor({
             ))}
           </details>
         )}
-        <p className="text-sm">
-          100 hundredths = one unit. Discount and tax are explicit minor-unit amounts, not
-          automatically calculated tax advice. Prices come from the server.
-        </p>
+        <p className="text-sm">{t('ui.f2836b72514b34be')}</p>
         <button type="button" onClick={() => setLines([...lines, empty()])}>
-          Add invoice line
+          {t('ui.c5e8a6d06a5c98c1')}
         </button>
-        <Field label="Draft change reason" value={reason} required onChange={setReason} />
+        <Field label={t('ui.40f62b6cfeb78efd')} value={reason} required onChange={setReason} />
       </fieldset>
       {error && (
         <p role="alert" className="text-red-700">
-          {error} Draft retained. Retry the same request after checking invoice history.
+          {error} {t('ui.ba1e2b79c3957b99')}
         </p>
       )}
       <div className="flex gap-4">
         <button disabled={busy} className="bg-indigo-600 text-white p-3 rounded-xl">
-          Save invoice draft
+          {t('ui.c8f14d945e83b6d2')}
         </button>
         <button type="button" disabled={busy} onClick={cancel}>
-          Cancel draft editor
+          {t('ui.22877781479384ae')}
         </button>
       </div>
     </form>

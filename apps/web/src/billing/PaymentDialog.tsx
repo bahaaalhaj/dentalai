@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useState } from 'react';
 import { ActionDialog } from '@dentalai/ui';
 import type { BillingInvoice } from '@dentalai/contracts';
@@ -36,7 +37,7 @@ export function PaymentDialog({
     [requestKey] = useState(() => crypto.randomUUID());
   return (
     <ActionDialog
-      title={`${action[0]!.toUpperCase() + action.slice(1)} invoice`}
+      title={t('ui.fe9d57dfddc5229a', { v0: action[0]!.toUpperCase() + action.slice(1) })}
       busy={busy}
       onClose={close}
     >
@@ -51,9 +52,9 @@ export function PaymentDialog({
               minor = ['issue', 'discard'].includes(action)
                 ? 0
                 : inputMinor(amount, invoice.currency);
-            if (!reason.trim()) throw new Error('A reason is required.');
+            if (!reason.trim()) throw new Error(t('ui.4e2224fde3819ef0'));
             if (!['issue', 'discard'].includes(action) && minor <= 0)
-              throw new Error('Enter a positive amount.');
+              throw new Error(t('ui.8164872b175e6bdb'));
             // Validate before locking retry details: invalid local input never reached the server.
             if (action === 'issue' || action === 'discard')
               InvoiceActionSchema.parse({ ...common, expectedVersion: invoice.version });
@@ -112,22 +113,21 @@ export function PaymentDialog({
         }}
       >
         <p>
-          {invoice.invoiceNumber} · Open balance {showMoney(invoice.balanceMinor, invoice.currency)}
+          {invoice.invoiceNumber} {t('ui.c683c803560aca31')}
+          {showMoney(invoice.balanceMinor, invoice.currency)}
         </p>
-        <p>
-          This action is authorized and recorded permanently. Confirm the details before applying.
-        </p>
+        <p>{t('ui.595253566ff847ec')}</p>
         {!['issue', 'discard'].includes(action) && (
           <fieldset disabled={busy || locked} className="space-y-3">
             <Field
-              label={`Amount in ${invoice.currency}`}
+              label={t('ui.64ec34d5da0ddd57', { v0: invoice.currency })}
               value={amount}
               required
               onChange={setAmount}
             />
             {action === 'payment' && (
               <SelectField
-                label="Payment method"
+                label={t('ui.b948ac04b854394f')}
                 value={method}
                 values={['cash', 'card', 'bank_transfer', 'insurance', 'other']}
                 onChange={(v) => setMethod(v as typeof method)}
@@ -135,14 +135,14 @@ export function PaymentDialog({
             )}
             {action === 'refund' && (
               <label>
-                Original payment
+                {t('ui.68f4d8eab3f44316')}
                 <select
-                  aria-label="Original payment"
+                  aria-label={t('ui.68f4d8eab3f44316')}
                   value={paymentId}
                   className="w-full border p-3"
                   onChange={(e) => setPaymentId(e.target.value)}
                 >
-                  <option value="">Select payment receipt</option>
+                  <option value="">{t('ui.5404d6e2e64ce51f')}</option>
                   {invoice.events
                     .filter((e) => e.kind === 'payment')
                     .map((p) => (
@@ -155,32 +155,27 @@ export function PaymentDialog({
             )}
             {action === 'adjustment' && (
               <SelectField
-                label="Adjustment direction"
+                label={t('ui.b1be7c07122318e8')}
                 value={direction}
                 values={['credit', 'debit']}
                 onChange={setDirection}
               />
             )}
             {action !== 'adjustment' && (
-              <Field
-                label="External receipt reference (optional)"
-                value={reference}
-                onChange={setReference}
-              />
+              <Field label={t('ui.e34a0b16a082251d')} value={reference} onChange={setReference} />
             )}
           </fieldset>
         )}
         <fieldset disabled={busy || locked}>
-          <Field label="Financial change reason" value={reason} required onChange={setReason} />
+          <Field label={t('ui.a4bf416a13294895')} value={reason} required onChange={setReason} />
         </fieldset>
         {error && (
           <p role="alert" className="text-red-700">
-            {error} Retry uses the same idempotency key and original details. Check financial
-            history before closing or starting a different operation.
+            {error} {t('ui.636e8c4be8e04c8f')}
           </p>
         )}
         <button disabled={busy} className="bg-indigo-600 text-white p-3 rounded-xl">
-          {locked ? 'Retry same financial action' : 'Confirm financial action'}
+          {locked ? t('ui.8654fae11054f104') : t('ui.88b6bd4c04b48da7')}
         </button>
       </form>
     </ActionDialog>

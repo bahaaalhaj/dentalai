@@ -21,6 +21,7 @@ export class AnesthesiaRepository {
     const db = await this.pool.connect();
     try {
       await db.query('BEGIN');
+      await db.query('SELECT saas_lock($1)', [m.clinicId]);
       const result = await db.query<{ id: string }>(
         `SELECT p.id FROM memberships m
         JOIN users u ON u.id=m.user_id AND u.disabled_at IS NULL

@@ -155,8 +155,8 @@ export function createAccessRouter(
         access,
         body.email,
         body.role,
-        options.sendMail,
         options.origin,
+        options.secret,
       );
       sendValidated(response, InvitationSchema, invitation);
     }),

@@ -26,6 +26,7 @@ export async function configureLocalDevelopment(root: string) {
     [
       '# Generated local-only configuration. Never deploy or commit this file.',
       'NODE_ENV=development',
+      'OUTBOX_WORKER_ENABLED=true',
       'HOST=localhost',
       'PORT=3000',
       'APP_ORIGIN=http://localhost:3000',

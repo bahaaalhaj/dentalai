@@ -53,6 +53,19 @@ for (const [email, role] of [
     throw new Error('Local seed role/tenant assertion failed.');
   await call('/api/v1/appointments?view=upcoming');
   await call('/api/v1/appointments?view=history');
+  await call('/api/v1/admin/notification-preferences');
+  if (role === 'clinic_owner' || role === 'clinic_admin') {
+    const administration = await call('/api/v1/admin/overview');
+    if (
+      administration.configuration.clinicId !== tenant ||
+      administration.configuration.currency !== 'SYP' ||
+      administration.subscription.provider !== 'administrative-mock'
+    )
+      throw new Error('Local clinic administration tenant/currency/provider assertion failed.');
+    await call('/api/v1/admin/plans');
+    await call('/api/v1/admin/notifications');
+    if (role === 'clinic_owner') await call('/api/v1/admin/audit');
+  }
   if (role === 'patient') {
     await call('/api/v1/clinical/portal');
     await call('/api/v1/billing/portal');

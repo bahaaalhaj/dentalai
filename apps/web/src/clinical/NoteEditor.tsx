@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import type { ClinicalContent } from '@dentalai/contracts';
 import { SelectField } from './ClinicalFields';
 type Note = Extract<ClinicalContent, { kind: 'note' }>;
@@ -5,15 +6,15 @@ export function NoteEditor({ value, change }: { value: Note; change: (value: Not
   return (
     <>
       <SelectField
-        label="Note type"
+        label={t('ui.1b906ea18db60730')}
         value={value.noteType}
         values={['progress', 'consultation', 'correction']}
         onChange={(v) => change({ ...value, noteType: v as Note['noteType'] })}
       />
       <label className="block">
-        Clinical note
+        {t('ui.1bf411712bdbd316')}
         <textarea
-          aria-label="Clinical note"
+          aria-label={t('ui.1bf411712bdbd316')}
           required
           className="mt-1 w-full p-3 border rounded-xl min-h-32"
           value={value.body}

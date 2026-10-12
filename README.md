@@ -82,6 +82,15 @@ OpenAPI: `/api/v1/contracts/v1?format=openapi`.
 
 ## Product boundaries and limitations
 
+Phase 13 adds [clinic administration](docs/saas-administration.md): guided onboarding,
+owner/admin configuration, memberships, server-enforced plans/usage, export and retained
+offboarding. New clinics start an administrative trial; **no subscription payments are
+processed**. Additional clinics/owner transfer require operator review. Open **Clinic
+administration** or **Set up a new clinic** in the account dashboard. Enable
+`OUTBOX_WORKER_ENABLED=true` in existing configuration for queued invitations (newly generated
+configurations enable it). English/Arabic and RTL are prepared; medical English remains
+pending professional review. See [Phase 13 verification](docs/phase13-verification.md).
+
 Authentication uses opaque server-owned sessions, Secure cookies, CSRF and membership-derived roles.
 Appointments use transactional booking and database resource exclusion constraints. Clinical records
 use immutable revisions, explicit tooth actions and approved-only portal projections. Billing uses

@@ -50,6 +50,26 @@ import {
 } from '@dentalai/contracts';
 import { z } from 'zod';
 import {
+  AdministrationOverviewSchema,
+  PlanSchema,
+  ConfigurationWriteSchema,
+  ClinicConfigurationResponseSchema,
+  OnboardingSchema,
+  MembershipSchema,
+  MemberChangeSchema,
+  LocationWriteSchema,
+  LocationSchema,
+  SubscriptionActionSchema,
+  SubscriptionSchema,
+  AuditSummarySchema,
+  NotificationHistorySchema,
+  NotificationPreferenceSchema,
+  ExportRequestSchema,
+  ExportSchema,
+  OffboardingSchema,
+  OffboardingStateSchema,
+} from '@dentalai/contracts';
+import {
   BillingCatalogSchema,
   BillingInvoiceSchema,
   BillingMutationSchema,
@@ -104,6 +124,74 @@ export class DentalAiApiClient {
 
   me() {
     return this.get('/api/v1/access/me', AuthIdentitySchema);
+  }
+  administration() {
+    return this.get('/api/v1/admin/overview', AdministrationOverviewSchema);
+  }
+  plans() {
+    return this.get('/api/v1/admin/plans', z.array(PlanSchema));
+  }
+  onboard(body: z.infer<typeof OnboardingSchema>) {
+    return this.post('/api/v1/admin/onboarding', OnboardingSchema.parse(body), MembershipSchema);
+  }
+  configureClinic(body: z.infer<typeof ConfigurationWriteSchema>) {
+    return this.request(
+      '/api/v1/admin/configuration',
+      ClinicConfigurationResponseSchema,
+      'PUT',
+      ConfigurationWriteSchema.parse(body),
+    );
+  }
+  changeMember(id: string, body: z.infer<typeof MemberChangeSchema>) {
+    return this.request(
+      `/api/v1/admin/members/${z.uuid().parse(id)}`,
+      SuccessSchema,
+      'PUT',
+      MemberChangeSchema.parse(body),
+    );
+  }
+  saveLocation(body: z.infer<typeof LocationWriteSchema>) {
+    return this.post('/api/v1/admin/locations', LocationWriteSchema.parse(body), LocationSchema);
+  }
+  subscriptionAction(body: z.infer<typeof SubscriptionActionSchema>) {
+    return this.post(
+      '/api/v1/admin/subscription',
+      SubscriptionActionSchema.parse(body),
+      SubscriptionSchema,
+    );
+  }
+  administrationAudit() {
+    return this.get('/api/v1/admin/audit', AuditSummarySchema);
+  }
+  notificationHistory() {
+    return this.get('/api/v1/admin/notifications', NotificationHistorySchema);
+  }
+  notificationPreferences(value?: boolean) {
+    return value === undefined
+      ? this.get('/api/v1/admin/notification-preferences', NotificationPreferenceSchema)
+      : this.request(
+          '/api/v1/admin/notification-preferences',
+          NotificationPreferenceSchema,
+          'PUT',
+          { operationalEmail: value },
+        );
+  }
+  exportClinic(reason: string) {
+    return this.post('/api/v1/admin/exports', ExportRequestSchema.parse({ reason }), ExportSchema);
+  }
+  requestOffboarding(reason: string) {
+    return this.post(
+      '/api/v1/admin/offboarding/request',
+      ExportRequestSchema.parse({ reason }),
+      OffboardingStateSchema,
+    );
+  }
+  completeOffboarding(body: z.infer<typeof OffboardingSchema>) {
+    return this.post(
+      '/api/v1/admin/offboarding/complete',
+      OffboardingSchema.parse(body),
+      SuccessSchema,
+    );
   }
   imagingHistory(patientId: string) {
     return this.get(`/api/v1/imaging/patients/${z.uuid().parse(patientId)}`, ImagingHistorySchema);
@@ -453,7 +541,8 @@ export class DentalAiApiClient {
     if (!response.ok) {
       if (
         response.status === 401 &&
-        (path.startsWith('/api/v1/access/') ||
+        (path.startsWith('/api/v1/admin/') ||
+          path.startsWith('/api/v1/access/') ||
           path.startsWith('/api/v1/appointments') ||
           path.startsWith('/api/v1/scheduling/') ||
           path.startsWith('/api/v1/clinical/') ||

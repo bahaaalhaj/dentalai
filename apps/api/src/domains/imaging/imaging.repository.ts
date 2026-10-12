@@ -23,6 +23,7 @@ export class ImagingRepository {
     const db = await this.pool.connect();
     try {
       await db.query('BEGIN');
+      await db.query('SELECT saas_lock($1)', [m.clinicId]);
       const access = await db.query(
         `SELECT m.id FROM memberships m JOIN users u ON u.id=m.user_id AND u.disabled_at IS NULL
         JOIN clinics c ON c.id=m.clinic_id AND c.active JOIN auth_sessions s ON s.id=$3 AND s.user_id=u.id AND s.expires_at>now()

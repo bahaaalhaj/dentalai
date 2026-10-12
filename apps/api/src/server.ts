@@ -20,6 +20,10 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { S3PrivateStorage } from './domains/imaging/storage.js';
 import { FilesystemPrivateStorage } from './domains/imaging/filesystem-storage.js';
 import { PrivateInferenceClient } from './domains/imaging/inference.js';
+import {
+  notificationHandlers,
+  emailNotificationProvider,
+} from './domains/notifications/notification.service.js';
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 
@@ -129,9 +133,18 @@ async function startServer(): Promise<void> {
           environment.aiServiceToken,
         )
       : undefined;
-  const worker = new OutboxWorker(pool, logger, new Map(), {
-    pollIntervalMs: environment.outboxPollIntervalMs,
-  });
+  const worker = new OutboxWorker(
+    pool,
+    logger,
+    notificationHandlers(
+      pool,
+      emailNotificationProvider(authOptions.sendMail, environment.mailDriver),
+      authOptions.secret,
+    ),
+    {
+      pollIntervalMs: environment.outboxPollIntervalMs,
+    },
+  );
   let closeFrontend = async () => {};
   const mountFrontend = frontendMount(process.argv.slice(2), (close) => {
     closeFrontend = close;

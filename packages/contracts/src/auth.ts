@@ -53,6 +53,12 @@ export const MembershipSchema = z.object({
   clinicId: z.uuid(),
   clinicName: z.string(),
   roles: z.array(ClinicRoleSchema),
+  locale: z.enum(['en', 'ar']).optional(),
+  brandColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
+  brandMark: z.string().max(8).optional(),
 });
 export const AuthIdentitySchema = z.object({
   user: z.object({ id: z.uuid(), name: z.string(), email: z.email(), emailVerified: z.boolean() }),

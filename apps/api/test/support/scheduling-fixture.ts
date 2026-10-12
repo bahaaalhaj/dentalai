@@ -95,11 +95,12 @@ export async function createSchedulingFixture(
       "INSERT INTO working_hours(clinic_id,location_id,weekday,opens_at_local,closes_at_local) VALUES($1,$2,$3,'09:00','17:00')",
       [clinicId, locationId, day],
     );
-  const provider = createAuthProvider(database.db, {
+  const authOptions = {
     secret: randomUUID() + randomUUID(),
     origin,
     sendMail: async () => undefined,
-  });
+  };
+  const provider = createAuthProvider(database.db, authOptions);
   const accessRepository = new AccessRepository(database.pool, database.db);
   const app = await createApplication({
     logger: pino({ level: 'silent' }),
@@ -117,7 +118,7 @@ export async function createSchedulingFixture(
     authentication: {
       provider,
       repository: accessRepository,
-      options: { secret: randomUUID() + randomUUID(), origin, sendMail: async () => undefined },
+      options: authOptions,
     },
     ...(mountFrontend ? { mountFrontend } : {}),
     ...(imaging ? { imaging } : {}),
@@ -201,6 +202,8 @@ export async function createSchedulingFixture(
     await admin.end();
   };
   return {
+    authOptions,
+    provider,
     app,
     origin,
     database,

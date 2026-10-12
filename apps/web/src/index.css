@@ -13,6 +13,22 @@
 }
 
 @layer base {
+  [dir='rtl'] body,
+  [dir='rtl'] h1,
+  [dir='rtl'] h2,
+  [dir='rtl'] h3,
+  [dir='rtl'] h4,
+  [dir='rtl'] h5,
+  [dir='rtl'] h6 {
+    font-family: Tahoma, Arial, sans-serif;
+  }
+  input[type='email'],
+  input[type='tel'],
+  input[type='number'],
+  input[type='date'],
+  input[type='time'] {
+    direction: ltr;
+  }
   body {
     @apply font-sans text-slate-900 antialiased;
   }

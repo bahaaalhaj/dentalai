@@ -5,6 +5,7 @@ import { clinicalContracts } from './clinical.js';
 import { billingContracts } from './billing.js';
 import { imagingContracts } from './imaging.js';
 import { anesthesiaContracts } from './anesthesia.js';
+import { administrationContracts, AdministrationExportFileContract } from './administration.js';
 import {
   HealthCheckRequestSchema,
   LivenessResponseSchema,
@@ -65,6 +66,31 @@ export function createOpenApiDocument() {
   };
 
   const accessPaths: Record<string, Record<string, unknown>> = {};
+  accessPaths[AdministrationExportFileContract.path] = {
+    get: {
+      security: [{ cookieSession: [] }],
+      description:
+        'Recent owner session required; private attachment, tenant-scoped and checksum-verified.',
+      parameters: [
+        {
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: z.toJSONSchema(AdministrationExportFileContract.params.shape.id),
+        },
+      ],
+      responses: {
+        '200': {
+          description: 'Private file',
+          content: { 'application/octet-stream': { schema: { type: 'string', format: 'binary' } } },
+        },
+        '401': errorResponse,
+        '403': errorResponse,
+        '404': errorResponse,
+        '503': errorResponse,
+      },
+    },
+  };
   for (const contract of [
     ...accessContracts,
     ...appointmentContracts,
@@ -72,6 +98,7 @@ export function createOpenApiDocument() {
     ...billingContracts,
     ...imagingContracts,
     ...anesthesiaContracts,
+    ...administrationContracts,
   ]) {
     const operation = {
       security: contract.public ? [] : [{ cookieSession: [] }],

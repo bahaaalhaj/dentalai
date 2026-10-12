@@ -24,7 +24,16 @@ export function createErrorHandler(logger: Logger): ErrorRequestHandler {
     let message = 'An unexpected error occurred.';
     let details: readonly ErrorDetail[] | undefined;
 
-    if (error instanceof DomainError) {
+    const databaseCode =
+      typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
+    if (databaseCode === 'P1301' || databaseCode === 'P1302') {
+      statusCode = 409;
+      code = databaseCode === 'P1301' ? 'PLAN_LIMIT_EXCEEDED' : 'SUBSCRIPTION_READ_ONLY';
+      message =
+        databaseCode === 'P1301'
+          ? 'The clinic plan capacity is exhausted. Ask the owner to review usage.'
+          : 'New capacity is unavailable for this subscription. Existing records remain retained.';
+    } else if (error instanceof DomainError) {
       statusCode = error.statusCode;
       code = error.code;
       message = error.message;

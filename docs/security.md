@@ -1,5 +1,10 @@
 # Security notes
 
+Phase 13 rechecks membership/session/clinic permissions within administrative transactions.
+Owner-only export/offboarding needs recent sign-in; exports exclude credentials/public
+objects. Notification tokens are encrypted at rest and quotas database-enforced.
+Administrative grants never represent payment evidence. See [administration](saas-administration.md).
+
 - Repository examples contain variable names only. Database, auth and storage credentials must never
   be exposed to the browser or committed. Generated local credentials/configuration are ignored.
 - Docker Compose requires explicit PostgreSQL and MinIO credentials; it supplies no credential defaults.

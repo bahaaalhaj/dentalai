@@ -22,6 +22,7 @@ import { createImagingRouter } from './domains/imaging/imaging.routes.js';
 import { createAnesthesiaRouter } from './domains/anesthesia/anesthesia.routes.js';
 import type { PrivateStorage } from './domains/imaging/storage.js';
 import type { InferenceClient } from './domains/imaging/inference.js';
+import { createAdministrationRouter } from './domains/administration/administration.routes.js';
 
 export interface ApiApplicationOptions {
   bodyLimit: string;
@@ -118,6 +119,16 @@ export async function createApplication({
   application.use('/api/v1', apiRateLimit, createSystemRouter(systemService));
   if (authentication) {
     const csrf = csrfProtection(authentication.options.secret, authentication.options.origin);
+    application.use(
+      '/api/v1',
+      csrf.verify,
+      createAdministrationRouter(
+        authentication.provider,
+        authentication.repository,
+        authentication.options,
+        imaging?.storage,
+      ),
+    );
     application.get('/api/v1/access/csrf', csrf.issue);
     application.use(
       '/api/v1',
@@ -172,6 +183,7 @@ export async function createApplication({
   if (authentication) {
     const auditRejected: ErrorRequestHandler = (error: unknown, request, _response, next) => {
       if (
+        request.path.startsWith('/api/v1/admin/') ||
         request.path.startsWith('/api/v1/auth/') ||
         request.path.startsWith('/api/v1/access/') ||
         request.path.startsWith('/api/v1/appointments') ||

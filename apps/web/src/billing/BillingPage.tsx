@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type {
@@ -63,43 +64,50 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
     <main className="bg-slate-50 min-h-screen p-6">
       <div className="max-w-5xl mx-auto space-y-5">
         <Link to="/dashboard" className="text-indigo-600">
-          DentalAI · Account
+          {t('ui.5da1476388be416f')}
         </Link>
         <h1 className="text-3xl font-bold">
-          {portal ? 'Your invoices and receipts' : 'Clinic billing ledger'}
+          {portal ? t('ui.e0d166dca6b8ae62') : t('ui.7e6562a764190dfc')}
         </h1>
         <p>
-          Financial history comes from issued invoices and immutable events, never current tooth
-          status. {portal ? 'Read-only permitted financial information.' : ''}
+          {t('ui.19b38f0396816d88')}
+          {portal ? t('ui.0f1ca410797c56a4') : ''}
         </p>
         <button disabled={editor !== undefined || action !== null} onClick={() => void refresh()}>
-          Refresh billing
+          {t('ui.bdb64a9f7e2332f4')}
         </button>
-        {loading && <p role="status">Loading billing…</p>}
+        {loading && <p role="status">{t('ui.2c8af4d4106d408c')}</p>}
         {error && (
           <p role="alert" className="text-red-700">
-            {error} <button onClick={() => void refresh()}>Retry</button>
+            {error} <button onClick={() => void refresh()}>{t('ui.942087cc2d41e013')}</button>
           </p>
         )}
         {receipt && (
           <p role="status" className="bg-emerald-50 p-4 break-all">
-            Recorded receipt: {receipt}
+            {t('ui.a7050f20bbe5af52')}
+            {receipt}
           </p>
         )}
-        {!loading && !invoices.length && <p>No {portal ? 'issued ' : ''}invoices available.</p>}
+        {!loading && !invoices.length && (
+          <p>
+            {t('ui.05f8bb36f8813cd8')}
+            {portal ? t('ui.80f24ee2af7c474c') : ''}
+            {t('ui.12e27867eb5c9926')}
+          </p>
+        )}
         {!portal && catalog && (
           <>
             <PricingPanel catalog={catalog} refresh={refresh} />
             <section className="bg-white border rounded-2xl p-5">
-              <h2 className="font-bold">Issued invoice and payment reports</h2>
-              {!reports.length && <p>No issued financial activity.</p>}
+              <h2 className="font-bold">{t('ui.0a49928d7e40e7c2')}</h2>
+              {!reports.length && <p>{t('ui.182865eb7af255dd')}</p>}
               {reports.map((r) => (
                 <p key={r.currency}>
-                  {r.currency} · {r.invoiceCount} invoices · Issued{' '}
-                  {showMoney(r.issuedMinor, r.currency)} · Adjustments{' '}
-                  {showMoney(r.adjustmentMinor, r.currency)} · Payments{' '}
-                  {showMoney(r.paymentsMinor, r.currency)} · Refunds{' '}
-                  {showMoney(r.refundsMinor, r.currency)} · Open{' '}
+                  {r.currency} · {r.invoiceCount} {t('ui.4c7e116e90017a10')}{' '}
+                  {showMoney(r.issuedMinor, r.currency)} {t('ui.fc4d6342d36923c6')}{' '}
+                  {showMoney(r.adjustmentMinor, r.currency)} {t('ui.d3758801a6cdb883')}{' '}
+                  {showMoney(r.paymentsMinor, r.currency)} {t('ui.a4a8c46199d080bd')}{' '}
+                  {showMoney(r.refundsMinor, r.currency)} {t('ui.a16474bbce3b4332')}{' '}
                   {showMoney(r.balanceMinor, r.currency)}
                 </p>
               ))}
@@ -114,15 +122,15 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
                   setLinks([]);
                 }}
               >
-                New invoice
+                {t('ui.84918c66a9d7fc7e')}
               </button>
             )}
           </>
         )}
         <label>
-          Invoice
+          {t('ui.b832002da297545f')}
           <select
-            aria-label="Invoice"
+            aria-label={t('ui.b832002da297545f')}
             disabled={editor !== undefined || action !== null}
             className="w-full p-3 border rounded-xl"
             value={selected}
@@ -134,7 +142,7 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
               setLinks([]);
             }}
           >
-            <option value="">Select invoice</option>
+            <option value="">{t('ui.81d75c961d178c6a')}</option>
             {invoices.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.invoiceNumber} · {i.status} · {showMoney(i.balanceMinor, i.currency)}
@@ -161,16 +169,17 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
               {invoice.invoiceNumber} · {invoice.status}
             </h2>
             <p>
-              Original {showMoney(invoice.originalTotalMinor, invoice.currency)} · Adjusted{' '}
-              {showMoney(invoice.adjustedTotalMinor, invoice.currency)} · Paid{' '}
-              {showMoney(invoice.paymentsMinor, invoice.currency)} · Refunded{' '}
-              {showMoney(invoice.refundsMinor, invoice.currency)} · Remaining{' '}
+              {t('ui.9feb5fc023004901')}
+              {showMoney(invoice.originalTotalMinor, invoice.currency)} {t('ui.9d64568c68311f9f')}{' '}
+              {showMoney(invoice.adjustedTotalMinor, invoice.currency)} {t('ui.b15892cd67d0079c')}{' '}
+              {showMoney(invoice.paymentsMinor, invoice.currency)} {t('ui.a8532b82397e2bdb')}{' '}
+              {showMoney(invoice.refundsMinor, invoice.currency)} {t('ui.b266aaace53d0524')}{' '}
               {showMoney(invoice.balanceMinor, invoice.currency)}
             </p>
             {invoice.items.map((i) => (
               <p key={i.id}>
-                {i.description} · quantity {i.quantityHundredths / 100} ·{' '}
-                {showMoney(i.lineTotalMinor, invoice.currency)}
+                {i.description} {t('ui.db84fd58edf34e24')}
+                {i.quantityHundredths / 100} · {showMoney(i.lineTotalMinor, invoice.currency)}
               </p>
             ))}
             {!portal && catalog?.permissions.write && invoice.status === 'draft' && (
@@ -192,27 +201,29 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
                       });
                   }}
                 >
-                  Edit draft
+                  {t('ui.4452cbdbee0f5f51')}
                 </button>
                 <button disabled={editor !== undefined} onClick={() => setAction('issue')}>
-                  Issue invoice
+                  {t('ui.3d669c085f9a2c43')}
                 </button>
                 <button disabled={editor !== undefined} onClick={() => setAction('discard')}>
-                  Discard draft
+                  {t('ui.cb30147eec19a758')}
                 </button>
               </div>
             )}
             {!portal &&
               catalog?.permissions.write &&
               !['draft', 'discarded'].includes(invoice.status) && (
-                <button onClick={() => setAction('payment')}>Record payment</button>
+                <button onClick={() => setAction('payment')}>{t('ui.1ef3fba4680a9698')}</button>
               )}
             {!portal &&
               catalog?.permissions.manage &&
               !['draft', 'discarded'].includes(invoice.status) && (
                 <div className="flex gap-4">
-                  <button onClick={() => setAction('refund')}>Refund payment</button>
-                  <button onClick={() => setAction('adjustment')}>Adjust invoice</button>
+                  <button onClick={() => setAction('refund')}>{t('ui.ebe493f66da3714a')}</button>
+                  <button onClick={() => setAction('adjustment')}>
+                    {t('ui.c814e045171759f1')}
+                  </button>
                 </div>
               )}
             <FinancialHistory invoice={invoice} />

@@ -3,7 +3,7 @@ import type { Pool, PoolClient } from 'pg';
 import { schema, type DentalDatabase } from '@dentalai/database';
 import { AuthIdentitySchema, type AuthIdentity, type ClinicRole } from '@dentalai/contracts';
 import { DomainError } from '../../errors/domain-errors.js';
-import type { MailSender } from '../auth/mail.js';
+import { enqueueNotification } from '../notifications/notification.service.js';
 
 export interface AccessContext {
   userId: string;
@@ -39,6 +39,7 @@ export class AccessRepository {
   private async administrativeAccess(client: PoolClient, context: AccessContext): Promise<void> {
     const membership = context.membership;
     if (!membership) throw new DomainError('ACCESS_DENIED', 'Select a clinic first.', 403);
+    await client.query('SELECT saas_lock($1)', [membership.clinicId]);
     const result = await client.query(
       `SELECT m.id FROM memberships m JOIN users u ON u.id=m.user_id AND u.disabled_at IS NULL
        JOIN clinics c ON c.id=m.clinic_id AND c.active
@@ -113,12 +114,13 @@ export class AccessRepository {
       throw new DomainError('SESSION_EXPIRED', 'Your session has expired. Sign in again.', 401);
     const memberships = await this.pool.query<AuthIdentity['memberships'][number]>(
       `SELECT m.id,m.clinic_id AS "clinicId",c.display_name AS "clinicName",
-        json_agg(r.key ORDER BY r.key) AS roles
+        json_agg(r.key ORDER BY r.key) AS roles,p.locale,p.brand_color AS "brandColor",p.brand_mark AS "brandMark"
        FROM memberships m JOIN clinics c ON c.id=m.clinic_id AND c.active
+       JOIN clinic_profiles p ON p.clinic_id=c.id
        JOIN membership_roles mr ON mr.clinic_id=m.clinic_id AND mr.membership_id=m.id
        JOIN roles r ON r.clinic_id=mr.clinic_id AND r.id=mr.role_id
        WHERE m.user_id=$1 AND m.status='active'
-       GROUP BY m.id,c.display_name ORDER BY m.joined_at,m.id`,
+       GROUP BY m.id,c.display_name,p.locale,p.brand_color,p.brand_mark ORDER BY m.joined_at,m.id`,
       [userId],
     );
     const session = await this.pool.query<{ active_membership_id: string | null }>(
@@ -225,8 +227,8 @@ export class AccessRepository {
     context: AccessContext,
     email: string,
     role: ClinicRole,
-    sendMail: MailSender,
     origin: string,
+    secret: string,
   ) {
     const membership = context.membership;
     if (!membership) throw new DomainError('ACCESS_DENIED', 'Select a clinic first.', 403);
@@ -255,35 +257,19 @@ export class AccessRepository {
         'invitation',
         invitation.id,
       );
+      await enqueueNotification(
+        client,
+        membership.clinicId,
+        {
+          to: email,
+          subject: 'DentalAI clinic invitation',
+          text: `Sign in or create a patient account with this email, verify it, then accept your clinic invitation: ${origin}/invitation#token=${token}`,
+        },
+        secret,
+        { category: 'invitation', invitationId: invitation.id },
+      );
       return invitation;
     });
-    try {
-      await sendMail({
-        to: email,
-        subject: 'DentalAI clinic invitation',
-        text: `Sign in or create a patient account with this email, verify it, then accept your clinic invitation: ${origin}/invitation#token=${token}`,
-      });
-    } catch {
-      await this.transaction(async (client) => {
-        await client.query(
-          "UPDATE invitations SET status='revoked' WHERE id=$1 AND status='pending'",
-          [row.id],
-        );
-        await this.transactionalSecurity(
-          client,
-          context,
-          membership.clinicId,
-          'auth.invitation_delivery_failed',
-          'invitation',
-          row.id,
-        );
-      });
-      throw new DomainError(
-        'EMAIL_UNAVAILABLE',
-        'The invitation could not be delivered. Try again later.',
-        503,
-      );
-    }
     return {
       id: row.id,
       email: email.toLowerCase(),
@@ -317,6 +303,13 @@ export class AccessRepository {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
+      const tenant = await client.query<{ clinic_id: string }>(
+        'SELECT clinic_id FROM invitations WHERE token_hash=$1',
+        [digest(token)],
+      );
+      if (!tenant.rows[0])
+        throw new DomainError('INVALID_INVITATION', 'This invitation is invalid or expired.', 403);
+      await client.query('SELECT saas_lock($1)', [tenant.rows[0].clinic_id]);
       // Keep the authenticated recipient/session live for the entire privilege-changing transaction.
       const session = await client.query(
         `SELECT s.id FROM auth_sessions s JOIN users u ON u.id=s.user_id
@@ -358,6 +351,10 @@ export class AccessRepository {
           'The invitation issuer no longer has access.',
           403,
         );
+      // Release the reserved seat in the SAME transaction before granting the membership role.
+      await client.query("UPDATE invitations SET status='accepted',accepted_at=now() WHERE id=$1", [
+        row.id,
+      ]);
       const member = await client.query<{ id: string }>(
         `INSERT INTO memberships(clinic_id,user_id,status,joined_at) VALUES ($1,$2,'active',now())
          ON CONFLICT(clinic_id,user_id) DO UPDATE SET status='active'
@@ -383,9 +380,6 @@ export class AccessRepository {
           `INSERT INTO providers(clinic_id,staff_id,provider_type) VALUES ($1,$2,'dentist') ON CONFLICT(clinic_id,staff_id) DO NOTHING`,
           [row.clinic_id, employee.rows[0]?.id],
         );
-      await client.query("UPDATE invitations SET status='accepted',accepted_at=now() WHERE id=$1", [
-        row.id,
-      ]);
       await client.query(
         'UPDATE auth_sessions SET clinic_id=$1,active_membership_id=$2 WHERE id=$3 AND user_id=$4',
         [row.clinic_id, memberId, context.sessionId, context.userId],

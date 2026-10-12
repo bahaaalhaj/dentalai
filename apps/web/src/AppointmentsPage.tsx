@@ -1,3 +1,4 @@
+import { t } from './i18n';
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Shield } from 'lucide-react';
@@ -166,16 +167,15 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
         <header className="flex justify-between">
           <Link to="/dashboard" className="flex gap-2 text-indigo-600 font-bold">
             <Shield />
-            DentalAi · Account
+            {t('ui.406dbd46e95a082b')}
           </Link>
           <h1 className="text-2xl font-bold flex gap-2">
             <Calendar />
-            {staff ? 'Clinic calendar' : 'My appointments'}
+            {staff ? t('ui.2ebe857f6dedd371') : t('ui.b98e4d4f12df4242')}
           </h1>
         </header>
         <p className="text-slate-600">
-          {identity.activeMembership?.clinicName} · Times are displayed in each appointment's clinic
-          location timezone, not your device timezone.
+          {identity.activeMembership?.clinicName} {t('ui.3961abf5d7ac7e63')}
         </p>
         {notification && (
           <p role="status" aria-live="polite" className="p-4 bg-indigo-50 rounded-xl">
@@ -194,7 +194,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
               disabled={busy || !catalog?.types.length || !catalog?.locations.length}
               onClick={() => openBooking()}
             >
-              Book appointment
+              {t('ui.eefda2bfa8623a6a')}
             </button>
             <button
               aria-pressed={view === 'upcoming'}
@@ -203,7 +203,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                 setOffset(0);
               }}
             >
-              Upcoming
+              {t('ui.5f1a2542e4e4ca5e')}
             </button>
             <button
               aria-pressed={view === 'history'}
@@ -212,17 +212,17 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                 setOffset(0);
               }}
             >
-              History
+              {t('ui.0e76960093379060')}
             </button>
             <button disabled={busy} onClick={() => void run(refresh, 'Appointments refreshed.')}>
-              Refresh
+              {t('ui.0e91610117029a62')}
             </button>
           </div>
           {staff && (
             <label className="block">
-              Calendar date (location local day)
+              {t('ui.14bf654846ab9b44')}
               <input
-                aria-label="Calendar date"
+                aria-label={t('ui.16c7fa8e242186e2')}
                 className={input}
                 type="date"
                 value={calendarDate}
@@ -237,22 +237,23 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                   setOffset(0);
                 }}
               >
-                Show all dates
+                {t('ui.89f488b4e4dc3211')}
               </button>
             </label>
           )}
-          {!items.length && <p>No appointments in this view.</p>}
+          {!items.length && <p>{t('ui.ef3db8e8e994c3b6')}</p>}
           <div className="space-y-4">
             {items.map((appointment) => (
               <article
                 key={appointment.id}
                 className="border border-slate-200 rounded-2xl p-5 space-y-3"
-                aria-label={`${appointment.typeName} appointment`}
+                aria-label={t('ui.9724a6bd199b45e0', { v0: appointment.typeName })}
               >
                 <div className="flex justify-between">
                   <h2 className="font-bold">
                     {appointment.typeName}
-                    {staff && ` · ${appointment.patientName ?? 'Patient'}`}
+                    {staff &&
+                      t('ui.8b43bbfd20d38ad2', { v0: appointment.patientName ?? 'Patient' })}
                   </h2>
                   <span className="text-indigo-700">{appointment.status}</span>
                 </div>
@@ -269,7 +270,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                   {['scheduled', 'confirmed'].includes(appointment.status) &&
                     Date.parse(appointment.startsAt) > now && (
                       <button disabled={busy} onClick={() => openBooking(appointment)}>
-                        Reschedule
+                        {t('ui.a6a80431b02464c1')}
                       </button>
                     )}
                   {(['confirm', 'cancel', 'no_show', 'check_in', 'start', 'complete'] as const)
@@ -311,7 +312,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                       }, 'History loaded.')
                     }
                   >
-                    Audit trail
+                    {t('ui.c1ada08ce13857e4')}
                   </button>
                 </div>
               </article>
@@ -322,7 +323,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
               disabled={offset === 0 || busy}
               onClick={() => setOffset(Math.max(0, offset - 50))}
             >
-              Previous page
+              {t('ui.1208ec01f223c616')}
             </button>
             <button
               disabled={nextOffset === null || busy}
@@ -330,7 +331,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                 if (nextOffset !== null) setOffset(nextOffset);
               }}
             >
-              Next page
+              {t('ui.c08ac736a5e29c29')}
             </button>
           </div>
         </section>
@@ -346,12 +347,21 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
           <ActionDialog
             title={
               modal.kind === 'history'
-                ? 'Appointment audit trail'
+                ? t('ui.259cb0842b7be881')
                 : modal.kind === 'action'
-                  ? `${{ confirm: 'Confirm appointment', cancel: 'Cancel appointment', no_show: 'Mark no-show', check_in: 'Check in', start: 'Start appointment', complete: 'Complete appointment' }[modal.action]}`
+                  ? t('ui.5b5219411d291239', {
+                      v0: {
+                        confirm: 'Confirm appointment',
+                        cancel: 'Cancel appointment',
+                        no_show: 'Mark no-show',
+                        check_in: 'Check in',
+                        start: 'Start appointment',
+                        complete: 'Complete appointment',
+                      }[modal.action],
+                    })
                   : modal.kind === 'reschedule'
-                    ? 'Reschedule appointment'
-                    : 'Book appointment'
+                    ? t('ui.25ece142842014ff')
+                    : t('ui.eefda2bfa8623a6a')
             }
             onClose={() => {
               setModal(null);
@@ -379,9 +389,9 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                 }}
               >
                 <label className="block">
-                  Location
+                  {t('ui.15b61974b2707a7b')}
                   <select
-                    aria-label="Location"
+                    aria-label={t('ui.15b61974b2707a7b')}
                     className={input}
                     value={location}
                     onChange={(event) => {
@@ -397,9 +407,9 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                   </select>
                 </label>
                 <label className="block">
-                  Appointment type
+                  {t('ui.3d3ef221d75e705d')}
                   <select
-                    aria-label="Appointment type"
+                    aria-label={t('ui.3d3ef221d75e705d')}
                     className={input}
                     value={type}
                     disabled={modal.kind === 'reschedule'}
@@ -410,15 +420,16 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                   >
                     {catalog?.types.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.name} ({item.durationMinutes} minutes)
+                        {item.name} ({item.durationMinutes} {t('ui.87a54b98d2ee7615')}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label className="block">
-                  Date ({timezone})
+                  {t('ui.53c140763ccb5e7b')}
+                  {timezone})
                   <input
-                    aria-label="Booking date"
+                    aria-label={t('ui.ee620d8ed25e4c5e')}
                     className={input}
                     type="date"
                     min={clinicToday(timezone)}
@@ -432,18 +443,15 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                 </label>
                 {staff && modal.kind === 'book' && (
                   <label className="block">
-                    Patient record UUID
+                    {t('ui.ef30502d2c7bdbc0')}
                     <input
-                      aria-label="Patient record UUID"
+                      aria-label={t('ui.ef30502d2c7bdbc0')}
                       className={input}
                       required
                       value={patientId}
                       onChange={(event) => setPatientId(event.target.value)}
                     />
-                    <span className="text-sm text-slate-500">
-                      Use a patient record belonging to this clinic; portal user IDs are not patient
-                      IDs.
-                    </span>
+                    <span className="text-sm text-slate-500">{t('ui.93dd6a396ae00fe5')}</span>
                   </label>
                 )}
                 <button
@@ -452,10 +460,13 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                   disabled={busy || !location || !type || !date}
                   onClick={() => void run(search, 'Availability refreshed.')}
                 >
-                  Search availability
+                  {t('ui.0f6d17ebda8ba3ff')}
                 </button>
                 <fieldset>
-                  <legend>Available times ({timezone})</legend>
+                  <legend>
+                    {t('ui.42a4849e0024f2d3')}
+                    {timezone})
+                  </legend>
                   {availabilityMessage && (
                     <p role="status" aria-live="polite">
                       {availabilityMessage}
@@ -477,7 +488,9 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                   </div>
                 </fieldset>
                 <button className={button} disabled={busy || !selectedSlot}>
-                  {modal.kind === 'reschedule' ? 'Save reschedule' : 'Book selected time'}
+                  {modal.kind === 'reschedule'
+                    ? t('ui.7705a94cae1f2a2f')
+                    : t('ui.7cb7151ca434bd77')}
                 </button>
               </form>
             )}
@@ -502,13 +515,14 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
               >
                 <p>
                   {formatAppointmentTime(modal.appointment.startsAt, modal.appointment.timezone)} (
-                  {modal.appointment.timezone}). This change is recorded in the audit trail.
+                  {modal.appointment.timezone}
+                  {t('ui.be59bc0d97c949c4')}
                 </p>
                 {['cancel', 'no_show'].includes(modal.action) && (
                   <label className="block">
-                    Reason
+                    {t('ui.f81ab834de5f8491')}
                     <textarea
-                      aria-label="Reason"
+                      aria-label={t('ui.f81ab834de5f8491')}
                       className={input}
                       maxLength={500}
                       required
@@ -518,7 +532,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                   </label>
                 )}
                 <button className={button} disabled={busy}>
-                  Apply change
+                  {t('ui.594c44e38834445f')}
                 </button>
               </form>
             )}
@@ -585,21 +599,18 @@ function SchedulingSettings({
       catalog.clinicTimezone);
   return (
     <details className="bg-white rounded-3xl border border-slate-200 p-6">
-      <summary className="font-bold cursor-pointer">Clinic scheduling settings</summary>
+      <summary className="font-bold cursor-pointer">{t('ui.3e7291e7ec1a268d')}</summary>
       <div className="space-y-6 mt-5">
+        <p>{t('ui.8bfd2804ee08109c')}</p>
         <p>
-          Providers are created through dentist invitations. Working hours use the selected
-          location's timezone; provider hours narrow the general clinic hours.
-        </p>
-        <p>
-          Active providers:{' '}
+          {t('ui.1240121f112ab1e5')}{' '}
           {catalog.providers.map((item) => item.name).join(', ') ||
             'None – invite a dentist first.'}
         </p>
         <label className="block">
-          Settings location
+          {t('ui.02b9235c82dc2be5')}
           <select
-            aria-label="Settings location"
+            aria-label={t('ui.02b9235c82dc2be5')}
             className={input}
             value={locationId}
             onChange={(event) => setLocationId(event.target.value)}
@@ -618,12 +629,12 @@ function SchedulingSettings({
             save(() => apiClient.addOperatory({ locationId, name: chair }), 'Chair added.');
           }}
         >
-          <h2 className="font-bold">Chairs</h2>
+          <h2 className="font-bold">{t('ui.09e99d8899cd6b72')}</h2>
           <p>{catalog.operatories.map((item) => item.name).join(', ')}</p>
           <label>
-            Chair name
+            {t('ui.1fb26001874e53a3')}
             <input
-              aria-label="Chair name"
+              aria-label={t('ui.1fb26001874e53a3')}
               className={input}
               required
               value={chair}
@@ -631,7 +642,7 @@ function SchedulingSettings({
             />
           </label>
           <button disabled={busy || !locationId} className={button}>
-            Add chair
+            {t('ui.ad7f1a27842a9254')}
           </button>
         </form>
         <form
@@ -644,11 +655,11 @@ function SchedulingSettings({
             );
           }}
         >
-          <h2 className="font-bold">Appointment types</h2>
+          <h2 className="font-bold">{t('ui.23a7da3b244aca3b')}</h2>
           <label>
-            Type name
+            {t('ui.795dfd0ae966023b')}
             <input
-              aria-label="Type name"
+              aria-label={t('ui.795dfd0ae966023b')}
               className={input}
               required
               value={name}
@@ -656,9 +667,9 @@ function SchedulingSettings({
             />
           </label>
           <label>
-            Type code
+            {t('ui.936997b9e45eb31d')}
             <input
-              aria-label="Type code"
+              aria-label={t('ui.936997b9e45eb31d')}
               className={input}
               required
               pattern="[a-z0-9_-]+"
@@ -667,9 +678,9 @@ function SchedulingSettings({
             />
           </label>
           <label>
-            Duration in minutes
+            {t('ui.91d7528868594410')}
             <input
-              aria-label="Duration in minutes"
+              aria-label={t('ui.91d7528868594410')}
               className={input}
               type="number"
               min={5}
@@ -680,7 +691,7 @@ function SchedulingSettings({
             />
           </label>
           <button disabled={busy} className={button}>
-            Add type
+            {t('ui.60f7694e9cd6a414')}
           </button>
         </form>
         <form
@@ -700,16 +711,16 @@ function SchedulingSettings({
             );
           }}
         >
-          <h2 className="font-bold">Working hours</h2>
+          <h2 className="font-bold">{t('ui.b9c635214e54995c')}</h2>
           <label>
-            Hours apply to
+            {t('ui.5069e7f0488d64bb')}
             <select
-              aria-label="Hours provider"
+              aria-label={t('ui.a948c08b17deaef2')}
               className={input}
               value={providerId}
               onChange={(event) => setProviderId(event.target.value)}
             >
-              <option value="">General clinic hours</option>
+              <option value="">{t('ui.4300e645fce54f7b')}</option>
               {catalog.providers.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
@@ -718,26 +729,34 @@ function SchedulingSettings({
             </select>
           </label>
           <label>
-            Weekday
+            {t('ui.6ff81986ead18583')}
             <select
-              aria-label="Hours weekday"
+              aria-label={t('ui.7f2b9a81dc91b5cf')}
               className={input}
               value={day}
               onChange={(event) => setDay(Number(event.target.value))}
             >
-              {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(
-                (label, index) => (
-                  <option key={label} value={index}>
-                    {label}
-                  </option>
-                ),
-              )}
+              {(
+                [
+                  'weekday.0',
+                  'weekday.1',
+                  'weekday.2',
+                  'weekday.3',
+                  'weekday.4',
+                  'weekday.5',
+                  'weekday.6',
+                ] as const
+              ).map((key, index) => (
+                <option key={key} value={index}>
+                  {t(key)}
+                </option>
+              ))}
             </select>
           </label>
           <label>
-            Opens
+            {t('ui.21a71f3e3356eeab')}
             <input
-              aria-label="Opens"
+              aria-label={t('ui.21a71f3e3356eeab')}
               className={input}
               type="time"
               required
@@ -746,9 +765,9 @@ function SchedulingSettings({
             />
           </label>
           <label>
-            Closes
+            {t('ui.74c21a6312ede178')}
             <input
-              aria-label="Closes"
+              aria-label={t('ui.74c21a6312ede178')}
               className={input}
               type="time"
               required
@@ -757,13 +776,14 @@ function SchedulingSettings({
             />
           </label>
           <button disabled={busy || !locationId} className={button}>
-            Add hours
+            {t('ui.260f780d01164dfa')}
           </button>
         </form>
         {catalog.hours.map((hour) => (
           <div key={hour.id}>
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][hour.weekday]} {hour.opensAt}–
-            {hour.closesAt} · {hour.providerId ? 'Provider' : 'General clinic'}
+            {hour.closesAt} ·{' '}
+            {hour.providerId ? t('ui.472590ae974d4c1f') : t('ui.2962cc236751bea3')}
             <button
               disabled={busy}
               onClick={() =>
@@ -773,7 +793,7 @@ function SchedulingSettings({
                 )
               }
             >
-              Remove hours
+              {t('ui.337419027e9f3105')}
             </button>
           </div>
         ))}
@@ -793,19 +813,22 @@ function SchedulingSettings({
             );
           }}
         >
-          <h2 className="font-bold">Closures ({timezone})</h2>
+          <h2 className="font-bold">
+            {t('ui.775cc873b0bd3ba0')}
+            {timezone})
+          </h2>
           <label>
             <input
               type="checkbox"
               checked={clinicWide}
               onChange={(event) => setClinicWide(event.target.checked)}
             />
-            Whole clinic
+            {t('ui.988b9fdb3e344d25')}
           </label>
           <label>
-            Closure starts
+            {t('ui.92688441a96d721f')}
             <input
-              aria-label="Closure starts"
+              aria-label={t('ui.92688441a96d721f')}
               className={input}
               type="datetime-local"
               required
@@ -814,9 +837,9 @@ function SchedulingSettings({
             />
           </label>
           <label>
-            Closure ends
+            {t('ui.fe6ba80577d6a05b')}
             <input
-              aria-label="Closure ends"
+              aria-label={t('ui.fe6ba80577d6a05b')}
               className={input}
               type="datetime-local"
               required
@@ -825,9 +848,9 @@ function SchedulingSettings({
             />
           </label>
           <label>
-            Closure reason
+            {t('ui.7ebd2ce1d37c69d0')}
             <input
-              aria-label="Closure reason"
+              aria-label={t('ui.7ebd2ce1d37c69d0')}
               className={input}
               maxLength={500}
               required
@@ -836,7 +859,7 @@ function SchedulingSettings({
             />
           </label>
           <button disabled={busy} className={button}>
-            Add closure
+            {t('ui.89af5fefa763e644')}
           </button>
         </form>
         {catalog.closures.map((closure) => (
@@ -846,7 +869,7 @@ function SchedulingSettings({
               disabled={busy}
               onClick={() => save(() => apiClient.removeClosure(closure.id), 'Closure archived.')}
             >
-              Archive closure
+              {t('ui.1400f848bd0a0e50')}
             </button>
           </div>
         ))}
@@ -860,11 +883,11 @@ function SchedulingSettings({
             );
           }}
         >
-          <h2 className="font-bold">Booking window</h2>
+          <h2 className="font-bold">{t('ui.88758c613cea9455')}</h2>
           <label>
-            Lead time in minutes
+            {t('ui.aef58ccf126d8918')}
             <input
-              aria-label="Lead time"
+              aria-label={t('ui.4cfaa9df90c53d55')}
               className={input}
               type="number"
               min={0}
@@ -874,9 +897,9 @@ function SchedulingSettings({
             />
           </label>
           <label>
-            Horizon in days
+            {t('ui.a05d215daf2c3df2')}
             <input
-              aria-label="Booking horizon"
+              aria-label={t('ui.5dff10d16b825023')}
               className={input}
               type="number"
               min={1}
@@ -886,7 +909,7 @@ function SchedulingSettings({
             />
           </label>
           <button disabled={busy} className={button}>
-            Save policy
+            {t('ui.57ee14ce1425ca9b')}
           </button>
         </form>
       </div>

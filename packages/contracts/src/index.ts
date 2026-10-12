@@ -6,3 +6,4 @@ export * from './clinical.js';
 export * from './billing.js';
 export * from './imaging.js';
 export * from './anesthesia.js';
+export * from './administration.js';

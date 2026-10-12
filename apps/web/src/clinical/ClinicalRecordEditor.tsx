@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useState } from 'react';
 import {
   ClinicalWriteSchema,
@@ -77,13 +78,13 @@ export function ClinicalRecordEditor({
   const [actionChosen, setActionChosen] = useState(!!correction);
   return (
     <form
-      aria-label="Clinical entry"
+      aria-label={t('ui.a7656eae828d7c83')}
       className="bg-white p-6 rounded-2xl border space-y-4"
       onSubmit={async (e) => {
         e.preventDefault();
         setError('');
         if ((data.kind === 'finding' || data.kind === 'procedure') && !actionChosen) {
-          setError('Select an explicit finding or procedure action before saving.');
+          setError(t('ui.cbc3e0be89a93efb'));
           return;
         }
         const parsed = ClinicalWriteSchema.safeParse({
@@ -107,11 +108,13 @@ export function ClinicalRecordEditor({
       }}
     >
       <h2 className="text-xl font-bold">
-        {correction ? `Correct / transition version ${correction.version}` : 'New clinical entry'}
+        {correction
+          ? t('ui.ae7103f888d2af50', { v0: correction.version })
+          : t('ui.2d9747d4d204a3b4')}
       </h2>
       {!correction && (
         <SelectField
-          label="Entry type"
+          label={t('ui.e8aa77fb5256605c')}
           value={data.kind}
           values={Object.keys(defaults)}
           onChange={(kind) => {
@@ -145,10 +148,10 @@ export function ClinicalRecordEditor({
       ) : (
         <RiskEditor value={data} change={setData} />
       )}
-      <Field label="Clinical change reason" required value={reason} onChange={setReason} />
+      <Field label={t('ui.57608d19816aef63')} required value={reason} onChange={setReason} />
       {error && (
         <p role="alert" className="text-red-700">
-          {error} Your entry remains here; review the error or refresh to reconcile a conflict.
+          {error} {t('ui.a94280aaaf8b3b73')}
         </p>
       )}
       <div className="flex gap-4">
@@ -157,16 +160,13 @@ export function ClinicalRecordEditor({
           disabled={busy}
           type="submit"
         >
-          {busy ? 'Saving…' : 'Save draft'}
+          {busy ? t('ui.23e39291d6135814') : t('ui.3de100106dd4e52e')}
         </button>
         <button type="button" disabled={busy} onClick={cancel}>
-          Cancel editor
+          {t('ui.a11cb4e4ce6b8a8c')}
         </button>
       </div>
-      <p className="text-sm text-slate-500">
-        Drafts are private to clinicians. Approval is a separate action. Previous versions are never
-        erased.
-      </p>
+      <p className="text-sm text-slate-500">{t('ui.9090a6ef071c6f4f')}</p>
     </form>
   );
 }

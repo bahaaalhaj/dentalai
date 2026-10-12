@@ -113,6 +113,7 @@ export class SchedulingRepository {
     try {
       await db.query('BEGIN');
       if (!context.membership) throw denied();
+      await db.query('SELECT saas_lock($1)', [context.membership.clinicId]);
       await db.query("SELECT pg_advisory_xact_lock(hashtextextended('scheduling:'||$1,0))", [
         context.membership.clinicId,
       ]);
