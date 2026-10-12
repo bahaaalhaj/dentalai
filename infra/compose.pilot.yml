@@ -1,0 +1,96 @@
+name: dentalai-pilot
+services:
+  postgres:
+    image: postgres:17.11-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dentalai_migrator
+      POSTGRES_DB: dentalai
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+    mem_limit: 1g
+    cpus: 2
+  api:
+    image: dentalai-app:${RELEASE_TAG:?Set an immutable release tag}
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DEPLOYMENT_ENV: ${DEPLOYMENT_ENV:?Set staging or production}
+      HOST: 0.0.0.0
+      APP_ORIGIN: ${APP_ORIGIN:?Set the public HTTPS origin}
+      DATABASE_URL_FILE: /run/secrets/database_url
+      AUTH_SECRET_FILE: /run/secrets/auth_secret
+      SMTP_URL_FILE: /run/secrets/smtp_url
+      MAIL_FROM: ${MAIL_FROM:?Set a verified sender address}
+      OUTBOX_WORKER_ENABLED: 'true'
+      CLINICAL_STORAGE_ENABLED: 'true'
+      STORAGE_DRIVER: filesystem
+      PRIVATE_STORAGE_DIRECTORY: /private/objects
+      XRAY_INFERENCE_ENABLED: 'false'
+      MONITORING_HOST: 0.0.0.0
+      MONITORING_TOKEN_FILE: /run/secrets/monitoring_token
+      TRUST_PROXY: 'true'
+    secrets: [database_url, auth_secret, smtp_url, monitoring_token]
+    volumes:
+      - clinical_objects:/private
+    # Only a local TLS reverse proxy can reach HTTP. Database and monitoring have no host ports.
+    ports: ['127.0.0.1:${PILOT_HTTP_PORT:-3000}:3000']
+    read_only: true
+    tmpfs: ['/tmp:size=64m,noexec,nosuid']
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    init: true
+    stop_grace_period: 30s
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 128
+    networks: [private, outbound]
+  migrate:
+    profiles: [maintenance]
+    image: dentalai-app:${RELEASE_TAG:?Set an immutable release tag}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL_FILE: /run/secrets/migration_database_url
+      MIGRATION_BACKUP_VERIFIED: ${MIGRATION_BACKUP_VERIFIED:-false}
+    secrets: [migration_database_url]
+    command: ['node', 'scripts/migrate-release.mjs']
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    networks: [private]
+secrets:
+  postgres_password:
+    file: ${SECRETS_DIRECTORY:?Set an absolute private secrets directory}/postgres_password
+  database_url:
+    file: ${SECRETS_DIRECTORY:?Set an absolute private secrets directory}/database_url
+  migration_database_url:
+    file: ${SECRETS_DIRECTORY:?Set an absolute private secrets directory}/migration_database_url
+  auth_secret:
+    file: ${SECRETS_DIRECTORY:?Set an absolute private secrets directory}/auth_secret
+  smtp_url:
+    file: ${SECRETS_DIRECTORY:?Set an absolute private secrets directory}/smtp_url
+  monitoring_token:
+    file: ${SECRETS_DIRECTORY:?Set an absolute private secrets directory}/monitoring_token
+volumes:
+  postgres_data:
+  clinical_objects:
+networks:
+  private:
+    internal: true
+  outbound:

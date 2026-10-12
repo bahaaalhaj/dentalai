@@ -6,6 +6,13 @@ export interface InferenceClient {
   infer(data: Buffer): Promise<InferenceResult>;
 }
 export class PrivateInferenceClient implements InferenceClient {
+  async health(): Promise<void> {
+    const response = await fetch(`${this.url}/ready`, {
+      signal: AbortSignal.timeout(2500),
+      redirect: 'error',
+    });
+    if (!response.ok) throw new Error('Inference is not ready');
+  }
   constructor(
     private readonly url: string,
     private readonly token: string,

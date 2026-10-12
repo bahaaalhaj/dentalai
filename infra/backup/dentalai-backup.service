@@ -1,0 +1,13 @@
+[Unit]
+Description=DentalAI encrypted quiesced backup
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/dentalai
+EnvironmentFile=/etc/dentalai/deployment.env
+ExecStart=/usr/bin/node scripts/backup.mjs create --project dentalai-pilot --output /var/backups/dentalai --key-file /etc/dentalai/backup-key
+UMask=0077
+NoNewPrivileges=true
+# Docker access is privileged. This unit is operator-controlled, not reachable from the API.

@@ -4,6 +4,9 @@ import type { Server } from 'node:http';
 import path from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { access } from 'node:fs/promises';
+import { ApplicationTelemetry, monitoringAuthorization } from './infrastructure/observability.js';
+import { assertRestrictedDatabaseIdentity } from './infrastructure/database-identity.js';
 import { createApplication } from './app.js';
 import { EnvironmentConfigurationError, readEnvironment } from './config/environment.js';
 import { PostgresSystemRepository } from './domains/system/system.repository.js';
@@ -80,6 +83,11 @@ async function startServer(): Promise<void> {
   loadRootEnvironmentFile();
   const environment = readEnvironment();
   if (
+    ['staging', 'production'].includes(environment.deploymentEnv) &&
+    process.argv.includes('--with-vite')
+  )
+    throw new Error('Development Vite middleware is prohibited in staging/production.');
+  if (
     !environment.authSecret ||
     (environment.mailDriver === 'smtp' && (!environment.smtpUrl || !environment.mailFrom))
   ) {
@@ -93,6 +101,14 @@ async function startServer(): Promise<void> {
   const logger = createLogger(environment.logLevel);
   const lifecycle = new ApplicationLifecycle();
   const { pool, db } = createDatabase(environment.databaseUrl);
+  if (['staging', 'production'].includes(environment.deploymentEnv)) {
+    try {
+      await assertRestrictedDatabaseIdentity(pool);
+    } catch {
+      await pool.end();
+      throw new Error('Restricted database identity verification failed.');
+    }
+  }
   const authOptions = {
     secret: environment.authSecret,
     origin: environment.appOrigin,
@@ -102,7 +118,6 @@ async function startServer(): Promise<void> {
         : smtpMailSender(environment.smtpUrl!, environment.mailFrom!),
   };
   const provider = createAuthProvider(db, authOptions);
-  const systemService = new SystemService(new PostgresSystemRepository(pool), lifecycle);
   const storage =
     environment.clinicalStorageEnabled &&
     environment.storageDriver === 'filesystem' &&
@@ -145,15 +160,26 @@ async function startServer(): Promise<void> {
       pollIntervalMs: environment.outboxPollIntervalMs,
     },
   );
+  const telemetry = new ApplicationTelemetry(logger);
+  const systemService = new SystemService(new PostgresSystemRepository(pool), lifecycle, {
+    storage: storage ? () => storage.health() : 'disabled',
+    ai: inference ? () => inference.health() : 'disabled',
+    worker: environment.outboxWorkerEnabled ? async () => worker.assertHealthy() : 'disabled',
+    web: process.argv.includes('--production')
+      ? () => access(path.resolve(currentDirectory, '../../web/dist/index.html'))
+      : 'disabled',
+  });
+  let monitoringServer: Server | undefined;
   let closeFrontend = async () => {};
   const mountFrontend = frontendMount(process.argv.slice(2), (close) => {
     closeFrontend = close;
   });
 
-  let server: Server;
+  let server: Server | undefined;
   try {
     const application = await createApplication({
       logger,
+      telemetry,
       systemService,
       imaging: { ...(storage ? { storage } : {}), ...(inference ? { inference } : {}) },
       authentication: {
@@ -172,7 +198,36 @@ async function startServer(): Promise<void> {
     });
 
     server = await listen(application, environment.port, environment.host);
+    server.requestTimeout = 30000;
+    server.headersTimeout = 10000;
+    server.keepAliveTimeout = 5000;
+    if (environment.monitoringToken) {
+      const monitoring = express();
+      monitoring.disable('x-powered-by');
+      monitoring.use(monitoringAuthorization(environment.monitoringToken));
+      monitoring.get('/metrics', async (_req, res) => {
+        try {
+          const queue = await pool.query<{ pending: string; exhausted: string }>(
+            "SELECT count(*) FILTER(WHERE status<>'completed' AND attempts<8)::text AS pending, count(*) FILTER(WHERE status<>'completed' AND attempts>=8)::text AS exhausted FROM outbox_jobs",
+          );
+          res.json({ ...telemetry.snapshot(), outbox: queue.rows[0] });
+        } catch {
+          res.status(503).json({ error: 'METRICS_UNAVAILABLE' });
+        }
+      });
+      monitoring.get('/ready', async (_req, res) => {
+        const ready = await systemService.readiness();
+        res.status(ready.status === 'ready' ? 200 : 503).json(ready);
+      });
+      monitoringServer = await listen(
+        monitoring,
+        environment.monitoringPort,
+        environment.monitoringHost,
+      );
+    }
   } catch (error) {
+    if (server) server.close();
+    if (monitoringServer) monitoringServer.close();
     await Promise.allSettled([closeFrontend(), worker.stop(), pool.end()]);
     throw error;
   }
@@ -191,12 +246,15 @@ async function startServer(): Promise<void> {
     logger.info({ signal }, 'Graceful shutdown started');
 
     const closeResources = async () => {
+      if (monitoringServer)
+        await new Promise<void>((resolve) => monitoringServer!.close(() => resolve()));
       await worker.stop();
       await pool.end();
     };
 
     try {
-      await drainServer(server, closeResources, environment.shutdownTimeoutMs, closeFrontend);
+      if (server)
+        await drainServer(server, closeResources, environment.shutdownTimeoutMs, closeFrontend);
       logger.info('Graceful shutdown completed');
       process.exitCode = 0;
     } catch {
@@ -212,18 +270,10 @@ async function startServer(): Promise<void> {
 
 startServer().catch((error: unknown) => {
   const logger = createLogger('error');
-  const configurationMessage =
-    error instanceof EnvironmentConfigurationError
-      ? error.message
-      : error instanceof Error &&
-          (error.message.startsWith('AUTH_SECRET (') ||
-            error.message.startsWith('APP_ORIGIN must use HTTPS'))
-        ? error.message
-        : 'Check server configuration, database availability, and the listening port.';
   logger.fatal(
     {
-      errorName: error instanceof Error ? error.name : 'UnknownError',
-      message: configurationMessage,
+      code:
+        error instanceof EnvironmentConfigurationError ? 'CONFIGURATION_INVALID' : 'STARTUP_FAILED',
     },
     'DentalAI API failed to start',
   );

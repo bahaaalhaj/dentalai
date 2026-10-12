@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { accessibilitySmoke } from './accessibility.js';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -49,6 +50,7 @@ test('patient books; staff confirms; patient sees confirmation and cancels with 
   await page.getByRole('button', { name: 'Book appointment', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Book appointment' });
   await expect(dialog).toBeVisible();
+  await accessibilitySmoke(page);
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
   await page.getByRole('button', { name: 'Book appointment', exact: true }).click();
@@ -83,6 +85,7 @@ test('patient books; staff confirms; patient sees confirmation and cancels with 
   const confirmation = staff.getByRole('dialog', { name: 'Confirm appointment' });
   await confirmation.getByRole('button', { name: 'Apply change' }).click();
   await expect(staff.getByText('confirmed', { exact: true })).toBeVisible();
+  await accessibilitySmoke(staff);
   await page.getByRole('button', { name: 'Refresh', exact: true }).click();
   await expect(page.getByText('confirmed', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();

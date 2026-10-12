@@ -34,6 +34,17 @@ export class OutboxWorker {
   private stopping = false;
   private activeRun: Promise<void> | undefined;
   private readonly workerId: string;
+  private lastPoll = 0;
+  private pollHealthy = false;
+
+  assertHealthy(): void {
+    if (
+      this.stopping ||
+      !this.pollHealthy ||
+      Date.now() - this.lastPoll > Math.max(30000, this.options.pollIntervalMs * 3)
+    )
+      throw new Error('Worker is not ready');
+  }
 
   constructor(
     private readonly pool: Pool,
@@ -65,6 +76,7 @@ export class OutboxWorker {
       this.timer = undefined;
       this.activeRun = this.runOnce()
         .catch(() => {
+          this.pollHealthy = false;
           // Driver/handler errors can embed credentials, tokens or clinical payloads.
           this.logger.error('Outbox polling failed');
         })
@@ -97,6 +109,8 @@ export class OutboxWorker {
     );
 
     const row = result.rows[0];
+    this.lastPoll = Date.now();
+    this.pollHealthy = true;
     if (!row) return;
 
     const handler = this.handlers.get(row.topic);

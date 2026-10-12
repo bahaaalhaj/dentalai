@@ -1,12 +1,23 @@
 import { createHash } from 'node:crypto';
-import { lstat, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
+import { access, lstat, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
 import path from 'node:path';
 import type { PrivateStorage } from './storage.js';
 
 /** Explicit local/private adapter, never a fallback. Its directory is not mounted by Express. */
 export class FilesystemPrivateStorage implements PrivateStorage {
+  readonly provider = 'filesystem-private';
   readonly bucket = 'private-local-clinical';
   private readonly directory: string;
+  async health(): Promise<void> {
+    await mkdir(this.directory, { recursive: true, mode: 0o700 });
+    if (
+      (await lstat(this.directory)).isSymbolicLink() ||
+      (await realpath(this.directory)) !== this.directory
+    )
+      throw new Error('Private storage root is not canonical');
+    await access(this.directory, constants.R_OK | constants.W_OK);
+  }
   constructor(directory: string) {
     if (!path.isAbsolute(directory))
       throw new Error('Private storage requires an absolute directory.');

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { resolveSecretFiles } from './secrets.js';
 
 const emptyToUndefined = <T extends z.ZodType>(schema: T) =>
   z.preprocess(
@@ -15,6 +16,12 @@ const booleanString = emptyToUndefined(
 
 const EnvironmentSchema = z
   .object({
+    DEPLOYMENT_ENV: emptyToUndefined(
+      z.enum(['development', 'test', 'staging', 'production']).optional(),
+    ),
+    MONITORING_TOKEN: emptyToUndefined(z.string().min(32).optional()),
+    MONITORING_PORT: emptyToUndefined(z.coerce.number().int().min(1).max(65535).default(9090)),
+    MONITORING_HOST: emptyToUndefined(z.string().min(1).default('127.0.0.1')),
     NODE_ENV: emptyToUndefined(
       z.enum(['development', 'test', 'production']).default('development'),
     ),
@@ -75,6 +82,72 @@ const EnvironmentSchema = z
     OUTBOX_POLL_INTERVAL_MS: emptyToUndefined(z.coerce.number().int().min(250).default(5_000)),
   })
   .transform((environment, context) => {
+    const deploymentEnv = environment.DEPLOYMENT_ENV ?? environment.NODE_ENV;
+    const hardened = deploymentEnv === 'staging' || deploymentEnv === 'production';
+    if (
+      (hardened && environment.NODE_ENV !== 'production') ||
+      (deploymentEnv === 'test' && environment.NODE_ENV !== 'test') ||
+      (deploymentEnv === 'development' && environment.NODE_ENV !== 'development')
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'DEPLOYMENT_ENV and NODE_ENV are inconsistent.',
+      });
+    if (hardened) {
+      if (!environment.MONITORING_TOKEN)
+        context.addIssue({
+          code: 'custom',
+          message: 'Staging/production requires a private monitoring token.',
+        });
+      if (
+        environment.SMTP_URL &&
+        (new URL(environment.SMTP_URL).protocol !== 'smtps:' ||
+          new URL(environment.SMTP_URL).search)
+      )
+        context.addIssue({
+          code: 'custom',
+          message: 'Staging/production SMTP requires implicit TLS without URL security overrides.',
+        });
+      if (
+        !environment.AUTH_SECRET ||
+        new Set(environment.AUTH_SECRET).size < 12 ||
+        /development|disposable|change.?me|example|local.only/i.test(environment.AUTH_SECRET)
+      )
+        context.addIssue({
+          code: 'custom',
+          message: 'Staging/production requires a generated AUTH_SECRET.',
+        });
+      if (
+        !environment.APP_ORIGIN.startsWith('https://') ||
+        environment.MAIL_DRIVER !== 'smtp' ||
+        !environment.SMTP_URL ||
+        !environment.MAIL_FROM
+      )
+        context.addIssue({
+          code: 'custom',
+          message: 'Staging/production requires HTTPS and explicit SMTP configuration.',
+        });
+      if (['debug', 'trace'].includes(environment.LOG_LEVEL))
+        context.addIssue({
+          code: 'custom',
+          message: 'Verbose logging is prohibited in staging/production.',
+        });
+      if (!environment.OUTBOX_WORKER_ENABLED)
+        context.addIssue({
+          code: 'custom',
+          message: 'Staging/production requires the notification outbox worker.',
+        });
+      const database = new URL(environment.DATABASE_URL);
+      if (
+        ['postgres', 'root'].includes(database.username) ||
+        decodeURIComponent(database.password).length < 20
+      )
+        context.addIssue({
+          code: 'custom',
+          message:
+            'Staging/production requires a non-superuser application database identity and a strong password.',
+        });
+    }
     if (
       environment.MAIL_DRIVER === 'filesystem' &&
       (environment.NODE_ENV === 'production' || !environment.PRIVATE_MAIL_DIRECTORY)
@@ -133,6 +206,7 @@ const EnvironmentSchema = z
         if (!['http:', 'https:'].includes(parsed.protocol) || parsed.origin !== origin) {
           throw new Error('Origin must not include a path');
         }
+        if (hardened && parsed.protocol !== 'https:') throw new Error('HTTPS required');
       } catch {
         context.addIssue({
           code: 'custom',
@@ -143,6 +217,10 @@ const EnvironmentSchema = z
     }
 
     return {
+      deploymentEnv,
+      monitoringToken: environment.MONITORING_TOKEN,
+      monitoringHost: environment.MONITORING_HOST,
+      monitoringPort: environment.MONITORING_PORT,
       nodeEnv: environment.NODE_ENV,
       clinicalStorageEnabled: environment.CLINICAL_STORAGE_ENABLED,
       storageDriver: environment.STORAGE_DRIVER,
@@ -190,7 +268,7 @@ export class EnvironmentConfigurationError extends Error {
 export function readEnvironment(
   source: Record<string, string | undefined> = process.env,
 ): ApiEnvironment {
-  const result = EnvironmentSchema.safeParse(source);
+  const result = EnvironmentSchema.safeParse(resolveSecretFiles(source));
   if (!result.success) {
     throw new EnvironmentConfigurationError(result.error);
   }

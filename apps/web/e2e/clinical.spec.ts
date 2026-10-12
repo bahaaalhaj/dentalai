@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { accessibilitySmoke } from './accessibility.js';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -89,6 +90,8 @@ test('clinician explicitly records, approves and corrects; patient sees approved
     ).toBeVisible();
     await dentist.getByRole('link', { name: 'Clinical patients', exact: true }).click();
     await dentist.getByLabel('Patient', { exact: true }).selectOption(fixture.patientId);
+    await accessibilitySmoke(patient);
+    await accessibilitySmoke(dentist);
     await dentist.getByRole('button', { name: 'Start encounter', exact: true }).click();
     let dialog = dentist.getByRole('dialog', { name: 'Start encounter' });
     await dialog.getByLabel('Reason', { exact: true }).fill('Fictional E2E visit');
@@ -167,6 +170,8 @@ test('clinician explicitly records, approves and corrects; patient sees approved
     await applyClinicalChange(dentist, 'Apply clinical change', '/close');
     await expect(dialog).not.toBeVisible();
     await expect(dentist.getByRole('button', { name: 'Add clinical entry' })).toHaveCount(0);
+    await accessibilitySmoke(dentist);
+    await accessibilitySmoke(patient);
   } finally {
     await patientContext.close();
     await dentistContext.close();

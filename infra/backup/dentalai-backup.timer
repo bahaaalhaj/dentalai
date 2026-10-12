@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily DentalAI backup window
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+RandomizedDelaySec=300
+Unit=dentalai-backup.service
+
+[Install]
+WantedBy=timers.target

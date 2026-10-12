@@ -1,5 +1,11 @@
 # DentalAI
 
+Phase 14 adds single-host pilot hardening and recovery preparation, not production or clinical approval.
+Use npm 11.17.0 for the documented install/CI/container flow; npm 10 produced a nested esbuild
+optional-binary mismatch in the Linux build. The application dependency versions are unchanged.
+See [release readiness](docs/phase14-release-readiness.md), [operations and restore](docs/phase14-operations.md)
+and the [scoped OWASP ASVS review/threat model](docs/phase14-threat-model.md).
+
 React/Vite frontend, Express API, self-hosted PostgreSQL and private clinical object storage.
 The browser uses `/api/v1` contracts, never database credentials. Phase 12 is an **intentional
 disposable-test-data reset**, not a legacy migration. See the [reset report](docs/phase12-test-data-reset.md).

@@ -1,0 +1,7 @@
+# LOCAL FIXTURE DRILL ONLY. Never combine this overlay with a real deployment.
+services:
+  postgres:
+    ports: ['127.0.0.1::5432']
+    # Docker Desktop cannot publish a port from an internal-only network.
+    # This extra network is confined to the disposable fixture overlay.
+    networks: [private, outbound]

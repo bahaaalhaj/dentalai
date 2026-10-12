@@ -15,8 +15,15 @@ export async function migrateDatabase(
   connectionString: string,
   folder = migrationsFolder,
 ): Promise<void> {
-  const pool = new Pool({ connectionString, max: 1 });
+  const pool = new Pool({
+    connectionString,
+    max: 1,
+    connectionTimeoutMillis: 5000,
+    statement_timeout: 60000,
+    query_timeout: 65000,
+  });
   try {
+    await pool.query("SET lock_timeout='5s'");
     // Serialize runners on this single connection before checking or applying migration history.
     await pool.query("SELECT pg_advisory_lock(hashtextextended('dentalai:migrations',0))");
     const files = readMigrationFiles({ migrationsFolder: folder });

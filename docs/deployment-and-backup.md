@@ -1,5 +1,9 @@
 # Local deployment, reset and backup
 
+Phase 14's encrypted automation, pilot containers and clean-environment restore drill are described
+in [operations](phase14-operations.md). The instructions below remain the Phase 12/13 local reset
+and manual backup context; they do not constitute a verified production deployment.
+
 Phase 13 remains local/pre-deployment. Enable the outbox worker for queued invitations.
 Owner exports omit authentication secrets and need separate private-file downloads.
 Offboarding disables access but retains history/objects; it is not erasure or a backup.

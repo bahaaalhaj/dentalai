@@ -9,11 +9,16 @@ import {
 import { DomainError } from '../../errors/domain-errors.js';
 
 export interface PrivateStorage {
+  readonly provider?: string;
   readonly bucket: string;
   put(key: string, data: Buffer, contentType: string): Promise<void>;
   get(key: string): Promise<Buffer>;
 }
 export class S3PrivateStorage implements PrivateStorage {
+  readonly provider = 's3-private';
+  async health(): Promise<void> {
+    await this.assertPrivate();
+  }
   constructor(
     private readonly client: S3Client,
     readonly bucket: string,

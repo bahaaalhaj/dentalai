@@ -115,7 +115,7 @@ export class ImagingRepository {
     existingStudy?: string,
   ) {
     // Authorization before expensive decoding; rechecked when reserving and publishing.
-    await this.tx(context, patient, async () => undefined);
+    const authorizedClinic = await this.tx(context, patient, async (_db, clinic) => clinic);
     if (!this.storage)
       throw new DomainError(
         'STORAGE_UNAVAILABLE',
@@ -126,7 +126,7 @@ export class ImagingRepository {
     const storage = this.storage;
     const id = randomUUID();
     const fileId = randomUUID();
-    const key = `clinical/${randomUUID()}/${randomUUID()}.png`;
+    const key = `clinical/${authorizedClinic}/${fileId}.png`;
     const studyId = existingStudy ?? randomUUID();
     await this.tx(context, patient, async (db, clinic, member) => {
       if (existingStudy) {
@@ -147,7 +147,7 @@ export class ImagingRepository {
       );
       await db.query(
         `INSERT INTO files(id,clinic_id,patient_id,storage_provider,bucket,object_key,original_filename,content_type,size_bytes,sha256,uploaded_by_membership_id)
-        VALUES($1,$2,$3,'s3-private',$4,$5,'clinical-image.png',$6,$7,$8,$9)`,
+        VALUES($1,$2,$3,$10,$4,$5,'clinical-image.png',$6,$7,$8,$9)`,
         [
           fileId,
           clinic,
@@ -158,6 +158,7 @@ export class ImagingRepository {
           image.data.length,
           image.sha256,
           member,
+          storage.provider ?? 'private-adapter',
         ],
       );
       await db.query(

@@ -20,6 +20,12 @@ export function requireDatabaseUrl(env: NodeJS.ProcessEnv = process.env): string
 }
 
 export function createDatabase(connectionString = requireDatabaseUrl()) {
-  const pool = new Pool({ connectionString });
+  const pool = new Pool({
+    connectionString,
+    connectionTimeoutMillis: 5000,
+    query_timeout: 15000,
+    statement_timeout: 15000,
+    max: 20,
+  });
   return { pool, db: drizzle(pool, { schema }) };
 }

@@ -2,6 +2,9 @@ node_modules/
 .local/
 infra/private-objects/
 infra/private-mail/
+infra/secrets/
+infra/backups/
+*.enc
 *.dump
 *.backup
 build/

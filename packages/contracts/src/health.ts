@@ -17,6 +17,9 @@ export const ReadinessResponseSchema = z.object({
   checks: z.object({
     database: z.enum(['ok', 'error']),
     lifecycle: z.enum(['accepting_traffic', 'draining']),
+    dependencies: z
+      .record(z.enum(['web', 'storage', 'worker', 'ai']), z.enum(['ok', 'error', 'disabled']))
+      .optional(),
   }),
 });
 

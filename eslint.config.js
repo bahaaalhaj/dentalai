@@ -13,6 +13,8 @@ export default tseslint.config(
       '.local/**',
       'infra/private-objects/**',
       'infra/private-mail/**',
+      'infra/secrets/**',
+      'infra/backups/**',
       'coverage/**',
       '**/test-results/**',
       '**/playwright-report/**',

@@ -23,6 +23,7 @@ import { createAnesthesiaRouter } from './domains/anesthesia/anesthesia.routes.j
 import type { PrivateStorage } from './domains/imaging/storage.js';
 import type { InferenceClient } from './domains/imaging/inference.js';
 import { createAdministrationRouter } from './domains/administration/administration.routes.js';
+import { ApplicationTelemetry } from './infrastructure/observability.js';
 
 export interface ApiApplicationOptions {
   bodyLimit: string;
@@ -39,6 +40,7 @@ export interface ApiApplicationDependencies {
   authentication?: { provider: AuthProvider; repository: AccessRepository; options: AuthOptions };
   mountFrontend?: (application: Express) => Promise<void> | void;
   imaging?: { storage?: PrivateStorage; inference?: InferenceClient };
+  telemetry?: ApplicationTelemetry;
 }
 
 export async function createApplication({
@@ -48,19 +50,21 @@ export async function createApplication({
   authentication,
   mountFrontend,
   imaging,
+  telemetry,
 }: ApiApplicationDependencies): Promise<Express> {
   const application = express();
   application.disable('x-powered-by');
   if (options.trustProxy) application.set('trust proxy', 1);
 
   application.use(requestIdMiddleware);
+  if (telemetry) application.use(telemetry.middleware);
   application.use(
     pinoHttp({
       logger,
       genReqId: (request) => (request as Request).requestId,
       customProps: (request) => ({ requestId: (request as Request).requestId }),
       serializers: {
-        req: (request) => ({ method: request.method, path: String(request.url).split('?')[0] }),
+        req: (request) => ({ method: request.method }),
         res: (response) => ({ statusCode: response.statusCode }),
       },
     }),
@@ -96,8 +100,6 @@ export async function createApplication({
       maxAge: 600,
     }),
   );
-  application.use(express.json({ limit: options.bodyLimit, strict: true }));
-  application.use(express.urlencoded({ extended: false, limit: options.bodyLimit }));
 
   const apiRateLimit = rateLimit({
     windowMs: options.rateLimitWindowMs,
@@ -116,7 +118,10 @@ export async function createApplication({
     },
   });
 
-  application.use('/api/v1', apiRateLimit, createSystemRouter(systemService));
+  application.use('/api/v1', apiRateLimit);
+  application.use(express.json({ limit: options.bodyLimit, strict: true }));
+  application.use(express.urlencoded({ extended: false, limit: options.bodyLimit }));
+  application.use('/api/v1', createSystemRouter(systemService));
   if (authentication) {
     const csrf = csrfProtection(authentication.options.secret, authentication.options.origin);
     application.use(

@@ -46,7 +46,9 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm install --global npm@11.17.0 --ignore-scripts
+          npm ci
 
       - name: Type-check
         run: npm run typecheck
@@ -62,6 +64,8 @@ jobs:
 
       - name: Run unit tests
         run: npm test
+      - name: Backup cryptography failure-path tests
+        run: npm run test:backup
 
       - name: Set up private inference test runtime
         uses: actions/setup-python@v6

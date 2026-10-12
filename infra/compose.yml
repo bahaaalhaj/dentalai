@@ -81,6 +81,11 @@ services:
         bind:
           create_host_path: false
     read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 128
     tmpfs:
       - /tmp:size=64m,noexec,nosuid
     healthcheck:
