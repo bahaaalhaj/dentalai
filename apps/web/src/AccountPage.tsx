@@ -11,6 +11,7 @@ import type { z } from 'zod';
 import { apiClient } from './lib/api-client';
 import { getErrorMessage } from './lib/errors';
 import { t } from './i18n';
+import { displayStatus, formatInstant } from './i18n/display';
 import { NotificationPreference } from './administration/NotificationPreference';
 
 function Frame({ children }: { children: ReactNode }) {
@@ -123,7 +124,7 @@ export function AccountDashboard({
           ))}
         </select>
       )}
-      <p className="p-4 bg-amber-50 rounded-xl text-slate-700">{t('ui.cb0ab6de3bb912c4')}</p>
+      <p className="p-4 bg-amber-50 rounded-xl text-slate-700">{t('account.limitations')}</p>
       {member && (
         <Link to="/appointments" className={buttonStyle}>
           {t('ui.a1164b91bb0b2fad')}
@@ -162,7 +163,7 @@ export function AccountDashboard({
         <div className="flex justify-between" key={session.id}>
           <span>
             {session.current ? t('ui.6da6530a0728728e') : t('ui.d862a5b820acbe98')}{' '}
-            {t('ui.1de5fe01e955da22')} {new Date(session.expiresAt).toLocaleString()}
+            {t('ui.1de5fe01e955da22')} {formatInstant(session.expiresAt)}
           </span>
           <button
             onClick={() =>
@@ -214,7 +215,8 @@ export function AccountDashboard({
           </form>
           {invitations.map((invitation) => (
             <div key={invitation.id}>
-              {invitation.email} · {invitation.role} · {invitation.status}{' '}
+              {invitation.email} · {displayStatus(invitation.role)} ·{' '}
+              {displayStatus(invitation.status)}{' '}
               {invitation.status === 'pending' && (
                 <button
                   onClick={() =>

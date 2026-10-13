@@ -1,14 +1,13 @@
-import { t } from './i18n';
+import { t, useLocale } from './i18n';
 import { motion } from 'framer-motion';
-import { DotLottieReact, setWasmUrl } from '@lottiefiles/dotlottie-react';
-import lottieWasmUrl from '@lottiefiles/dotlottie-web/dotlottie-player.wasm?url';
+import { lazy, Suspense } from 'react';
 import { Activity, Shield, Clock, Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// Configure the browser wrapper's own player, not the separately bundled standalone SDK class.
-setWasmUrl(lottieWasmUrl);
+const LandingAnimation = lazy(() => import('./landing-animation'));
 
 export function LandingPage() {
+  const locale = useLocale();
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
@@ -90,13 +89,13 @@ export function LandingPage() {
           >
             <div className="absolute inset-0 bg-indigo-400/10 blur-[120px] rounded-full" />
 
-            <DotLottieReact
-              src="/animations/Cleantooth.json"
-              loop
-              autoplay
-              className="w-full max-w-lg lg:max-w-xl"
-              speed={0.8}
-            />
+            <Suspense
+              fallback={
+                <div className="w-full max-w-lg lg:max-w-xl aspect-square" aria-hidden="true" />
+              }
+            >
+              <LandingAnimation />
+            </Suspense>
           </motion.div>
         </div>
       </section>
@@ -105,12 +104,12 @@ export function LandingPage() {
       <section className="py-12 bg-white border-y border-slate-100 overflow-hidden">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-4xl font-bold text-slate-900 mb-4">{t('ui.10fa92ce3b1e8a9c')}</h2>
-          <p className="text-slate-600">{t('ui.e3d5299ddca5ed51')}</p>
+          <p className="text-slate-600">{t('landing.examples')}</p>
         </div>
         <div className="relative flex">
           <motion.div
             className="flex gap-12 items-center whitespace-nowrap"
-            animate={{ x: ['-50%', '0%'] }}
+            animate={{ x: [locale === 'ar' ? '50%' : '-50%', '0%'] }}
             transition={{
               duration: 20,
               ease: 'linear',
@@ -124,8 +123,14 @@ export function LandingPage() {
                 className="w-64 h-32 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200"
               >
                 <img
-                  src={`/pics/${img}`}
-                  alt={`Clinic Partner ${i + 1}`}
+                  src={`/pics/${img.replace('.jpg', '-640.webp')}`}
+                  srcSet={`/pics/${img.replace('.jpg', '-320.webp')} 320w, /pics/${img.replace('.jpg', '-640.webp')} 640w`}
+                  sizes="256px"
+                  alt={t('landing.clinicImage', { number: i + 1 })}
+                  loading="lazy"
+                  decoding="async"
+                  width={256}
+                  height={128}
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
@@ -138,8 +143,14 @@ export function LandingPage() {
                 className="w-64 h-32 shrink-0 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200"
               >
                 <img
-                  src={`/pics/${img}`}
-                  alt={`Clinic Partner ${i + 1}`}
+                  src={`/pics/${img.replace('.jpg', '-640.webp')}`}
+                  srcSet={`/pics/${img.replace('.jpg', '-320.webp')} 320w, /pics/${img.replace('.jpg', '-640.webp')} 640w`}
+                  sizes="256px"
+                  alt={t('landing.clinicImage', { number: i + 5 })}
+                  loading="lazy"
+                  decoding="async"
+                  width={256}
+                  height={128}
                   className="w-full h-full object-cover "
                   referrerPolicy="no-referrer"
                 />
@@ -160,18 +171,18 @@ export function LandingPage() {
             {[
               {
                 icon: Shield,
-                title: 'Experimental X-Ray Workspace',
-                desc: 'Unavailable for patient-care use pending technical and clinical validation.',
+                title: t('landing.xray'),
+                desc: t('landing.xrayDescription'),
               },
               {
                 icon: Clock,
-                title: 'Smart Scheduling',
-                desc: 'Automated reminders and easy online booking for your convenience.',
+                title: t('landing.scheduling'),
+                desc: t('landing.schedulingDescription'),
               },
               {
                 icon: Heart,
-                title: 'Personalized Care',
-                desc: 'Tailored treatment plans based on your unique dental history.',
+                title: t('landing.records'),
+                desc: t('landing.recordsDescription'),
               },
             ].map((s, i) => (
               <motion.div
@@ -205,16 +216,14 @@ export function LandingPage() {
           <div>
             <h4 className="font-bold mb-6">{t('ui.2b5c3d26721ae9c3')}</h4>
             <ul className="space-y-4 text-slate-400 text-sm">
-              <li>{t('ui.117d768f8a1d63ce')}</li>
-              <li>{t('ui.afde4ace259c202b')}</li>
-              <li>{t('ui.e4bca9fb0bf6751e')}</li>
+              <li>{t('landing.contact')}</li>
             </ul>
           </div>
           <div>
             <h4 className="font-bold mb-6">{t('ui.21e8492938abc179')}</h4>
             <ul className="space-y-4 text-slate-400 text-sm">
-              <li>{t('ui.2fdee7da52dbee24')}</li>
-              <li>{t('ui.04d8aa05e63ac34b')}</li>
+              <li>{t('landing.hours')}</li>
+              <li>{t('landing.experimental')}</li>
             </ul>
           </div>
         </div>

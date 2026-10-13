@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiClient } from '../lib/api-client';
 import { getErrorMessage } from '../lib/errors';
 import { Field } from '../clinical/ClinicalFields';
@@ -7,6 +7,7 @@ import { ClinicFields } from './ClinicFields';
 import { initialClinic } from './initial-clinic';
 import { t } from '../i18n';
 export function OnboardingPage({ refresh }: { refresh: () => Promise<void> }) {
+  const navigate = useNavigate();
   const [value, setValue] = useState(initialClinic),
     [slug, setSlug] = useState(''),
     [locationName, setLocation] = useState(''),
@@ -44,7 +45,7 @@ export function OnboardingPage({ refresh }: { refresh: () => Promise<void> }) {
                     authorityConfirmed: true,
                   });
                   await refresh();
-                  window.location.assign('/administration');
+                  navigate('/administration');
                 } catch (error) {
                   setError(getErrorMessage(error));
                 } finally {

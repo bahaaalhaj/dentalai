@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { getErrorMessage } from '../lib/errors';
 import { useState } from 'react';
 import {
   ClinicalWriteSchema,
@@ -94,14 +95,14 @@ export function ClinicalRecordEditor({
           data,
         });
         if (!parsed.success) {
-          setError(parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '));
+          setError(t('error.invalid'));
           return;
         }
         setBusy(true);
         try {
           await onSave(parsed.data);
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Unable to save. Retry after refreshing.');
+          setError(getErrorMessage(err));
         } finally {
           setBusy(false);
         }

@@ -34,3 +34,14 @@ it('requires explicit configuration and never falls back from S3', () => {
     readEnvironment({ ...env, STORAGE_DRIVER: 'filesystem', PRIVATE_STORAGE_DIRECTORY: tmpdir() }),
   ).toMatchObject({ storageDriver: 'filesystem' });
 });
+it('honors cancellation before opening or writing a private object', async () => {
+  const storage = new FilesystemPrivateStorage(
+    path.join(tmpdir(), `dentalai-aborted-${randomUUID()}`),
+  );
+  const key = `clinical/${randomUUID()}/${randomUUID()}.png`,
+    signal = AbortSignal.abort();
+  await expect(
+    storage.put(key, Buffer.from('synthetic'), 'image/png', signal),
+  ).rejects.toMatchObject({ code: 'STORAGE_UNAVAILABLE' });
+  await expect(storage.get(key, signal)).rejects.toMatchObject({ code: 'STORAGE_UNAVAILABLE' });
+});

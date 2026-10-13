@@ -1,0 +1,130 @@
+[
+  {
+    "name": "img1-320.webp",
+    "width": 320,
+    "height": 483,
+    "bytes": 11598,
+    "sourceSha256": "a864b13fff1a132f0a09704419bd2fc410ad47cd73326cb7ba066b1ef17eb336",
+    "sha256": "c68a1ba335c092687231cb744d382bd0a40784fcb1a506a4467a1afd3cb9e27a"
+  },
+  {
+    "name": "img1-640.webp",
+    "width": 640,
+    "height": 967,
+    "bytes": 27890,
+    "sourceSha256": "a864b13fff1a132f0a09704419bd2fc410ad47cd73326cb7ba066b1ef17eb336",
+    "sha256": "933f27226e57c618bdd515c9f0a0b3a7aa5635a551f8223645f62deaab4e684b"
+  },
+  {
+    "name": "img2-320.webp",
+    "width": 320,
+    "height": 248,
+    "bytes": 14664,
+    "sourceSha256": "5410fff8c1f41d43bd086de8f161d93f518f10bdd4a7f8435799d94abec44d16",
+    "sha256": "1ae53e667a4f75d13797dbcb9d422cb7747dd933a8593b9f402050ff384b195c"
+  },
+  {
+    "name": "img2-640.webp",
+    "width": 640,
+    "height": 495,
+    "bytes": 40190,
+    "sourceSha256": "5410fff8c1f41d43bd086de8f161d93f518f10bdd4a7f8435799d94abec44d16",
+    "sha256": "076492861d8d6ea3866075c6af01a6e1cdddd2b62bee6b647dc7e33ed9520996"
+  },
+  {
+    "name": "img3-320.webp",
+    "width": 320,
+    "height": 166,
+    "bytes": 3450,
+    "sourceSha256": "7c4d944cbf4e9219fb1f53a9610da36e2f85a50ee8ece62fc14fd463fe28664f",
+    "sha256": "a734c8adaf7e71ba34b2eca97c3341d813f50803decb34904d4553a16d7dafef"
+  },
+  {
+    "name": "img3-640.webp",
+    "width": 640,
+    "height": 332,
+    "bytes": 7444,
+    "sourceSha256": "7c4d944cbf4e9219fb1f53a9610da36e2f85a50ee8ece62fc14fd463fe28664f",
+    "sha256": "d6d231e27488a80c88a3d8c499491d659f14929ecc67ab5f1d0257a8a14f55e5"
+  },
+  {
+    "name": "img4-320.webp",
+    "width": 320,
+    "height": 168,
+    "bytes": 9906,
+    "sourceSha256": "bad58a822f5fa6ec8e56913f71c3fcd7849450f013aa8b41ac6d3388e2c14d71",
+    "sha256": "9e8737802a8f7294c958f19727b9af4cd8406212372231cce1ffd5084d857d32"
+  },
+  {
+    "name": "img4-640.webp",
+    "width": 640,
+    "height": 336,
+    "bytes": 26878,
+    "sourceSha256": "bad58a822f5fa6ec8e56913f71c3fcd7849450f013aa8b41ac6d3388e2c14d71",
+    "sha256": "98d78ba4a74d7bac29de7158385e3701f254ebdad7058380e18b4e4e82e2f4fb"
+  },
+  {
+    "name": "img5-320.webp",
+    "width": 320,
+    "height": 196,
+    "bytes": 4892,
+    "sourceSha256": "bf6e05d62373bdcb359a3663c8ad62fb3936f106379b983f50686da81a663f0a",
+    "sha256": "dae4b89facff7c79a6aeb5f9a7d15cc02e63d659824e7a7ae2d653a15020d399"
+  },
+  {
+    "name": "img5-640.webp",
+    "width": 640,
+    "height": 391,
+    "bytes": 10854,
+    "sourceSha256": "bf6e05d62373bdcb359a3663c8ad62fb3936f106379b983f50686da81a663f0a",
+    "sha256": "4b9c678568a53aa8089455a8e4b1807cc2a027169d6c46892e3eef617000607b"
+  },
+  {
+    "name": "img6-320.webp",
+    "width": 320,
+    "height": 185,
+    "bytes": 5792,
+    "sourceSha256": "fda678ceaa45b95a0784c8ddd95e078552084fe4cdf1306c9fe222ecc7898b29",
+    "sha256": "151e3d159d0a749327ba7268b2dcaa65f3da0a6810dec999b2d02e6eda84e97c"
+  },
+  {
+    "name": "img6-640.webp",
+    "width": 640,
+    "height": 372,
+    "bytes": 13134,
+    "sourceSha256": "fda678ceaa45b95a0784c8ddd95e078552084fe4cdf1306c9fe222ecc7898b29",
+    "sha256": "92199465ac92fc3d9d4899d4f2eb8b9dfc47c14322c94a5c3bec0559cf50ed91"
+  },
+  {
+    "name": "img7-320.webp",
+    "width": 320,
+    "height": 188,
+    "bytes": 4960,
+    "sourceSha256": "22dc88fbe8166a5390a1067dfacf8385ccf9df97940ba796dba1be47ec915ead",
+    "sha256": "6d614d55a8952abaaf85c2f54ac8cb5059c34ccc3eb7d66f27fa2dcaeede2ac2"
+  },
+  {
+    "name": "img7-640.webp",
+    "width": 640,
+    "height": 376,
+    "bytes": 11860,
+    "sourceSha256": "22dc88fbe8166a5390a1067dfacf8385ccf9df97940ba796dba1be47ec915ead",
+    "sha256": "3d524c57e0cc214eec40a4d37def6524db89b80edbc4a959d4cbac9280f3be0c"
+  },
+  {
+    "name": "img8-320.webp",
+    "width": 320,
+    "height": 178,
+    "bytes": 13316,
+    "sourceSha256": "8e162c02cd6f20644caca949f5cfbf456fc1fc52fb11ed4982c9e5663bfaacee",
+    "sha256": "7b7d1a0f6fb8d4460363648fabfd088f36b1e4828718459d73697eab316cb378"
+  },
+  {
+    "name": "img8-640.webp",
+    "width": 640,
+    "height": 357,
+    "bytes": 32332,
+    "sourceSha256": "8e162c02cd6f20644caca949f5cfbf456fc1fc52fb11ed4982c9e5663bfaacee",
+    "sha256": "2780e3e1a7a4d25f3de71f05246460621b6343392990cb0f053da9c51074053d"
+  }
+]

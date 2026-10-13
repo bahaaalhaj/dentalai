@@ -59,6 +59,20 @@ services:
     cpus: 2
     pids_limit: 128
     networks: [private, outbound]
+  backup-tools:
+    # Operator-only archive utility, not a network service or an HTTP runtime dependency.
+    profiles: [operations]
+    image: postgres:17.11-alpine
+    user: '10001:10001'
+    entrypoint: ['tar']
+    volumes: [clinical_objects:/private]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 128m
+    cpus: 1
+    pids_limit: 32
   migrate:
     profiles: [maintenance]
     image: dentalai-app:${RELEASE_TAG:?Set an immutable release tag}

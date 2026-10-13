@@ -1,0 +1,58 @@
+export const accountArabic = {
+  'Welcome, ': 'مرحباً، ',
+  'Patient account · no clinic access assigned': 'حساب مريض · لم تُسند عضوية عيادة',
+  'This session': 'هذه الجلسة',
+  'Other session': 'جلسة أخرى',
+  '· expires': '· تنتهي',
+  'Invitations are queued for private delivery. Review delivery history in clinic administration.':
+    'تُوضع الدعوات في قائمة الإرسال الخاص. راجع سجل الإرسال في إدارة العيادة.',
+  'Password reset. All previous sessions are revoked. Sign in again.':
+    'تمت إعادة تعيين كلمة المرور وإلغاء جميع الجلسات السابقة. سجل دخولك مجدداً.',
+  'If the account is eligible, an email will be sent.': 'إذا كان الحساب مؤهلاً فستُرسل رسالة بريد.',
+  'Reset password': 'إعادة تعيين كلمة المرور',
+  'Account recovery': 'استرداد الحساب',
+  'New password': 'كلمة المرور الجديدة',
+  'Set password': 'تعيين كلمة المرور',
+  'Send reset email': 'إرسال بريد إعادة التعيين',
+  'Resend verification': 'إعادة إرسال التحقق',
+  'Clinic invitation': 'دعوة العيادة',
+  'Sign in or register and verify the invited email, then reopen the link from your email.':
+    'سجل دخولك أو أنشئ حساباً وتحقق من البريد المدعو ثم افتح رابط البريد مجدداً.',
+  'Accepting as ': 'القبول بصفتك ',
+  '. Your access is determined by the clinic invitation, not account registration.':
+    '. تُحدد صلاحياتك عبر دعوة العيادة وليس تسجيل الحساب.',
+  'Accept invitation': 'قبول الدعوة',
+  'bytes · ': 'بايت · ',
+  'Account service unavailable. ': 'خدمة الحساب غير متاحة. ',
+  'DentalAi · Account': 'DentalAi · الحساب',
+  'DentalAI · Account': 'DentalAI · الحساب',
+  'Check your email to verify your patient account before signing in. Staff access requires a clinic invitation.':
+    'راجع بريدك للتحقق من حساب المريض قبل تسجيل الدخول. يتطلب دخول الموظفين دعوة من العيادة.',
+  'Welcome Back': 'مرحباً بعودتك',
+  'Enter your credentials to access your portal': 'أدخل بيانات حسابك للوصول إلى البوابة',
+  'Join DentalAi for smart dental care management': 'انضم إلى DentalAi لإدارة خدمات العيادة',
+  'Your session expired or was revoked. Sign in again.': 'انتهت جلستك أو أُلغيت. سجل دخولك مجدداً.',
+  'John Doe': 'اسم توضيحي',
+  'Processing...': 'جارٍ المعالجة…',
+  'Reset password or resend verification': 'إعادة تعيين كلمة المرور أو إعادة إرسال التحقق',
+  "Don't have an account?": 'ليس لديك حساب؟',
+  'Already have an account?': 'لديك حساب بالفعل؟',
+  'Sign Up': 'إنشاء حساب',
+  'Smart Dental Care': 'إدارة خدمات الأسنان',
+  'Appointment scheduling, interactive records, and care-management tools for the dental clinic.':
+    'جدولة المواعيد والسجلات التفاعلية وأدوات إدارة العيادة.',
+  'some of dental treatments in clinic': 'صور توضيحية للعيادة',
+  'Our Smart Services': 'خدماتنا الرقمية',
+  'Digital tools that support clinic administration and communication.':
+    'أدوات رقمية لدعم إدارة العيادة والتواصل.',
+  'Leading the way in digital dentistry. Providing smart, secure, and compassionate care for your smile.':
+    'أدوات رقمية لإدارة العيادة. الاستخدام السريري يخضع للتحقق والمراجعة.',
+  Hours: 'ساعات العمل',
+  '© 2026 DentalAi. All rights reserved.': '© 2026 DentalAi. الحقوق تخضع للتراخيص المراجعة.',
+  '{v0} · {v1}': '{v0} · {v1}',
+  '{v0}: {v1}': '{v0}: {v1}',
+  '{v0} appointment': 'موعد {v0}',
+  ' · {v0}': ' · {v0}',
+  '{v0}': '{v0}',
+  'An unexpected error occurred.': 'حدث خطأ غير متوقع.',
+};

@@ -30,6 +30,48 @@ test.afterAll(async () => {
     );
   if (fixture) await fixture.dispose();
 });
+test('responsive illustrative assets and Arabic landing layout do not claim implemented reminders', async ({
+  browser,
+}) => {
+  for (const width of [390, 1280]) {
+    const context = await browser.newContext({ viewport: { width, height: 900 } }),
+      page = await context.newPage();
+    await page.goto(origin);
+    await page.locator('section').nth(1).scrollIntoViewIfNeeded();
+    const images = page.locator('img[src*=".webp"]');
+    await expect(images).toHaveCount(8);
+    await expect
+      .poll(() => images.first().evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
+    await expect(images.first()).toHaveAttribute('loading', 'lazy');
+    await expect(images.first()).toHaveAttribute('srcset', /320w.*640w/);
+    await expect(
+      page.getByText('Automated reminders and easy online booking for your convenience.'),
+    ).toHaveCount(0);
+    await page.evaluate(() => {
+      localStorage.setItem('dentalai.locale', 'ar');
+    });
+    await page.reload();
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await page.locator('section').nth(1).scrollIntoViewIfNeeded();
+    await expect
+      .poll(() =>
+        images.evaluateAll((nodes) =>
+          nodes.some((node) => {
+            const img = node as HTMLImageElement,
+              rect = img.getBoundingClientRect();
+            return img.naturalWidth > 0 && rect.right > 0 && rect.left < window.innerWidth;
+          }),
+        ),
+      )
+      .toBe(true);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.screenshot({ path: `../../.local/phase16-landing-${width}-ar.png`, fullPage: true });
+    await context.close();
+  }
+});
 test('English owner dashboard and Arabic RTL remain usable; onboarding creates an isolated clinic', async ({
   browser,
 }) => {

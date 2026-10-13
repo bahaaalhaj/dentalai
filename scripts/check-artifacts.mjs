@@ -9,14 +9,20 @@ if (base !== 'HEAD' && !/^[0-9a-f]{40}$/.test(base))
 if (/^0{40}$/.test(base))
   throw new Error('An explicit reviewed baseline commit is required for an initial push');
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
-const files = execFileSync('git', ['diff', '--name-only', '--diff-filter=AM', '-z', base], {
+const changed = execFileSync('git', ['diff', '--name-only', '--diff-filter=AM', '-z', base], {
   encoding: 'utf8',
 })
   .split('\0')
   .filter(Boolean);
+const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard', '-z'], {
+  encoding: 'utf8',
+})
+  .split('\0')
+  .filter(Boolean);
+const files = [...new Set([...changed, ...untracked])];
 const blocked = files.filter(
   (file) =>
-    /(^|\/)(dataset_yolo|runs|dental_training|wandb|\.venv|__pycache__|\.pytest_cache)\//.test(
+    /(^|\/)(datasets?|dataset_yolo|converted_datasets?|training_data|checkpoints|runs|dental_training|wandb|\.venv|__pycache__|\.pytest_cache)\//.test(
       file,
     ) ||
     /^scripts\/dataset\//.test(file) ||

@@ -32,38 +32,45 @@ jobs:
         run: node scripts/check-sarif.mjs /tmp/codeql-results
   containers:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
+    env:
+      RELEASE_TAG: ci-${{ github.sha }}
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
+      - name: Fetch only retained clinic-photo originals for reproducible optimization
+        run: git lfs pull --include="apps/web/assets/clinic-originals/*.jpg" --exclude=""
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
       - name: Build immutable deployment candidates
         run: |
-          docker build -f infra/Dockerfile -t dentalai-app:ci .
-          docker build -t dentalai-ai:ci services/ai
+          docker build -f infra/Dockerfile -t dentalai-app:$RELEASE_TAG .
+          docker build -t dentalai-ai:$RELEASE_TAG services/ai
+      - name: Prove runtime imports and absence of unnecessary build toolchain
+        run: node scripts/check-runtime-image.mjs
       - name: Scan ALL high and critical container vulnerabilities (including unfixed)
-        run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 dentalai-app:ci
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 dentalai-ai:ci
-          docker run --rm aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa image --scanners vuln --severity HIGH,CRITICAL --exit-code 1 postgres:17.11-alpine
+        run: node scripts/scan-containers.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-vulnerability-evidence
+          path: .local/security/
+          if-no-files-found: warn
       - name: Validate pilot Compose without credentials on stdout
         env:
-          RELEASE_TAG: ci
           DEPLOYMENT_ENV: staging
           APP_ORIGIN: https://staging.example.invalid
           MAIL_FROM: noreply@example.invalid
           SECRETS_DIRECTORY: /tmp/never-production-secrets
         run: docker compose -f infra/compose.pilot.yml config --quiet
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
       - name: Install/build the actual restore-drill harness
         run: |
           npm install --global npm@11.17.0 --ignore-scripts
           npm ci
           npm run build:packages
           npm run build --workspace @dentalai/api
-          docker tag dentalai-app:ci dentalai-app:phase14
       - name: Restore encrypted synthetic backup into a clean isolated project
         run: npm run test:restore-drill

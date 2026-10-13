@@ -1,0 +1,43 @@
+{
+  "reviewedHead": "9333ad772d5815af5a3d1acb2ff7b4434a1eeb43",
+  "groups": {
+    "dataset": {
+      "files": 2540,
+      "bytes": 21086666,
+      "pointers": 0,
+      "formats": {
+        ".jpg": 1269,
+        ".txt": 1269,
+        ".cache": 2
+      }
+    },
+    "training-runs": {
+      "files": 8,
+      "bytes": 50368777,
+      "pointers": 0,
+      "formats": {
+        ".yaml": 1,
+        ".jpg": 4,
+        ".csv": 1,
+        ".pt": 2
+      }
+    },
+    "other-ml": {
+      "files": 1273,
+      "bytes": 27540507,
+      "pointers": 0,
+      "formats": {
+        ".jpg": 1269,
+        ".csv": 3,
+        ".pt": 1
+      }
+    }
+  },
+  "lfsTrackedEntries": 2550,
+  "duplicateContentGroups": 1269,
+  "duplicateCopies": 1269,
+  "metadataContainers": 0,
+  "identifierPatternFiles": 0,
+  "unreadable": 0,
+  "limitations": "Heuristic metadata/pattern counts are NOT de-identification, consent, licensing, or pixel-text review evidence. LFS pointers are not inspected image bytes."
+}

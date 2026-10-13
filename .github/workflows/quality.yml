@@ -10,7 +10,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     services:
       postgres:
         image: postgres:17.11-alpine
@@ -33,6 +33,9 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Fetch only retained clinic-photo originals for reproducible optimization
+        run: git lfs pull --include="apps/web/assets/clinic-originals/*.jpg" --exclude=""
 
       - name: Prevent new training data, runs, caches and model artifacts
         env:
@@ -58,6 +61,10 @@ jobs:
 
       - name: Check UI literal extraction
         run: npm run i18n:check
+      - name: Bilingual interface and source-size regression gates
+        run: |
+          npm run i18n:arabic
+          npm run source:check
 
       - name: Check requirement IDs, test traceability and local documentation links
         run: node scripts/check-documentation.mjs
@@ -69,6 +76,8 @@ jobs:
         run: npm test
       - name: Backup cryptography failure-path tests
         run: npm run test:backup
+      - name: Toolchain and release-input failure-path tests
+        run: npm run test:gates
 
       - name: Set up private inference test runtime
         uses: actions/setup-python@v6
@@ -83,9 +92,19 @@ jobs:
 
       - name: Rebuild PostgreSQL from zero and test constraints
         run: npm run test:db
+      - name: Business-logic coverage including integration authorization
+        run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: error
 
       - name: Build production bundle
         run: npm run build
+      - name: Production asset budgets
+        run: npm run bundle:check
 
       - name: Install browser for administration, appointment, clinical, billing and imaging E2E
         run: npx playwright install --with-deps --no-shell chromium

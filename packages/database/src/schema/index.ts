@@ -10,4 +10,5 @@ export * from './operations.js';
 export * from './clinical-workflow.js';
 export * from './financial-ledger.js';
 export * from './private-imaging.js';
+export * from './imaging-operations.js';
 export * from './administration.js';

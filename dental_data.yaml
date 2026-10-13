@@ -1,14 +1,7 @@
-
-path: C:\projects\dentalai\dataset_yolo
+path: dataset_yolo
 train: images/train
 val: images/valid
 test: images/test
 
 nc: 5
-names: [
-  'Fillings', 
-  'Caries', 
-  'Implant', 
-  'Cavity', 
-  'Impacted Tooth'
-]
+names: ['Fillings', 'Caries', 'Implant', 'Cavity', 'Impacted Tooth']

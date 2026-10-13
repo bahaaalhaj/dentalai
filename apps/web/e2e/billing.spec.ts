@@ -79,7 +79,7 @@ test('owner issues a snapshot, staff records payment, owner refunds, patient rea
       .selectOption({ label: 'Fictional E2E service · $100.00' });
     await owner.getByLabel('Draft change reason').fill('Fictional invoice');
     await owner.getByRole('button', { name: 'Save invoice draft' }).click();
-    const option = owner.getByRole('option').filter({ hasText: /INV-.*draft/ });
+    const option = owner.getByRole('option').filter({ hasText: /INV-.*Draft/ });
     await expect(option).toHaveCount(1);
     const invoiceId = await option.getAttribute('value');
     expect(invoiceId).toBeTruthy();

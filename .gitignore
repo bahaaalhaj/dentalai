@@ -46,3 +46,6 @@ packages/*/dist/
 *.tsbuildinfo
 playwright-report/
 test-results/
+# Ignore unreviewed generated variants; the approved Phase 16 assets are explicitly tracked.
+apps/web/public/pics/*.webp
+apps/web/public/pics/manifest.json

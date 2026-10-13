@@ -139,6 +139,13 @@ async function startServer(): Promise<void> {
               },
             }),
             environment.s3Bucket,
+            {
+              endpoint: environment.s3Endpoint,
+              hardened: ['staging', 'production'].includes(environment.deploymentEnv),
+              allowInsecureLocalDevelopment: environment.s3AllowInsecureLocalDevelopment,
+              encryption: environment.s3Encryption,
+              ...(environment.s3KmsKeyId ? { kmsKeyId: environment.s3KmsKeyId } : {}),
+            },
           )
         : undefined;
   const inference =

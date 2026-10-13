@@ -8,9 +8,10 @@ import { Pool } from 'pg';
 import { migrateDatabase } from '@dentalai/database';
 import { seedLocalDevelopment } from '../apps/api/dist/development/seed.js';
 import sharp from 'sharp';
+import { releaseTag } from './release-config.mjs';
 
 const suffix = randomUUID().slice(0, 8);
-const root = path.resolve('.local', `phase14-restore-${suffix}`);
+const root = path.resolve('.local', `restore-drill-${suffix}`);
 await mkdir(root, { recursive: true, mode: 0o700 });
 const keyFile = path.join(root, 'backup-key');
 await writeFile(keyFile, randomBytes(32).toString('hex'), { mode: 0o600 });
@@ -60,7 +61,7 @@ async function prepare(kind, port) {
     await writeFile(path.join(secrets, name), value, { mode: 0o600 });
   const env = {
     SECRETS_DIRECTORY: secrets,
-    RELEASE_TAG: 'phase14',
+    RELEASE_TAG: releaseTag(),
     DEPLOYMENT_ENV: 'staging',
     APP_ORIGIN: 'https://fixture.example.invalid',
     MAIL_FROM: 'fixture@example.invalid',

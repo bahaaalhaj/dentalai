@@ -1,15 +1,30 @@
 # DentalAI
 
-<<<<<<< HEAD
 Current specification: [aligned SRS](docs/srs.md), [requirements-to-tests matrix](docs/requirements-traceability.md)
-and [Phase 15 final verification](docs/phase15-final-verification.md). These supersede earlier
+and [Phase 16 verification](docs/phase16-final-verification.md). These supersede earlier
 present-tense architecture/completion claims; historical phase reports describe their dated checkpoints.
 
-Phase 14 adds single-host pilot hardening and recovery preparation, not production or clinical approval.
+Phase 16 repairs the merge, bounds private imaging, adds audited recovery and regression gates,
+and reduces runtime/container and frontend attack surface. It is not production or clinical approval.
 Use npm 11.17.0 for the documented install/CI/container flow; npm 10 produced a nested esbuild
-optional-binary mismatch in the Linux build. The application dependency versions are unchanged.
+optional-binary mismatch in the Linux build. The supported policy remains Node 22+ (CI: Node 22);
+the observed local run uses Node 24.19.0. Root preinstall rejects other npm versions.
 See [release readiness](docs/phase14-release-readiness.md), [operations and restore](docs/phase14-operations.md)
 and the [scoped OWASP ASVS review/threat model](docs/phase14-threat-model.md).
+Current additions: [storage/recovery](docs/phase16-storage-and-recovery.md),
+[security design blockers](docs/phase16-security-design.md), [data/model governance](docs/ml-data-governance.md).
+
+Use one `RELEASE_TAG` for `npm run release:build`, `npm run release:build:ai`, Compose and
+`npm run test:restore-drill`; the local default is `local-verification`, never a published release.
+CI uses a commit-derived tag. Runtime uses a pinned non-root distroless Node 22 image; there is
+no shell, npm or build toolchain. Use the documented Node operator scripts, not shell access.
+All workspace package versions remain private `0.0.0`; release identity is the immutable commit/tag
+and image digest until an owner-approved distribution/versioning policy exists.
+
+Additional gates: `npm run source:check`, `npm run i18n:arabic`, `npm run bundle:check`
+(after build), and `npm run test:coverage` (with disposable `DATABASE_URL`). Coverage JSON/HTML/LCOV
+are under ignored `coverage/`. Public/production governance checks intentionally fail until
+reviewed mandatory fields and the repository license are resolved: `npm run governance:check -- public`.
 
 React/Vite frontend, Express API, self-hosted PostgreSQL and private clinical object storage.
 The browser uses `/api/v1` contracts, never database credentials. Phase 12 is an **intentional
@@ -29,6 +44,7 @@ PostgreSQL and the test browser before disconnecting. Installed application flow
 local PostgreSQL and explicitly configured private filesystem storage/mail.
 
 ```bash
+npm install --global npm@11.17.0 --ignore-scripts
 npm ci
 npm run dev:configure
 npm run infra:up:local
@@ -138,38 +154,8 @@ docs/                 Architecture, security and validation notes
 [schema](docs/database-schema.md), [clinical safety](docs/clinical-validation.md),
 [private imaging](docs/private-imaging.md), [anesthesia](docs/anesthesia-decision-support.md),
 [deployment/backup](docs/deployment-and-backup.md), [ML artifact migration](docs/ml-artifact-migration.md).
-=======
-> A full-stack dental-clinic management application with AI-assisted exploration.
-
-## Overview
-
-DentalAI is a software-engineering project that combines clinic operations with a modern frontend, a managed backend database, and exploratory AI features. It was designed around practical patient and doctor workflows rather than a standalone model demo.
-
-> Educational project only. It does not provide medical or dental diagnosis.
-
-## Highlights
-
-- Built patient and doctor workflows, appointments, billing, and dashboards
-- Developed interactive dental-focused interfaces with **React** and **TypeScript**
-- Integrated **Supabase** for database-backed and role-based workflows
-- Added interactive data visualization
-- Explored AI-assisted dental X-ray analysis using a **YOLO** model and clinical-calculation support
-
-## Tech stack
-
-`React` · `TypeScript` · `Supabase` · `Data Visualization` · `YOLO`
-
-## Run locally
-
-```bash
-git clone https://github.com/bahaaalhaj/dentalai.git
-cd dentalai
-```
-
-Refer to the project files for the current setup instructions.
 
 ## Author
 
-**Bahaa Alhaj** - AI Engineering student  
+**Bahaa Alhaj** - AI Engineering student
 [GitHub profile](https://github.com/bahaaalhaj)
->>>>>>> 9f641cdf51e02c15cac04beb812edd85041cdc35

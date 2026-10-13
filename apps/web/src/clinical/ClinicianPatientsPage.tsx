@@ -313,7 +313,7 @@ export function ClinicianPatientsPage() {
                 : action.kind === 'close'
                   ? t('ui.c1d4535afb397013')
                   : t('ui.07677ac30a789154', {
-                      v0: action.kind === 'approved' ? 'Approve' : 'Reject',
+                      v0: action.kind === 'approved' ? t('action.approve') : t('action.reject'),
                     })
             }
             busy={busy}

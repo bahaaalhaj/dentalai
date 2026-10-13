@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { getErrorMessage } from '../lib/errors';
 import { useState } from 'react';
 import type { BillingCatalog } from '@dentalai/contracts';
 import { apiClient } from '../lib/api-client';
@@ -26,7 +27,7 @@ export function PricingPanel({
       await operation();
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Pricing unavailable.');
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { formatInstant, displayStatus } from '../i18n/display';
 import type { BillingInvoice } from '@dentalai/contracts';
 import { showMoney } from './Money';
 export function FinancialHistory({ invoice }: { invoice: BillingInvoice }) {
@@ -9,13 +10,13 @@ export function FinancialHistory({ invoice }: { invoice: BillingInvoice }) {
       {invoice.events.map((e) => (
         <article key={e.id} className="border-b py-3">
           <p>
-            {e.kind.replaceAll('_', ' ')} · {showMoney(e.amountMinor, e.currency)} ·{' '}
-            {new Date(e.recordedAt).toLocaleString()}
+            {displayStatus(e.kind)} · {showMoney(e.amountMinor, e.currency)} ·{' '}
+            {formatInstant(e.recordedAt)}
           </p>
           {e.method && (
             <p>
               {t('ui.3cca555f38a507ba')}
-              {e.method.replaceAll('_', ' ')}
+              {displayStatus(e.method)}
             </p>
           )}
           {e.reason && (

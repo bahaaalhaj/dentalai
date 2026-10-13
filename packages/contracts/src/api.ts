@@ -4,6 +4,7 @@ import { appointmentContracts } from './appointments.js';
 import { clinicalContracts } from './clinical.js';
 import { billingContracts } from './billing.js';
 import { imagingContracts } from './imaging.js';
+import { authorizationDocumentation } from './authorization-documentation.js';
 import { anesthesiaContracts } from './anesthesia.js';
 import { administrationContracts, AdministrationExportFileContract } from './administration.js';
 import {
@@ -101,13 +102,79 @@ export function createOpenApiDocument() {
     ...administrationContracts,
   ]) {
     const operation = {
-      security: contract.public ? [] : [{ cookieSession: [] }],
+      security: ['post', 'patch', 'put', 'delete'].includes(contract.method)
+        ? [
+            contract.public
+              ? { csrfHeader: [], csrfCookie: [] }
+              : { cookieSession: [], csrfHeader: [], csrfCookie: [] },
+          ]
+        : contract.public
+          ? []
+          : [{ cookieSession: [] }],
+      description: authorizationDocumentation(contract.path, contract.method, contract.public),
+      ...('binaryUpload' in contract
+        ? {
+            requestBody: {
+              required: true,
+              description:
+                'Single-frame PNG/JPEG, maximum 10 MiB; magic bytes, dimensions 16–8192, max 32 megapixels and full decode verified. Never public storage.',
+              content: {
+                'image/png': { schema: { type: 'string', format: 'binary' } },
+                'image/jpeg': { schema: { type: 'string', format: 'binary' } },
+              },
+            },
+          }
+        : {}),
       ...('body' in contract
         ? { requestBody: { required: true, content: jsonContent(contract.body) } }
         : {}),
-      ...('params' in contract || 'query' in contract
+      ...('params' in contract ||
+      'query' in contract ||
+      ['post', 'put', 'patch', 'delete'].includes(contract.method)
         ? {
             parameters: [
+              ...(['post', 'put', 'patch', 'delete'].includes(contract.method)
+                ? [
+                    {
+                      in: 'header',
+                      name: 'x-csrf-token',
+                      required: true,
+                      schema: { type: 'string' },
+                      description:
+                        'Obtain from GET /api/v1/access/csrf and send with its signed HttpOnly cookie and exact configured Origin.',
+                    },
+                    {
+                      in: 'header',
+                      name: 'Origin',
+                      required: true,
+                      schema: { type: 'string', format: 'uri' },
+                    },
+                  ]
+                : []),
+              ...('binaryUpload' in contract
+                ? [
+                    {
+                      in: 'header',
+                      name: 'x-imaging-reason',
+                      required: true,
+                      schema: { type: 'string' },
+                      description: 'Percent-encoded change reason, 3–500 decoded characters.',
+                    },
+                  ]
+                : []),
+              ...(contract.method === 'post' &&
+              /\/imaging\/(patients\/\{id\}\/images|images\/\{id\}\/analyses)$/.test(contract.path)
+                ? [
+                    {
+                      in: 'header',
+                      name: 'idempotency-key',
+                      required: false,
+                      schema: { type: 'string', format: 'uuid' },
+                      description:
+                        'Reuse the same UUID and exact provenance on retries. Completed requests replay their original result; pending/failed keys return 409 and require owner reconciliation or an explicit new logical operation. Omission creates a new operation.',
+                    },
+                  ]
+                : []),
               ...('params' in contract
                 ? [
                     {
@@ -135,7 +202,13 @@ export function createOpenApiDocument() {
           : {
               ['successStatus' in contract ? contract.successStatus : 200]: {
                 description: 'Validated response',
-                content: jsonContent(contract.response),
+                content:
+                  'binaryResponse' in contract
+                    ? {
+                        'image/png': { schema: { type: 'string', format: 'binary' } },
+                        'image/jpeg': { schema: { type: 'string', format: 'binary' } },
+                      }
+                    : jsonContent(contract.response),
               },
             }),
         '400': errorResponse,
@@ -143,7 +216,12 @@ export function createOpenApiDocument() {
         '403': errorResponse,
         '404': errorResponse,
         '409': errorResponse,
+        '413': errorResponse,
+        '415': errorResponse,
         '422': errorResponse,
+        '429': errorResponse,
+        '503': errorResponse,
+        '500': errorResponse,
       },
     };
     accessPaths[contract.path] = { ...accessPaths[contract.path], [contract.method]: operation };
@@ -154,9 +232,46 @@ export function createOpenApiDocument() {
       title: 'DentalAI API',
       version: '1.0.0',
       description:
-        'Backend authentication, clinic access, scheduling, and versioned clinical-record workflows. Experimental AI remains unavailable.',
+        'Backend authentication, clinic access, scheduling and versioned clinical records. Experimental inference is unavailable by default; explicitly configured private inference remains advisory and requires clinician review. Anesthesia recommendations remain disabled.',
     },
     paths: {
+      '/api/v1/auth/verify-email': {
+        get: {
+          security: [],
+          description:
+            'Public, single-use email verification link. Requires a valid signed provider token; callback is server-owned and constrained to the configured origin. Redirects to login, never returns a session token. This email-link GET is not a cookie-authenticated mutation and does not use the CSRF header.',
+          parameters: [
+            {
+              in: 'query',
+              name: 'token',
+              required: true,
+              schema: { type: 'string', minLength: 1, maxLength: 4096 },
+            },
+          ],
+          responses: {
+            '302': {
+              description: 'Redirect to configured-origin login after verification',
+              headers: { Location: { schema: { type: 'string', format: 'uri' } } },
+            },
+            '400': errorResponse,
+            '429': errorResponse,
+          },
+        },
+      },
+      '/api/v1/access/csrf': {
+        get: {
+          security: [],
+          description:
+            'Issue signed double-submit CSRF cookie and token; not a login session. Use same-origin credentials, then pass x-csrf-token + exact Origin on mutations.',
+          responses: {
+            '200': {
+              description: 'Private/no-store token response',
+              content: jsonContent(z.object({ token: z.string() })),
+            },
+            '429': errorResponse,
+          },
+        },
+      },
       ...accessPaths,
       '/api/v1/health/live': {
         get: {
@@ -217,6 +332,8 @@ export function createOpenApiDocument() {
     components: {
       securitySchemes: {
         cookieSession: { type: 'apiKey', in: 'cookie', name: '__Secure-dentalai.session_token' },
+        csrfHeader: { type: 'apiKey', in: 'header', name: 'x-csrf-token' },
+        csrfCookie: { type: 'apiKey', in: 'cookie', name: '__Host-dentalai.csrf' },
       },
       schemas: {
         HealthCheckRequest: z.toJSONSchema(HealthCheckRequestSchema, {

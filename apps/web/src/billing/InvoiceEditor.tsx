@@ -1,4 +1,5 @@
 import { t } from '../i18n';
+import { getErrorMessage } from '../lib/errors';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import {
@@ -64,8 +65,7 @@ export function InvoiceEditor({
         if (active) setPatientLinks(data);
       })
       .catch((e: unknown) => {
-        if (active)
-          setLinkError(e instanceof Error ? e.message : 'Clinical link references unavailable.');
+        if (active) setLinkError(getErrorMessage(e));
       })
       .finally(() => {
         if (active) setLinkLoading(false);
@@ -110,7 +110,7 @@ export function InvoiceEditor({
           else await apiClient.createInvoice(body);
           await saved();
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'Unable to save draft.');
+          setError(getErrorMessage(err));
         } finally {
           setBusy(false);
         }

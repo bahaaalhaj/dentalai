@@ -5,9 +5,17 @@ import {
   localDateWindow,
   dateInZone,
   weekday,
+  formatAppointmentTime,
 } from '@dentalai/domain';
 import { BookingSchema, AppointmentActionSchema, AvailabilitySchema } from '@dentalai/contracts';
 describe('appointment rules and timezone semantics', () => {
+  it('localizes presentation without altering the appointment instant/timezone', () => {
+    const instant = '2026-01-05T09:00:00Z';
+    expect(formatAppointmentTime(instant, 'Asia/Baghdad')).toContain('12:00');
+    expect(formatAppointmentTime(instant, 'Asia/Baghdad', 'ar')).not.toBe(
+      formatAppointmentTime(instant, 'Asia/Baghdad'),
+    );
+  });
   it('accepts explicit transitions and keeps terminal states terminal', () => {
     expect(canTransition('scheduled', 'confirmed')).toBe(true);
     expect(canTransition('scheduled', 'completed')).toBe(false);

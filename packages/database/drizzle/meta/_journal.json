@@ -71,6 +71,13 @@
       "when": 1791295402030,
       "tag": "0009_saas_administration",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791295402031,
+      "tag": "0010_imaging_resilience",
+      "breakpoints": true
     }
   ]
 }

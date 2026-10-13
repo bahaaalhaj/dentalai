@@ -41,10 +41,10 @@ export function dateInZone(instant: string, timezone: string): string {
 export function clinicToday(timezone: string): string {
   return Temporal.Now.instant().toZonedDateTimeISO(timezone).toPlainDate().toString();
 }
-export function formatAppointmentTime(instant: string, timezone: string): string {
+export function formatAppointmentTime(instant: string, timezone: string, locale = 'en-GB'): string {
   return Temporal.Instant.from(instant)
     .toZonedDateTimeISO(timezone)
-    .toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
+    .toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
 }
 export function localDateWindow(
   date: string,

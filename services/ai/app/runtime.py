@@ -4,6 +4,7 @@ import io
 import json
 import os
 import time
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,7 @@ import onnxruntime as ort
 from PIL import Image
 
 POSTPROCESSING_VERSION = "yolov8-onnx-v1"
+MAX_RESPONSE_BYTES = 512 * 1024
 
 
 def letterbox(data: bytes, size: int):
@@ -70,7 +72,9 @@ class Runtime:
         if any(node.domain not in ("", "ai.onnx") or any(attribute.type in (onnx.AttributeProto.GRAPH, onnx.AttributeProto.GRAPHS) for attribute in node.attribute) for node in graph.graph.node):
             raise ValueError("Custom operators and control-flow exports are not supported")
         onnx.checker.check_model(graph)
-        if not isinstance(m["classMap"], list) or not 1 <= len(m["classMap"]) <= 100 or any(not isinstance(c,str) or not c for c in m["classMap"]):
+        if any(not isinstance(m[key], str) or not 1 <= len(m[key]) <= 150 for key in ('modelName', 'modelVersion')):
+            raise ValueError('Invalid model identity')
+        if not isinstance(m["classMap"], list) or not 1 <= len(m["classMap"]) <= 100 or any(not isinstance(c,str) or not 1 <= len(c) <= 150 for c in m["classMap"]):
             raise ValueError("Invalid class map")
         if not isinstance(m["inputSize"], int) or not 32 <= m["inputSize"] <= 1280 or m["inputSize"] % 32:
             raise ValueError("Invalid model input size")
@@ -84,7 +88,18 @@ class Runtime:
         if len(inputs) != 1 or inputs[0].type != "tensor(float)" or inputs[0].shape != [1, 3, m["inputSize"], m["inputSize"]]:
             raise ValueError("Only static YOLOv8 detect ONNX inputs are supported")
         self.input_name = inputs[0].name
-        self._output(self.session.run(None, {self.input_name: np.zeros(inputs[0].shape, dtype=np.float32)}))
+        self._output(self._run(np.zeros(inputs[0].shape, dtype=np.float32)))
+
+    def _run(self, tensor, timeout_seconds=20):
+        # ORT cancellation keeps the endpoint lock held until execution actually stops.
+        options = ort.RunOptions()
+        timer = threading.Timer(timeout_seconds, lambda: setattr(options, 'terminate', True))
+        timer.daemon = True
+        timer.start()
+        try:
+            return self.session.run(None, {self.input_name: tensor}, run_options=options)
+        finally:
+            timer.cancel()
 
     def _output(self, outputs):
         if len(outputs) != 1:
@@ -94,15 +109,19 @@ class Runtime:
             raise ValueError("Invalid YOLOv8 raw output")
         if ((output[:, 4:, :] < 0) | (output[:, 4:, :] > 1)).any():
             raise ValueError("Model confidence values outside [0,1]")
+        if (output[:, 2:4, :] <= 0).any():
+            raise ValueError('Invalid model box dimensions')
         return output[0].T
 
     def infer(self, data: bytes):
         started = time.perf_counter()
         m = self.manifest
         tensor, scale, left, top, width, height = letterbox(data, m["inputSize"])
-        output = self._output(self.session.run(None, {self.input_name: tensor}))
+        output = self._output(self._run(tensor))
         raw = []
         for row in output:
+            if time.perf_counter() - started > 25:
+                raise TimeoutError('Inference processing deadline exceeded')
             class_id = int(np.argmax(row[4:]))
             score = float(row[4 + class_id])
             x1 = max(0.0, min(float(width), (float(row[0]) - float(row[2]) / 2 - left) / scale))
@@ -115,11 +134,16 @@ class Runtime:
         candidates = sorted((d for d in raw if d["score"] >= m["confidenceThreshold"]), key=lambda d: (-d["score"], d["classId"], tuple(d["box"])))
         detections = []
         for detection in candidates:
+            if time.perf_counter() - started > 25:
+                raise TimeoutError('Inference processing deadline exceeded')
             if not any(d["classId"] == detection["classId"] and overlap(d["box"], detection["box"]) > m["iouThreshold"] for d in detections):
                 detections.append(detection)
             if len(detections) >= 1000:
                 break
-        return {"modelName": m["modelName"], "modelVersion": m["modelVersion"], "artifactSha256": m["artifactSha256"],
+        result = {"modelName": m["modelName"], "modelVersion": m["modelVersion"], "artifactSha256": m["artifactSha256"],
                 "imageSha256": hashlib.sha256(data).hexdigest(), "classMap": m["classMap"], "confidenceThreshold": m["confidenceThreshold"],
                 "iouThreshold": m["iouThreshold"], "postprocessingVersion": POSTPROCESSING_VERSION,
-                "latencyMs": (time.perf_counter() - started) * 1000, "rawPredictions": output.tolist(), "rawDetections": raw, "detections": detections}
+                "latencyMs": (time.perf_counter() - started) * 1000, "responseVersion": "detections-v2", "detections": detections}
+        if len(json.dumps(result, allow_nan=False).encode('utf-8')) > MAX_RESPONSE_BYTES:
+            raise ValueError('Compact inference exceeds response limit')
+        return result

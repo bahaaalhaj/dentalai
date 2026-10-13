@@ -27,6 +27,7 @@ export async function mutation(
   body: object,
   cookie: string,
   method: 'post' | 'put' | 'delete' = 'post',
+  headers: Record<string, string> = {},
 ) {
   const csrf = await request(app).get('/api/v1/access/csrf').expect(200);
   return request(app)
@@ -34,6 +35,7 @@ export async function mutation(
     .set('origin', origin)
     .set('cookie', [cookie, ...responseCookies(csrf)].join('; '))
     .set('x-csrf-token', String(csrf.body.token))
+    .set(headers)
     .send(body);
 }
 export async function createSchedulingFixture(

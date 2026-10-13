@@ -12,10 +12,12 @@ import type { InferenceClient } from '../../src/domains/imaging/inference.js';
 import { checksum } from '../../src/domains/imaging/image-validation.js';
 import { ImagingRepository } from '../../src/domains/imaging/imaging.repository.js';
 import { AuthIdentitySchema } from '@dentalai/contracts';
+import { reconcileImaging } from '../../src/domains/imaging/imaging-recovery.js';
 
 const objects = new Map<string, Buffer>();
 let storageFailure = false;
 let inferenceFailure = false;
+let nonemptyFixture = false;
 const storage: PrivateStorage = {
   bucket: 'fictional-private',
   async put(key, data) {
@@ -42,9 +44,8 @@ const inference: InferenceClient = {
       iouThreshold: 0.5,
       latencyMs: 1,
       postprocessingVersion: 'yolov8-onnx-v1',
-      rawDetections: [],
-      rawPredictions: [],
-      detections: [],
+      responseVersion: 'detections-v2',
+      detections: nonemptyFixture ? [{ classId: 0, score: 0.9, box: [0, 0, 10, 10] }] : [],
     };
   },
 };
@@ -62,10 +63,17 @@ beforeAll(async () => {
     .toBuffer();
 });
 afterAll(async () => fixture?.dispose());
-async function upload(role = 'dentist', patient = fixture.patientId, data = png, studyId?: string) {
+async function upload(
+  role = 'dentist',
+  patient = fixture.patientId,
+  data = png,
+  studyId?: string,
+  requestKey = randomUUID(),
+) {
   const csrf = await request(fixture.app).get('/api/v1/access/csrf').expect(200);
   return request(fixture.app)
     .post(`/api/v1/imaging/patients/${patient}/images${studyId ? `?studyId=${studyId}` : ''}`)
+    .set('idempotency-key', requestKey)
     .set('origin', fixture.origin)
     .set('cookie', [fixture.members[role]?.cookie, ...responseCookies(csrf)].join('; '))
     .set('x-csrf-token', String(csrf.body.token))
@@ -74,6 +82,15 @@ async function upload(role = 'dentist', patient = fixture.patientId, data = png,
     .send(data);
 }
 describe('private imaging authorization and history', () => {
+  it('requires actual results for successful clinical runs, never SQL NULL', async () => {
+    await expect(
+      fixture.database.pool.query(
+        `INSERT INTO image_inference_runs(clinic_id,image_id,requested_by_membership_id,reason,status,completed_at)
+      VALUES($1,$2,$3,'Fictional null-result rejection','succeeded',now())`,
+        [fixture.clinicId, randomUUID(), fixture.members['dentist']!.membershipId],
+      ),
+    ).rejects.toMatchObject({ code: '23514' });
+  });
   it('blocks anonymous, all non-dentist roles and cross-clinic upload', async () => {
     await request(fixture.app).get(`/api/v1/imaging/patients/${fixture.patientId}`).expect(401);
     for (const role of ['patient', 'receptionist', 'clinic_admin', 'clinic_owner', 'foreign'])
@@ -362,5 +379,298 @@ describe('private imaging authorization and history', () => {
         fixture.providerId,
       ]);
     }
+  });
+  it('deduplicates concurrent upload retries and rejects key reuse with different provenance', async () => {
+    const key = randomUUID();
+    const results = await Promise.all([
+      upload('dentist', fixture.patientId, png, undefined, key),
+      upload('dentist', fixture.patientId, png, undefined, key),
+    ]);
+    expect(results.some((r) => r.status === 201)).toBe(true);
+    expect(results.every((r) => r.status === 201 || r.status === 409)).toBe(true);
+    expect(new Set(results.filter((r) => r.status === 201).map((r) => r.body.id)).size).toBe(1);
+    const original = results.find((r) => r.status === 201)!;
+    const replay = await upload('dentist', fixture.patientId, png, undefined, key);
+    expect(replay.status).toBe(201);
+    expect(replay.body.id).toBe(original.body.id);
+    expect(
+      (
+        await fixture.database.pool.query(
+          'SELECT count(*)::integer AS n FROM imaging_operations WHERE request_key=$1',
+          [key],
+        )
+      ).rows[0].n,
+    ).toBe(1);
+    const changed = await sharp(png).resize(40, 40).png().toBuffer();
+    expect((await upload('dentist', fixture.patientId, changed, undefined, key)).status).toBe(409);
+  });
+  it('recovers only expired runs in the explicitly authorized owner clinic without generating results', async () => {
+    const image = await upload();
+    const runId = randomUUID();
+    await fixture.database.pool.query(
+      `INSERT INTO image_inference_runs(id,clinic_id,image_id,requested_by_membership_id,reason,created_at,lease_expires_at)
+      VALUES($1,$2,$3,$4,'Fictional interrupted operation',now()-interval '10 minutes',now()-interval '5 minutes')`,
+      [runId, fixture.clinicId, image.body.id, fixture.members['dentist']!.membershipId],
+    );
+    await expect(
+      reconcileImaging(
+        fixture.database.pool,
+        storage,
+        fixture.clinicId,
+        fixture.members['foreign']!.userId,
+        'Fictional recovery test',
+      ),
+    ).rejects.toThrow('active owner');
+    await expect(
+      reconcileImaging(
+        fixture.database.pool,
+        storage,
+        fixture.clinicId,
+        fixture.members['dentist']!.userId,
+        'Fictional recovery test',
+      ),
+    ).rejects.toThrow('active owner');
+    const first = await reconcileImaging(
+      fixture.database.pool,
+      storage,
+      fixture.clinicId,
+      fixture.members['clinic_owner']!.userId,
+      'Fictional recovery test',
+    );
+    expect(first.failedRuns).toBe(1);
+    expect(
+      (
+        await fixture.database.pool.query(
+          'SELECT status,result,error_code FROM image_inference_runs WHERE id=$1',
+          [runId],
+        )
+      ).rows[0],
+    ).toEqual({ status: 'failed', result: null, error_code: 'INFERENCE_INTERRUPTED' });
+    expect(
+      (
+        await reconcileImaging(
+          fixture.database.pool,
+          storage,
+          fixture.clinicId,
+          fixture.members['clinic_owner']!.userId,
+          'Fictional repeated recovery',
+        )
+      ).failedRuns,
+    ).toBe(0);
+    await expect(
+      fixture.database.pool.query(
+        "UPDATE image_inference_runs SET status='running',completed_at=NULL,error_code=NULL WHERE id=$1",
+        [runId],
+      ),
+    ).rejects.toMatchObject({ code: '55000' });
+  });
+  it('analysis retries return the original run and late detection inserts are rejected', async () => {
+    const image = await upload(),
+      key = randomUUID();
+    const analyze = () =>
+      mutation(
+        fixture.app,
+        fixture.origin,
+        `/api/v1/imaging/images/${image.body.id}/analyses`,
+        { reason: 'Fictional idempotent analysis' },
+        fixture.members['dentist']!.cookie,
+        'post',
+        { 'idempotency-key': key },
+      );
+    const first = await analyze(),
+      second = await analyze();
+    expect(first.status).toBe(201);
+    expect(second.body.id).toBe(first.body.id);
+    const stored = (
+      await fixture.database.pool.query('SELECT result FROM image_inference_runs WHERE id=$1', [
+        first.body.id,
+      ])
+    ).rows[0].result;
+    expect(stored).toMatchObject({ responseVersion: 'detections-v2', detectionCount: 0 });
+    for (const field of ['detections', 'rawDetections', 'rawPredictions'])
+      expect(stored).not.toHaveProperty(field);
+    await expect(
+      fixture.database.pool.query(
+        `INSERT INTO image_model_detections(clinic_id,run_id,ordinal,class_id,class_name,score,x,y,width,height)
+      VALUES($1,$2,0,0,'fixture',0.9,0,0,10,10)`,
+        [fixture.clinicId, first.body.id],
+      ),
+    ).rejects.toMatchObject({ code: '23514' });
+  });
+  it('projects previous-format analysis without rewriting immutable stored history', async () => {
+    const image = await upload(),
+      runId = randomUUID();
+    const { responseVersion: _version, ...metadata } = await inference.infer(png);
+    const legacy = { ...metadata, rawPredictions: [[1, 2, 3, 4, 0.9]], rawDetections: [] };
+    await fixture.database.pool.query(
+      `INSERT INTO image_inference_runs(id,clinic_id,image_id,requested_by_membership_id,reason,status,result,completed_at)
+      VALUES($1,$2,$3,$4,'Fictional historical contract','succeeded',$5,now())`,
+      [
+        runId,
+        fixture.clinicId,
+        image.body.id,
+        fixture.members['dentist']!.membershipId,
+        JSON.stringify(legacy),
+      ],
+    );
+    const history = await request(fixture.app)
+      .get(`/api/v1/imaging/patients/${fixture.patientId}`)
+      .set('cookie', fixture.members['dentist']!.cookie)
+      .expect(200);
+    const projected = history.body.analyses.find((r: { id: string }) => r.id === runId).result;
+    expect(projected.responseVersion).toBe('detections-v2');
+    expect(projected).not.toHaveProperty('rawPredictions');
+    expect(
+      (
+        await fixture.database.pool.query('SELECT result FROM image_inference_runs WHERE id=$1', [
+          runId,
+        ])
+      ).rows[0].result,
+    ).toEqual(legacy);
+  });
+  it('reconciles checksum-verified stale uploads but retains missing or ambiguous objects', async () => {
+    const original = await upload();
+    const source = (
+      await fixture.database.pool.query(
+        'SELECT f.*,v.study_id FROM files f JOIN clinical_image_versions v ON v.file_id=f.id WHERE v.id=$1',
+        [original.body.id],
+      )
+    ).rows[0];
+    const normalized = await storage.get(source.object_key);
+    for (const [index, bytes] of [normalized, undefined, Buffer.from('corrupt')].entries()) {
+      const fileId = randomUUID(),
+        imageId = randomUUID(),
+        key = `clinical/${fixture.clinicId}/${fileId}.png`;
+      if (bytes) objects.set(key, bytes);
+      await fixture.database.pool.query(
+        `INSERT INTO files(id,clinic_id,patient_id,storage_provider,bucket,object_key,original_filename,content_type,size_bytes,sha256,uploaded_by_membership_id,created_at)
+        VALUES($1,$2,$3,'private-adapter',$4,$5,'synthetic.png','image/png',$6,$7,$8,now()-interval '10 minutes')`,
+        [
+          fileId,
+          fixture.clinicId,
+          fixture.patientId,
+          storage.bucket,
+          key,
+          normalized.length,
+          checksum(normalized),
+          fixture.members['dentist']!.membershipId,
+        ],
+      );
+      await fixture.database.pool.query(
+        `INSERT INTO clinical_image_versions(id,clinic_id,patient_id,study_id,file_id,version,owner_user_id,width,height,source_sha256,reason)
+        VALUES($1,$2,$3,$4,$5,$6,$7,32,32,$8,'Fictional interrupted publication')`,
+        [
+          imageId,
+          fixture.clinicId,
+          fixture.patientId,
+          source.study_id,
+          fileId,
+          index + 2,
+          fixture.members['dentist']!.userId,
+          checksum(png),
+        ],
+      );
+    }
+    const result = await reconcileImaging(
+      fixture.database.pool,
+      storage,
+      fixture.clinicId,
+      fixture.members['clinic_owner']!.userId,
+      'Fictional upload recovery',
+    );
+    expect(result).toMatchObject({ published: 1, retained: 2 });
+    const again = await reconcileImaging(
+      fixture.database.pool,
+      storage,
+      fixture.clinicId,
+      fixture.members['clinic_owner']!.userId,
+      'Fictional upload recovery repeat',
+    );
+    expect(again).toMatchObject({ published: 0, retained: 2 });
+  });
+  it('stores nonempty compact results atomically and rejects an incomplete normalized publication', async () => {
+    const image = await upload();
+    nonemptyFixture = true;
+    let analyzed;
+    try {
+      analyzed = await mutation(
+        fixture.app,
+        fixture.origin,
+        `/api/v1/imaging/images/${image.body.id}/analyses`,
+        { reason: 'Synthetic nonclinical contract fixture' },
+        fixture.members['dentist']!.cookie,
+      );
+    } finally {
+      nonemptyFixture = false;
+    }
+    expect(analyzed.status).toBe(201);
+    expect(analyzed.body.result.detections).toHaveLength(1);
+    const metadata = (
+      await fixture.database.pool.query('SELECT result FROM image_inference_runs WHERE id=$1', [
+        analyzed.body.id,
+      ])
+    ).rows[0].result;
+    expect(metadata).toHaveProperty('detectionCount', 1);
+    expect(metadata).not.toHaveProperty('detections');
+    const runId = randomUUID(),
+      db = await fixture.database.pool.connect();
+    try {
+      await db.query('BEGIN');
+      await db.query(
+        `INSERT INTO image_inference_runs(id,clinic_id,image_id,requested_by_membership_id,reason,status,result,completed_at)
+        VALUES($1,$2,$3,$4,'Fictional incomplete atomic publication','succeeded',$5,now())`,
+        [
+          runId,
+          fixture.clinicId,
+          image.body.id,
+          fixture.members['dentist']!.membershipId,
+          JSON.stringify(metadata),
+        ],
+      );
+      await expect(db.query('COMMIT')).rejects.toMatchObject({ code: '23514' });
+    } finally {
+      await db.query('ROLLBACK');
+      db.release();
+    }
+    expect(
+      (
+        await fixture.database.pool.query('SELECT id FROM image_inference_runs WHERE id=$1', [
+          runId,
+        ])
+      ).rowCount,
+    ).toBe(0);
+  });
+  it('retains a successful private object when database publication fails and blocks duplicate retries', async () => {
+    await fixture.database.pool
+      .query(`CREATE FUNCTION fixture_refuse_publication() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'private publication failure'; END $$;
+      CREATE TRIGGER fixture_refuse_publication BEFORE UPDATE ON files FOR EACH ROW WHEN(NEW.status='available') EXECUTE FUNCTION fixture_refuse_publication()`);
+    const key = randomUUID();
+    let response;
+    try {
+      response = await upload('dentist', fixture.patientId, png, undefined, key);
+    } finally {
+      await fixture.database.pool.query(
+        'DROP TRIGGER fixture_refuse_publication ON files; DROP FUNCTION fixture_refuse_publication()',
+      );
+    }
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(response.body)).not.toContain('private publication failure');
+    const pending = (
+      await fixture.database.pool.query(
+        `SELECT f.object_key,f.status FROM imaging_operations o JOIN clinical_image_versions v ON v.clinic_id=o.clinic_id AND v.id=o.image_id JOIN files f ON f.id=v.file_id AND f.clinic_id=v.clinic_id WHERE o.request_key=$1`,
+        [key],
+      )
+    ).rows[0];
+    expect(pending.status).toBe('pending');
+    expect(objects.has(pending.object_key)).toBe(true);
+    expect((await upload('dentist', fixture.patientId, png, undefined, key)).status).toBe(409);
+    expect(
+      (
+        await fixture.database.pool.query(
+          'SELECT id FROM imaging_operations WHERE request_key=$1',
+          [key],
+        )
+      ).rowCount,
+    ).toBe(1);
   });
 });
