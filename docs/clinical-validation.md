@@ -2,19 +2,26 @@
 
 The X-ray analysis and anesthetic decision-support modules are experimental. They have not completed technical or clinical validation and must not be used to diagnose, recommend treatment, calculate a patient dose, or make any other patient-care decision.
 
-Both modules are disabled by default. Development or demonstration access requires `VITE_CLINICAL_ENV` to be explicitly set to `development` or `demo` and the module's individual flag to be set to `true`:
+Legacy experimental UI gates default to disabled. Development or demonstration access to those
+gated controls requires `VITE_CLINICAL_ENV=development|demo` and the individual flag:
 
 - `VITE_ENABLE_XRAY_ANALYSIS`
 - `VITE_ENABLE_ANESTHETIC_DECISION_SUPPORT`
 
-The browser X-ray analyzer never produces findings; Phase 10 supplies a separately configured private inference service, not a demo simulation. Anesthetic recommendations remain disabled even in development/demo: Phase 11 found no approved clinical reference set, formulary or golden cases. See [anesthesia decision support](anesthesia-decision-support.md) for the versioned, fail-closed structure and every pending clinical rule.
+The browser X-ray analyzer never produces findings. The current private imaging workflow uses
+separate server flags `CLINICAL_STORAGE_ENABLED` and `XRAY_INFERENCE_ENABLED`; a browser flag
+cannot enable backend inference. Authorized private upload is distinct from analysis. No approved
+dental artifact/evaluation is bundled. Anesthetic recommendations remain disabled even in
+development/demo: there is no approved reference set, formulary or golden case. See
+[anesthesia decision support](anesthesia-decision-support.md) for every pending rule, and the
+[aligned SRS](srs.md) for AI-assisted decision support requiring clinician confirmation.
 
 ## Phase 8 clinical-record workflows
 
-This phase implements clinician-authored record keeping, **not** diagnosis, automated treatment
+The clinical workflow implements clinician-authored record keeping, **not** diagnosis, automated treatment
 selection, clinical decision support or an inference service. Nothing here validates the experimental
-modules above. The theme and appointment/account flows are preserved; billing/file migration is not
-part of this phase.
+modules above. Billing/private-file workflows are now separately implemented. The verification
+section below is historical Phase 8 evidence; current results are in [Phase 15](phase15-final-verification.md).
 
 ### Roles and patient projection
 
@@ -170,5 +177,6 @@ Primary changed areas: `packages/contracts/src/clinical.ts`, `packages/domain/sr
 the clinical unit/integration/browser tests, CI and these setup/security/migration notes. Only the
 migrated medical-record/tooth-state Supabase queries/subscriptions/writes/types and their obsolete
 chart/test-only helpers were retired. Deleted source files remain recoverable from Git. Unmigrated
-Supabase billing/file/experimental paths and the package remain; tooth-derived billing estimates are
-explicitly unavailable rather than replaced with invented amounts.
+hosted billing/file/experimental paths and package still remained at that historical checkpoint.
+Phase 12 subsequently removed them under the approved test-data reset. Current prices/invoices use
+the immutable server ledger, never tooth-derived historical estimates.

@@ -17,6 +17,8 @@ Public registration has a strict allowlist: name, email, password, and optional 
 a membership, role, clinic, or patient clinical entity. All accounts have an unprivileged global
 `accountRole: patient`; actual privileges are clinic-bound and are not inferred from that label.
 Staff register/verify this same unprivileged account, then accept an administrator-issued invitation.
+Verified onboarding can create a new isolated clinic and owner membership; it cannot grant access
+to an existing clinic. See [current roles/tenancy](srs.md#4-tenancy-and-final-role-model).
 
 | Resource/action                                    | owner | admin | dentist | receptionist | patient            |
 | -------------------------------------------------- | ----- | ----- | ------- | ------------ | ------------------ |
@@ -29,9 +31,10 @@ Clinic selection accepts a membership identifier **only as a selector**. The ser
 belongs to the authenticated user and an active clinic; browser clinic/user/role fields are rejected.
 Patient identity lookup also requires the selected clinic and, for a patient-only membership, an
 explicit `patients.portal_user_id` link. No email-based auto-linking or public linking endpoint exists.
-Patient metadata includes name and medical-record number, not diagnoses, notes, or files. A future
-clinical migration must define its own narrower permissions; these metadata permissions do not grant
-clinical access. Database session context FKs additionally bind clinic, membership, and user together.
+Patient metadata includes name and medical-record number, not diagnoses, notes or files; these
+metadata permissions do not grant clinical access. Current clinical routes require an active
+dentist/provider; patient routes use a linked approved-only projection. Database session FKs
+bind clinic, membership and user together.
 
 ## Staff and first-owner provisioning
 
@@ -39,7 +42,8 @@ Owners/admins can invite `clinic_admin`, `dentist`, or `receptionist` in their s
 browser endpoint grants ownership. Invitations expire after 48 hours, store SHA-256 token hashes,
 bind to the recipient's verified email, and are consumed under a transaction/row lock. Acceptance
 rechecks the issuer's active administrative membership, creates the staff/provider relationship,
-selects the clinic, and writes audit history. Failed delivery revokes the invitation. Revoked,
+selects the clinic, and writes audit history. Delivery uses the real transactional outbox; failures
+retry to exhaustion without fabricating successful delivery. Revoked,
 expired, wrong-email, replayed, or cross-clinic invitations do not grant access.
 
 An operator with trusted server/database access bootstraps the **first** owner of an existing clinic:
@@ -51,8 +55,9 @@ npm run auth:bootstrap-owner -- <clinic-uuid> <verified-email>
 First register and verify the account, apply migrations, and provision the clinic through trusted
 operator tooling. This command serializes owner bootstrap, seeds the fixed role vocabulary, refuses
 clinics with an existing owner, and records the grant in `audit_events`. It is not a public endpoint
-and does not create a password or bypass email verification. Clinic creation, patient linkage,
-ownership transfer, and a role-management UI remain deliberate later operator workflows.
+and does not create a password or bypass email verification. Clinic creation and authorized staff
+role/status management now have dedicated UI/API workflows. Patient linkage and ownership
+transfer/recovery remain reviewed operator workflows.
 
 ## CSRF, session lifecycle, and abuse protection
 
@@ -84,7 +89,8 @@ parameter dumps. The auth library's generic JSON responses are replaced with our
 ## Local and production configuration
 
 Set server-only `DATABASE_URL`, a randomly generated `AUTH_SECRET` of at least 32 characters,
-`APP_ORIGIN` (one exact HTTP(S) origin, no trailing slash/path), `SMTP_URL` using smtp/smtps, and
+`APP_ORIGIN` (one exact HTTP(S) origin, no trailing slash/path), `SMTP_URL` (staging/production requires
+implicit-TLS `smtps:` without security overrides), and
 `MAIL_FROM`. Never prefix these with `VITE_`. Generate a secret locally, for example:
 
 ```bash
@@ -122,10 +128,10 @@ administrative membership and role rows in its transaction. Invitations cannot r
 or revoked memberships (which would otherwise restore historical roles); restoration requires a
 separately reviewed operator policy. Invitation creation/revocation, acceptance, membership selection
 and explicit session revocation commit their security/audit records atomically. Expired pending
-invitations can be reissued; live duplicates return a safe conflict. SMTP remains an external side
-effect, not part of the database transaction: failed invitation delivery is explicitly revoked and
-audited, but durable email delivery is not claimed. Library lifecycle hooks are not a distributed
-transaction with SMTP.
+invitations can be reissued; live duplicates return a safe conflict. Invitation enqueue/delivery state
+uses PostgreSQL outbox leases and bounded retries; SMTP remains an external side effect. Library
+verification/reset mail still uses its maintained direct adapter, not a distributed SMTP transaction.
+Provider acceptance is not inbox delivery, and a crash can duplicate a send.
 
 Better Auth stores opaque session tokens in its server-only table; database/backups must therefore
 be access-restricted and encrypted at rest. OAuth fields are library-compatible but OAuth endpoints

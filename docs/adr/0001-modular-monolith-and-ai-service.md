@@ -8,7 +8,7 @@
 This context records the Phase 3 baseline at the decision date, not current deployment setup.
 See [Phase 12](../phase12-test-data-reset.md) for the completed local-runtime retirement/reset.
 
-DentalAI is currently one small product with tightly related clinic workflows and a direct Supabase
+At the Phase 3 decision date DentalAI was one small product with tightly related workflows and a direct hosted
 integration. Splitting each capability into a network service now would add deployment, observability,
 versioning, authentication, and failure-mode complexity before stable service boundaries exist.
 
@@ -22,8 +22,13 @@ Use an npm-workspace modular monolith for the web application, Express API, cont
 shared UI. Keep dependencies directional and modules independently testable, but deploy the TypeScript
 application as one unit for now.
 
-Reserve a separate FastAPI service for future validated inference. In Phase 3 it exposes health only:
+Reserve a separate FastAPI service for separately reviewed inference. At Phase 3 it exposed health only:
 there is no model loading, inference endpoint, simulated result, or automatic fallback.
+
+Current evolution: Phase 10 added a private real ONNX endpoint with versioned artifact loading,
+safe missing-model errors and dentist review; no approved dental model is bundled. Phase 12
+removed the hosted SDK/runtime under an intentional test-data reset. The TypeScript modular
+monolith and separate Python trust boundary remain; see [current architecture](../architecture.md).
 
 ## Consequences
 

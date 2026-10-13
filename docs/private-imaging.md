@@ -2,7 +2,8 @@
 
 ## Safety boundary
 
-Engineering infrastructure, **not a clinically validated diagnostic product**. Model scores and
+AI-assisted decision support requiring clinician confirmation, **not a clinically validated
+diagnostic product**. Model scores and
 dentist confirmation do not establish system clinical validation. Do not use these experimental
 modules for patient-care decisions. No approved model or eligible evaluation dataset was provided;
 real dental inference remains unavailable by default. No accuracy claim is made. The randomized
@@ -33,6 +34,8 @@ DICOM/TIFF/PDF/SVG, animation and remote image URLs are unsupported.
 Clinic, patient ownership and uploader come from a live authenticated dentist membership.
 Patients, owners, admins and receptionists cannot upload, analyze, review or stream images in this
 phase. Reads are authenticated same-origin streams with no-store; no public or permanent URLs.
+This describes clinical imaging endpoints. The separate fresh-owner export endpoint authorizes
+private-file attachments for the owner's tenant; it does not grant clinical analysis/review privileges.
 Cryptographic UUID object keys contain no names. Browser contracts contain no storage credentials.
 
 Upload reservation and audit commit before object PUT. Only a subsequent transaction publishes
@@ -51,7 +54,7 @@ All endpoints require a session cookie and tenant authorization; mutations also 
 | POST   | `/api/v1/imaging/patients/{id}/images` | Raw PNG/JPEG; percent-encoded `x-imaging-reason`; optional UUID `studyId` query appends a version |
 | GET    | `/api/v1/imaging/images/{id}/content`  | Authorized private stream                                                                         |
 | POST   | `/api/v1/imaging/images/{id}/analyses` | `{ reason }`; append actual run or persist safe failure                                           |
-| POST   | `/api/v1/imaging/analyses/{id}/review` | `{ decision: "confirmed"                                                                          | "rejected", reason }` |
+| POST   | `/api/v1/imaging/analyses/{id}/review` | `{ decision: "confirmed" or "rejected", reason }`; authorized dentist's terminal review           |
 
 Review is a single terminal decision under a row lock. Corrections need a new run/review, never
 erasure. Normalized model detections do not automatically become odontogram clinical truth.
@@ -74,9 +77,11 @@ metadata only; no image acquisition or findings are invented. See [the reset rep
 - Reviewed dental YOLOv8 ONNX artifact, license, class taxonomy, provenance and golden-image test.
 - Dataset license/consent, de-identification and trustworthy patient-level split manifest.
 - Actual holdout metrics, calibration, chosen thresholds and independent clinical validation.
-- Storage encryption, access-policy enforcement, restore test and retention sign-off.
+- Deployed volume encryption, access-policy enforcement and retention sign-off. Private-filesystem
+  encrypted backup/clean restore is locally verified; this is not S3 recovery evidence.
 - Reachable private S3-compatible server for the real adapter integration test. The configured
-  MinIO Docker Hub pull failed with access denied; Quay also returned 401 in this environment.
-  Injected storage tests are not real MinIO integration verification.
+  Phase 10 MinIO pulls failed with access denied. The current optional real-adapter test remains
+  skipped without an explicitly configured disposable private-S3 service; filesystem tests are
+  real private-file IO, not MinIO validation. See [current verification](phase15-final-verification.md).
 
 No valuable dataset, run output or weight was deleted or moved without a verified destination.

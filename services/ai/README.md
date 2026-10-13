@@ -1,5 +1,9 @@
 # DentalAI AI service
 
+AI-assisted decision support requiring clinician confirmation; no clinical/regulatory authorization.
+See [aligned SRS](../../docs/srs.md) and [final verification](../../docs/phase15-final-verification.md)
+for current build/evaluation status. The private pilot overlay publishes no AI host port.
+
 Private experimental YOLOv8 detect ONNX runtime; no artifact is bundled or downloaded. Missing,
 incompatible or unapproved models return readiness 503, never substitute results. `/health` is
 liveness; `/ready` is model readiness; `POST /v1/infer` accepts bounded image bytes and a server-only

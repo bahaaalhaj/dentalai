@@ -46,13 +46,15 @@ after the backup. Do not claim zero-data-loss rollback without that operational 
 ## Identifier, tenancy, time, and money rules
 
 - Primary identifiers are UUIDs generated with PostgreSQL `gen_random_uuid()`. Imports may retain a
-  stable source identifier in migration tooling, but application identifiers are globally unique UUIDs.
+  stable source identifier in future reviewed migration tooling, but application identifiers are globally unique UUIDs.
 - `clinics` is the tenant root. Every tenant-owned child row has a non-null `clinic_id`; global identity
   rows in `users` are deliberately not tenant-owned. A session can be global until a clinic context is
-  selected, so `sessions.clinic_id` is nullable.
+  selected, so runtime `auth_sessions.clinic_id` is nullable. The older `sessions` table is reserved,
+  not the login/session authority. Global auth/security tables and `saas_plans` are explicit exceptions.
 - Tenant relationships use composite foreign keys such as `(clinic_id, patient_id)` to prevent a row
   from pointing across clinics. Application authorization is still required; row-level-security policy
-  design is deferred until authentication migration.
+  policies are not implemented; application authorization and tenant constraints enforce current isolation.
+  The pilot's restricted runtime role is separate from the privileged migration identity.
 - Instants use `timestamp with time zone`. Appointments and schedule blocks also store the IANA timezone
   used for wall-clock display. Working hours use local `time` plus a location timezone.
 - Money is stored as integer minor units (`*_minor`) plus an uppercase three-letter currency. No
@@ -99,6 +101,9 @@ erDiagram
 
 ## Table catalog
 
+The initial catalog/diagram below includes retained baseline tables. New runtime workflows use
+the extensions listed immediately below; a retained table does not imply an active browser/API path.
+
 | Domain                | Tables                                                                                                               | Key history and integrity behavior                                                                                                          |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Clinic                | `clinics`, `clinic_settings`, `locations`, `operatories`, `working_hours`                                            | Valid IANA timezone checks; operatory/location tenant consistency                                                                           |
@@ -113,6 +118,21 @@ erDiagram
 | Operations            | `audit_events`, `outbox_jobs`                                                                                        | Audit events are append-only; outbox jobs have tenant-scoped idempotency keys                                                               |
 
 ## Scheduling collision semantics
+
+Current runtime extensions:
+
+| Area           | Runtime tables / authority                                                                                                                                                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication | `auth_accounts`, `auth_sessions`, `auth_verifications`, `auth_rate_limits`, `login_attempts`, global `security_events`; not older `sessions`/`users.password_hash`                                             |
+| Scheduling     | `clinic_closures`, `appointment_slot_offers`, revision/provenance additions; appointment/status history remains authoritative                                                                                  |
+| Clinical       | `clinical_revisions`, `clinical_approvals`, `clinical_demographics`, `clinical_encounter_provenance`, `treatment_plan_item_surfaces`; normalized domain payloads link to revisions                             |
+| Financial      | `billing_invoice_workflows`, `billing_price_publications`, `billing_item_links`, `billing_ledger`; legacy `invoices.balance_minor` is not runtime balance authority                                            |
+| Imaging        | `clinical_image_versions`, `image_inference_runs`, `image_model_detections`, `image_clinician_reviews` alongside `files`/`xray_studies`; retained `ai_analysis_runs` is not the new inference persistence path |
+| Administration | `clinic_profiles`, `clinic_subscriptions`, `subscription_events`, `clinic_exports`, `clinic_offboarding`, `notification_preferences`, `notification_deliveries`; global `saas_plans`                           |
+
+See schema modules and migrations `0000` through `0009` (ten reviewed migrations), generated
+contracts and [requirements traceability](requirements-traceability.md). Baseline AI table result-file
+constraints do not describe the normalized current inference-run/detection tables.
 
 Phase 7 adds `clinic_closures` and hashed, short-lived `appointment_slot_offers`, appointment revision/
 last-actor columns, bidirectional closure collision checks, delete/transition/history guards, and
@@ -196,18 +216,19 @@ patients are authorized through the selected authenticated membership and explic
 ## Explicitly unresolved decisions
 
 1. Confirm the production base currencies and the minor-unit scale for legacy `*_sp` values before any
-   billing import; the old schema does not declare a currency or scale.
+   future real billing import; no import occurred. The approved synthetic reset is explicitly SYP,
+   recreated numeric values 1:1 without conversion. Production currency/legal policy needs review.
 2. Phase 8 selects FDI two-digit numbering for new clinical records. Legacy numbering and provenance
    still require clinician/operator reconciliation before import; never reinterpret source codes silently.
 3. Define patient deduplication, medical-record-number allocation, and optional portal-account linking.
 4. Phase 7 skips ambiguous/nonexistent DST slots and offset-crossing durations. Define future
    recurrence expansion and overnight working-hours behavior before extending that policy.
 5. Better Auth is selected in Phase 6. Application membership/tenant enforcement is implemented;
-   PostgreSQL row-level-security defense-in-depth and a least-privilege deployment DB role still need
-   a separate deployment design/review.
+   PostgreSQL per-tenant row-level-security defense-in-depth is absent. Phase 14 provides reviewed
+   runtime grants/identity validation; deployed role/host/operator policy still needs verification.
 6. Set legal retention, correction, archival, and erasure rules per deployment jurisdiction.
 7. Decide whether insurance claims, payer adjustments, and split tender need first-class models.
-8. Decide whether legacy simulated AI/anesthetic JSON is discarded or retained in a quarantined audit
-   archive; it must never be imported as validated output.
+8. The operator authorized discarding disposable hosted test data; no legacy simulated AI/anesthetic
+   JSON was imported. Future real-source imports require explicit provenance/quarantine decisions.
 9. Confirm whether the deployment role may install `btree_gist`; otherwise provision the extension as
    an infrastructure prerequisite.

@@ -1,5 +1,8 @@
 # Architecture
 
+Current requirements and verification: [aligned SRS](srs.md),
+[traceability](requirements-traceability.md), [final report](phase15-final-verification.md).
+
 Phase 13 adds tenant administration, subscription capacity triggers and a PostgreSQL
 notification outbox inside the modular monolith, not payment processing/new services.
 See [administration](saas-administration.md).
@@ -28,7 +31,7 @@ The approved disposable-test-data reset is not a legacy import. See
 ## Dependency direction
 
 Applications may depend on packages. Packages must not depend on applications. The web application may
-not call a future inference implementation directly; validated inference integration must enter through
+not call the inference implementation directly; inference integration must enter through
 an explicitly reviewed API contract and preserve the clinical feature gates.
 
 `packages/contracts` is browser-safe and may contain Zod transport schemas, inferred DTO types, and API

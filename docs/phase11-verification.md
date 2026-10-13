@@ -1,5 +1,8 @@
 # Phase 11 verification — 9 October 2026
 
+Historical Phase 11 checkpoint evidence. Current results are [Phase 15](phase15-final-verification.md);
+approved clinical constants/golden cases are still absent, so numerical recommendations remain disabled.
+
 Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
 describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
 see [the current reset report](./phase12-test-data-reset.md).

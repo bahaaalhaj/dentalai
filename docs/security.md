@@ -1,5 +1,10 @@
 # Security notes
 
+Current security evidence/gaps: [Phase 15](phase15-final-verification.md) and
+[scoped ASVS/threat model](phase14-threat-model.md). This is not regulatory approval.
+The pilot requires mounted secrets, separate non-owner runtime DB identity, trusted HTTPS edge,
+private monitoring and configured worker/SMTP; operational provisioning still needs verification.
+
 Phase 13 rechecks membership/session/clinic permissions within administrative transactions.
 Owner-only export/offboarding needs recent sign-in; exports exclude credentials/public
 objects. Notification tokens are encrypted at rest and quotas database-enforced.
@@ -20,7 +25,9 @@ Administrative grants never represent payment evidence. See [administration](saa
   `wasm-unsafe-eval` for the bundled landing animation only; JavaScript `unsafe-eval`, external
   scripts and external connections remain disallowed. Browser tests assert actual rendering offline.
 
-These controls support local development; they are not a production security accreditation.
+These controls support local/pilot preparation; they are not production security accreditation.
+Per-tenant PostgreSQL RLS, MFA/common-password blocking, independent penetration testing,
+immutable off-host audit custody and deployment TLS/disk encryption are not completed claims.
 
 ## Phase 8 clinical access
 

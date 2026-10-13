@@ -1,5 +1,8 @@
 # Phase 13 verification
 
+Historical Phase 13 run evidence. Current requirements/results are [SRS](srs.md) and
+[Phase 15](phase15-final-verification.md). Administrative subscription state is not payment evidence.
+
 Administration/productization only; no deployment/later phase. Initial worktree was clean
 at `f5fc069` (`commit12`). Existing clinical gates/reset inspected; no user edits overwritten,
 dependencies changed, clinical constants invented or model artifacts deleted.

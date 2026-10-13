@@ -1,5 +1,9 @@
 # DentalAI
 
+Current specification: [aligned SRS](docs/srs.md), [requirements-to-tests matrix](docs/requirements-traceability.md)
+and [Phase 15 final verification](docs/phase15-final-verification.md). These supersede earlier
+present-tense architecture/completion claims; historical phase reports describe their dated checkpoints.
+
 Phase 14 adds single-host pilot hardening and recovery preparation, not production or clinical approval.
 Use npm 11.17.0 for the documented install/CI/container flow; npm 10 produced a nested esbuild
 optional-binary mismatch in the Linux build. The application dependency versions are unchanged.
@@ -11,6 +15,8 @@ The browser uses `/api/v1` contracts, never database credentials. Phase 12 is an
 disposable-test-data reset**, not a legacy migration. See the [reset report](docs/phase12-test-data-reset.md).
 
 X-ray inference and anesthesia are experimental and **must not be used for patient-care decisions**.
+The intended boundary is AI-assisted decision support requiring clinician confirmation;
+clinician confirmation is not system clinical validation. Anesthesia is rule-based, not a second AI model.
 No approved dental model/evaluation or approved anesthesia references are bundled. Anesthesia
 recommendations and confirmation remain disabled even when a demo flag is enabled. Missing
 inference returns unavailable, never fabricated findings.

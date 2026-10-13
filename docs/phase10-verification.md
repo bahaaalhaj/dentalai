@@ -1,5 +1,8 @@
 # Phase 10 verification and release status
 
+Historical Phase 10 run/implementation evidence. Current runtime, recovery and remaining
+gates are [SRS](srs.md) and [Phase 15](phase15-final-verification.md); no legacy objects were imported.
+
 Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
 describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
 see [the current reset report](./phase12-test-data-reset.md).

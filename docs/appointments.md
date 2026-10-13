@@ -15,8 +15,8 @@ setup script remains in the deployment path.
 
 1. Follow the root README: install, configure server-only PostgreSQL/auth/SMTP values, start local
    infrastructure, and run `npm run db:migrate --workspace @dentalai/database`.
-2. Provision the first owner with the Phase 6 operator command. Clinic/location identities and IANA
-   timezones must already be provisioned in PostgreSQL; location creation is not a new public endpoint.
+2. Use verified onboarding for a new isolated clinic, or the operator bootstrap for an existing clinic
+   without an owner. Owners/admins manage locations and explicit IANA timezones through administration.
 3. Invite a dentist using the account dashboard. Accepting a dentist invitation creates the existing
    staff/provider records; revoked/disabled memberships or users cannot receive new slots.
 4. Owners/admins open **Clinic scheduling settings** to add chairs, appointment types/durations,
@@ -24,8 +24,8 @@ setup script remains in the deployment path.
 5. Booking requires a non-archived clinical `patients` row. Patients require an explicitly assigned
    `portal_user_id` in the same clinic. Public registration does not create or link a clinical patient.
    Patient linkage and any legacy import still require a reviewed operator process. Staff booking
-   currently accepts an existing clinic patient-record UUID; a clinical patient directory is not
-   being migrated in this phase.
+   accepts an existing clinic patient-record UUID. The dentist clinical directory lists existing
+   patients; general patient creation, linkage and text search are not implemented UI workflows.
 
 The root `dev:seed` creates clearly synthetic local-only identities and hashed, privately generated
 credentials, never real users or cloud password hashes. Tests create disposable databases and use
@@ -148,5 +148,5 @@ closures against bookings, test authority injection, each role and clinic bounda
 expiry, changed hours/blocks, patient linkage, terminal history, and completion/no-show timing.
 
 See [phase7-verification.md](phase7-verification.md) for exact run results and remaining deployment
-decisions. No later phase, clinical migration, automatic legacy-data import, or clinical validation
-is included.
+decisions at that historical checkpoint. For current evidence use [Phase 15](phase15-final-verification.md).
+No automatic legacy-data import or clinical validation is claimed.

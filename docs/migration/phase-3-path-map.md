@@ -1,5 +1,9 @@
 # Phase 3 path migration map
 
+Historical Phase 3 map, not current provisioning instructions. Phase 12 removed the hosted SQL/
+client paths below; current architecture is self-hosted PostgreSQL/API/private storage/FastAPI.
+See [aligned SRS](../srs.md) and [test-data reset](../phase12-test-data-reset.md).
+
 Historical phase record. Retained source paths, SDK dependencies and deployment instructions below
 describe that phase only. Phase 12 intentionally retires disposable source data and legacy files;
 see [the current reset report](../phase12-test-data-reset.md).
