@@ -180,3 +180,39 @@ and restore success. Quality must actually proceed past the artifact gate. A reg
 test for workflow order is not evidence those remote steps ran. Do not release this
 candidate while any HIGH/CRITICAL finding, build error or external gate remains unresolved.
 Clinical/model/reference approvals remain pending; anesthesia recommendations stay disabled.
+
+## Closing verified source checkpoint
+
+Source commit **`d05e74ecd2e5d67833dee66a61b92d929b330291`** subsequently passed both
+complete workflows:
+
+- [Quality 38447802496](https://github.com/bahaaalhaj/dentalai/actions/runs/38447802496):
+  install, baseline/artifact protection, typecheck, lint, documentation/formatting,
+  unit/inference tests, empty-database migrations/constraints, authorization/integration
+  coverage, correctly sequenced coverage upload, production build/budgets, all E2E,
+  infrastructure syntax, dependency audit and full-history secret scanning.
+- [Security 38447802037](https://github.com/bahaaalhaj/dentalai/actions/runs/38447802037):
+  both unchanged CodeQL/severity gates, all three builds, actual runtime guards including
+  Linux secret ownership, comprehensive all-image High/Critical scans with unfixed findings,
+  pilot Compose validation and the encrypted synthetic clean-environment restore drill.
+
+Remote scan completed at 18:36:11 UTC; Compose validation started at 18:36:12;
+restore ran from 18:36:34 to 18:37:13 and passed. The ownership correction therefore
+resolved the observed Linux drill failure without weakening secrets or security gates.
+No unresolved High/Critical finding or scanner error remains in these candidate scans.
+Local vulnerability-database access is still blocked and is not represented as a local pass.
+
+Only intended source/tests/configuration/sanitized evidence/documentation were staged.
+Final staged secret and whitespace checks passed before each source commit; the final
+history scan found zero leaks in 20 commits. The owned test PostgreSQL container was
+removed without deleting its volume; the owner's PostgreSQL/MySQL were not restarted
+or removed. Encrypted drill evidence remains recoverable under ignored `.local` storage.
+No environments, backup bundles/keys, coverage, test artifacts, raw downloaded logs,
+scanner databases, model artifacts or temporary installs were committed.
+
+The subsequent closing handoff is documentation-only and does not alter the verified
+source, contracts, migrations, dependencies, runtime images or gates. Its new Actions
+identities and final Git SHA are provided in the handoff; source evidence is explicitly
+anchored above rather than claiming unobserved CI results. No merge, deployment, release
+or history rewrite occurred. Clinical approval and broader production-readiness blockers
+in the main Phase 16 report remain; green engineering CI is not patient-care authorization.

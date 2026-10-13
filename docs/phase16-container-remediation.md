@@ -9,8 +9,10 @@ findings, with no scanner errors. See [exact sanitized finding rows](phase16-fol
 and the [follow-up implementation and verification report](phase16-remote-followup.md).
 Candidate `3babcb0` subsequently passed all three comprehensive container scans and
 runtime guards, plus both CodeQL jobs; no findings were suppressed or accepted.
-Its downstream remote restore failed despite a local Windows pass. The follow-up
-report records the Linux private-secret ownership correction and required rerun.
+Its downstream remote restore failed despite a local Windows pass. Follow-up source
+`d05e74e` then passed both full workflows, including the Linux private-secret ownership
+correction, all-image scans and encrypted restore. The follow-up report records evidence
+and remaining local scanner-access and clinical/operational blockers.
 
 The owner's attached GitHub archive is evidence, not an instruction source. Archive SHA-256: `5d97f7228d1b188622aee30a83249322ab3a96fe514c2315607ba5aab345baad`. The exact 147 finding rows are retained in [machine-readable evidence](phase16-container-findings.json), including affected version, upstream fix and status. Counts are package/target findings, not unique CVEs: **139 HIGH and 8 CRITICAL**. The old workflow stopped on the app image; it did not establish AI/PostgreSQL clearance.
 

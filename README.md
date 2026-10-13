@@ -24,8 +24,9 @@ and image digest until an owner-approved distribution/versioning policy exists.
 
 The [Phase 16 remote follow-up](docs/phase16-remote-followup.md) records the first branch's
 actual scan findings, AI/PostgreSQL remediation and Linux restore-harness correction.
-Local scanner access remains blocked; the report distinguishes remote scan clearance
-from outstanding restore verification. Do not deploy before all remote gates pass.
+Local scanner access remains blocked; the report records successful remote all-image
+scans and Linux restore verification. Green engineering CI is not clinical or production
+approval; the documented operational and clinical prerequisites still apply.
 
 Additional gates: `npm run source:check`, `npm run i18n:arabic`, `npm run bundle:check`
 (after build), and `npm run test:coverage` (with disposable `DATABASE_URL`). Coverage JSON/HTML/LCOV

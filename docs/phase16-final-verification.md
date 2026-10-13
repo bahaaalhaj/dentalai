@@ -11,6 +11,12 @@ is not weakened.
 
 ## Repository state and preservation
 
+The subsequent [remote follow-up](phase16-remote-followup.md) closes the engineering CI
+gates on source `d05e74e`: both Quality and Security are green, including all-image
+High/Critical scans, unchanged CodeQL and encrypted Linux restore. Local scanner database
+access remains blocked. Earlier failures below are historical checkpoints, not asserted
+current failures. Clinical and independent production-readiness gates remain unmet.
+
 Starting branch `main`, HEAD `9333ad772d5815af5a3d1acb2ff7b4434a1eeb43`, clean worktree. Ending branch/HEAD are unchanged; all Phase 16 work remains uncommitted. No push, publish, release, PR, final deployment, history rewrite or dataset deletion was performed. The original SRS PDF was not modified. The owner's supplied log archive was treated as evidence, not instructions.
 
 The complete path/status inventory is [changed files](phase16-changed-files.json). Public JPEG D entries are preserved moves to `apps/web/assets/clinic-originals`, not lost photographs. Existing ML data/weights/LFS remain intact. Ignored local synthetic credentials, dependency caches and encrypted drill evidence are not release content. Existing user PostgreSQL/MySQL containers were not altered.
