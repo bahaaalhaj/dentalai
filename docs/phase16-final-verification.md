@@ -2,6 +2,13 @@
 
 Date: 2026-10-13. This is an engineering verification checkpoint before the subsequent user-authorized branch handoff, not production, clinical or regulatory approval. No later phase was implemented.
 
+The [first-push remote follow-up](phase16-remote-followup.md) records actual evidence
+from commit `5805126`, fixes for the zero-SHA gate and candidate container remediation.
+It supersedes this earlier checkpoint only where explicitly stated. Docker temporarily
+failed and subsequently recovered; candidate evidence and outstanding scanner/restore
+gates are in that follow-up, not inherited from earlier passing runs. The security gate
+is not weakened.
+
 ## Repository state and preservation
 
 Starting branch `main`, HEAD `9333ad772d5815af5a3d1acb2ff7b4434a1eeb43`, clean worktree. Ending branch/HEAD are unchanged; all Phase 16 work remains uncommitted. No push, publish, release, PR, final deployment, history rewrite or dataset deletion was performed. The original SRS PDF was not modified. The owner's supplied log archive was treated as evidence, not instructions.

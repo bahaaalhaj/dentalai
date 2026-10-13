@@ -49,8 +49,11 @@ jobs:
         run: |
           docker build -f infra/Dockerfile -t dentalai-app:$RELEASE_TAG .
           docker build -t dentalai-ai:$RELEASE_TAG services/ai
+          docker build -f infra/postgres/Dockerfile -t dentalai-postgres:$RELEASE_TAG .
       - name: Prove runtime imports and absence of unnecessary build toolchain
-        run: node scripts/check-runtime-image.mjs
+        run: |
+          node scripts/check-runtime-image.mjs
+          node scripts/check-service-images.mjs
       - name: Scan ALL high and critical container vulnerabilities (including unfixed)
         run: node scripts/scan-containers.mjs
       - uses: actions/upload-artifact@v4

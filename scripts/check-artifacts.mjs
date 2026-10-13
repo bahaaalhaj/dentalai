@@ -9,7 +9,7 @@ if (base !== 'HEAD' && !/^[0-9a-f]{40}$/.test(base))
 if (/^0{40}$/.test(base))
   throw new Error('An explicit reviewed baseline commit is required for an initial push');
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
-const changed = execFileSync('git', ['diff', '--name-only', '--diff-filter=AM', '-z', base], {
+const changed = execFileSync('git', ['diff', '--name-only', '--diff-filter=ACMR', '-z', base], {
   encoding: 'utf8',
 })
   .split('\0')

@@ -11,20 +11,6 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 40
-    services:
-      postgres:
-        image: postgres:17.11-alpine
-        env:
-          POSTGRES_DB: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: ci_database_only
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
     env:
       DATABASE_URL: postgresql://postgres:ci_database_only@localhost:5432/postgres
     steps:
@@ -37,10 +23,26 @@ jobs:
       - name: Fetch only retained clinic-photo originals for reproducible optimization
         run: git lfs pull --include="apps/web/assets/clinic-originals/*.jpg" --exclude=""
 
-      - name: Prevent new training data, runs, caches and model artifacts
+      - name: Resolve a reviewed artifact baseline, including new-branch pushes
         env:
-          ARTIFACT_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+          ARTIFACT_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          ARTIFACT_PUSH_BEFORE_SHA: ${{ github.event.before }}
+          ARTIFACT_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: node scripts/resolve-artifact-baseline.mjs >> "$GITHUB_ENV"
+
+      - name: Prevent new training data, runs, caches and model artifacts
         run: node scripts/check-artifacts.mjs
+
+      - name: Build and start the same hardened PostgreSQL candidate used by deployment
+        run: |
+          docker build -f infra/postgres/Dockerfile -t dentalai-postgres:ci-${{ github.sha }} .
+          docker run -d --name dentalai-ci-postgres -e POSTGRES_DB=postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=ci_database_only -p 127.0.0.1:5432:5432 --health-cmd="pg_isready -U postgres -d postgres" --health-interval=2s --health-timeout=3s --health-retries=30 dentalai-postgres:ci-${{ github.sha }}
+          for attempt in $(seq 1 30); do
+            if [ "$(docker inspect --format '{{.State.Health.Status}}' dentalai-ci-postgres)" = healthy ]; then exit 0; fi
+            sleep 2
+          done
+          echo "Disposable PostgreSQL did not become healthy" >&2
+          exit 1
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -93,9 +95,10 @@ jobs:
       - name: Rebuild PostgreSQL from zero and test constraints
         run: npm run test:db
       - name: Business-logic coverage including integration authorization
+        id: coverage
         run: npm run test:coverage
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ always() && (steps.coverage.outcome == 'success' || steps.coverage.outcome == 'failure') }}
         with:
           name: coverage
           path: coverage/
@@ -126,6 +129,10 @@ jobs:
 
       - name: Audit dependencies
         run: npm run audit
+
+      - name: Stop only the disposable CI PostgreSQL container
+        if: always()
+        run: docker rm -f dentalai-ci-postgres 2>/dev/null || true
 
   secret-scan:
     runs-on: ubuntu-latest

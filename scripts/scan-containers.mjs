@@ -10,7 +10,7 @@ const scanner =
 const images = {
   app: `dentalai-app:${releaseTag()}`,
   ai: `dentalai-ai:${releaseTag()}`,
-  postgres: 'postgres:17.11-alpine',
+  postgres: `dentalai-postgres:${releaseTag()}`,
 };
 let failed = false;
 for (const [name, image] of Object.entries(images)) {

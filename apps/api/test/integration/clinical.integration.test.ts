@@ -205,31 +205,27 @@ describe('clinical workflow on production API and PostgreSQL', () => {
   it('requires review before closing, prevents repeated approval, and excludes rejected content', async () => {
     const e = await encounter();
     const r = await write(e.id);
-    expect(
-      (await mutate(`/api/v1/clinical/encounters/${e.id}/close`, { reason: 'Fictional closure' }))
-        .status,
-    ).toBe(409);
-    expect(
-      (
-        await mutate(`/api/v1/clinical/records/${r.id}/review`, {
-          decision: 'rejected',
-          reason: 'Fictional rejection',
-        })
-      ).status,
-    ).toBe(200);
-    expect(
-      (
-        await mutate(`/api/v1/clinical/records/${r.id}/review`, {
-          decision: 'approved',
-          reason: 'Fictional repeat',
-        })
-      ).status,
-    ).toBe(409);
+    const pendingClose = await mutate(`/api/v1/clinical/encounters/${e.id}/close`, {
+      reason: 'Fictional closure',
+    });
+    expect(pendingClose.status, pendingClose.text).toBe(409);
+    expect(pendingClose.body.error.code).toBe('PENDING_CLINICAL_REVIEW');
+    const rejected = await fixtureMutation(`/api/v1/clinical/records/${r.id}/review`, {
+      decision: 'rejected',
+      reason: 'Fictional rejection',
+    });
+    expect(rejected.status, rejected.text).toBe(200);
+    const repeated = await mutate(`/api/v1/clinical/records/${r.id}/review`, {
+      decision: 'approved',
+      reason: 'Fictional repeat',
+    });
+    expect(repeated.status, repeated.text).toBe(409);
+    expect(repeated.body.error.code).toBe('CLINICAL_CONFLICT');
     expect((await portal()).history.some((p) => p.id === r.id)).toBe(false);
-    expect(
-      (await mutate(`/api/v1/clinical/encounters/${e.id}/close`, { reason: 'Fictional closure' }))
-        .status,
-    ).toBe(200);
+    const closed = await fixtureMutation(`/api/v1/clinical/encounters/${e.id}/close`, {
+      reason: 'Fictional closure',
+    });
+    expect(closed.status, closed.text).toBe(200);
   });
   it('stores demographic, alert, allergy and medication revisions without JSON-only truth', async () => {
     const e = await encounter();

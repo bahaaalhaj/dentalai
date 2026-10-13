@@ -47,6 +47,15 @@ needs its own immutable image fixtures and approved golden tolerances before rel
 
 ## Offline evaluation
 
+The container candidate preserves CPython 3.12 and the frozen inference dependency lock
+on a pinned non-root distroless C/C++ runtime. Only linked distribution libraries are
+copied, together with their genuine Debian package records and available copyright
+notices. Unused interactive terminal extensions and libuuid acceleration are omitted;
+stdlib UUID generation retains its secure fallback. No shell or installer is provided.
+Container-native imports and missing-model behavior must pass the runtime guard before
+the unchanged High/Critical scanner gate. See the repository's Phase 16 remote follow-up
+for verification blockers; local Python tests alone do not establish container clearance.
+
 From this directory: `python -m app.evaluation <external-manifest.json> --threshold <validation-selected-value>`.
 Manifest: `licenseEvidence`, `deidentificationReviewed: true`, `classMap`, and `images` with pseudonymous
 `patientId`, `split` (`train`, `validation`, `test`), `sha256`, `truth` (`classId`, pixel `box`), and actual

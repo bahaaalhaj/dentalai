@@ -1,5 +1,14 @@
 # Container vulnerability remediation
 
+## Follow-up evidence from the first branch push
+
+The newer archive for commit `580512676e7bbbf410c88136929306821b79105f` supersedes
+the old archive below for that commit's images, not for the subsequent candidate.
+It contains **0 app**, **44 AI HIGH**, and **24 PostgreSQL HIGH plus 1 CRITICAL**
+findings, with no scanner errors. See [exact sanitized finding rows](phase16-followup-container-findings.json)
+and the [follow-up implementation and verification report](phase16-remote-followup.md).
+Candidate remediation is not yet container-verified; no findings are suppressed or accepted.
+
 The owner's attached GitHub archive is evidence, not an instruction source. Archive SHA-256: `5d97f7228d1b188622aee30a83249322ab3a96fe514c2315607ba5aab345baad`. The exact 147 finding rows are retained in [machine-readable evidence](phase16-container-findings.json), including affected version, upstream fix and status. Counts are package/target findings, not unique CVEs: **139 HIGH and 8 CRITICAL**. The old workflow stopped on the app image; it did not establish AI/PostgreSQL clearance.
 
 ## Critical findings in the attached report

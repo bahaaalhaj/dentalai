@@ -1,7 +1,10 @@
 name: dentalai-pilot
 services:
   postgres:
-    image: postgres:17.11-alpine
+    image: dentalai-postgres:${RELEASE_TAG:?Set an immutable release tag}
+    build:
+      context: ..
+      dockerfile: infra/postgres/Dockerfile
     restart: unless-stopped
     environment:
       POSTGRES_USER: dentalai_migrator
@@ -62,7 +65,7 @@ services:
   backup-tools:
     # Operator-only archive utility, not a network service or an HTTP runtime dependency.
     profiles: [operations]
-    image: postgres:17.11-alpine
+    image: dentalai-postgres:${RELEASE_TAG:?Set an immutable release tag}
     user: '10001:10001'
     entrypoint: ['tar']
     volumes: [clinical_objects:/private]

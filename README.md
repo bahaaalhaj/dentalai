@@ -14,12 +14,18 @@ and the [scoped OWASP ASVS review/threat model](docs/phase14-threat-model.md).
 Current additions: [storage/recovery](docs/phase16-storage-and-recovery.md),
 [security design blockers](docs/phase16-security-design.md), [data/model governance](docs/ml-data-governance.md).
 
-Use one `RELEASE_TAG` for `npm run release:build`, `npm run release:build:ai`, Compose and
+Use one `RELEASE_TAG` for `npm run release:build`, `npm run release:build:ai`,
+`npm run release:build:postgres`, Compose and
 `npm run test:restore-drill`; the local default is `local-verification`, never a published release.
 CI uses a commit-derived tag. Runtime uses a pinned non-root distroless Node 22 image; there is
 no shell, npm or build toolchain. Use the documented Node operator scripts, not shell access.
 All workspace package versions remain private `0.0.0`; release identity is the immutable commit/tag
 and image digest until an owner-approved distribution/versioning policy exists.
+
+The [Phase 16 remote follow-up](docs/phase16-remote-followup.md) records the first branch's
+actual scan findings and the candidate AI/PostgreSQL packaging remediation. Container
+scanner verification still requires a usable vulnerability database and remote CI; do not
+treat this candidate as scanner-cleared or deploy it before the remote gates pass.
 
 Additional gates: `npm run source:check`, `npm run i18n:arabic`, `npm run bundle:check`
 (after build), and `npm run test:coverage` (with disposable `DATABASE_URL`). Coverage JSON/HTML/LCOV
