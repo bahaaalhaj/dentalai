@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import type { StaffMemberSchema, MemberChangeSchema } from '@dentalai/contracts';
 import { Field } from '../clinical/ClinicalFields';
 import { t } from '../i18n';
+import { displayStatus } from '../i18n/display';
 export function MembershipPanel({
   members,
   self,
@@ -76,7 +77,7 @@ function MemberRow({
         <br />
         <bdi>{member.email}</bdi>
         <br />
-        {member.roles.join(', ')} · {member.status}
+        {member.roles.map(displayStatus).join(', ')} · {displayStatus(member.status)}
       </span>
       <label>
         {t('admin.members')}

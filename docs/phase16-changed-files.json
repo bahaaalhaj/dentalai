@@ -1,0 +1,770 @@
+{
+  "startingHead": "9333ad772d5815af5a3d1acb2ff7b4434a1eeb43",
+  "state": "Phase 16 checkpoint file inventory plus explicitly authorized optimized assets for the phase16-hardening branch handoff. Photo D/new pairs are preserved moves, not dataset deletion. No runtime secrets or local artifacts are included.",
+  "files": [
+    {
+      "status": "M",
+      "path": ".dockerignore"
+    },
+    {
+      "status": "M",
+      "path": ".env.example"
+    },
+    {
+      "status": "M",
+      "path": ".github/workflows/quality.yml"
+    },
+    {
+      "status": "M",
+      "path": ".github/workflows/security.yml"
+    },
+    {
+      "status": "M",
+      "path": ".gitignore"
+    },
+    {
+      "status": "M",
+      "path": "README.md"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/package.json"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/app.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/config/environment.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/development/seed.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/access/access.repository.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/administration/administration.repository.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/billing/billing.repository.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/clinical/clinical.repository.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/imaging/filesystem-storage.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/imaging/imaging.repository.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/imaging/imaging.routes.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/imaging/inference.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/imaging/storage.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/domains/scheduling/scheduling.repository.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/src/server.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/integration/imaging.integration.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/integration/storage.integration.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/support/scheduling-fixture.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/unit/filesystem-storage.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/api/test/unit/scheduling.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/e2e/administration.spec.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/e2e/appointments.spec.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/e2e/billing.spec.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/package.json"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img1.jpg"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img2.jpg"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img3.jpg"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img4.jpg"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img5.jpg"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img6.jpg"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img7.jpg"
+    },
+    {
+      "status": "D",
+      "path": "apps/web/public/pics/img8.jpg"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/AccountPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/AppointmentsPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/LandingPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/administration/AdministrationPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/administration/MembershipPanel.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/administration/OnboardingPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/billing/BillingPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/billing/FinancialHistory.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/billing/InvoiceEditor.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/billing/PaymentDialog.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/billing/PricingPanel.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/clinical/ClinicalFields.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/clinical/ClinicalRecordEditor.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/clinical/ClinicianPatientsPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/i18n/generated.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/i18n/index.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/i18n/interface-arabic.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/i18n/messages.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/imaging/ImagingPage.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/lib/api-client.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/lib/errors.ts"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/tests/administration.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/src/tests/clinical-workflows.test.tsx"
+    },
+    {
+      "status": "M",
+      "path": "apps/web/vitest.config.ts"
+    },
+    {
+      "status": "M",
+      "path": "dental_data.yaml"
+    },
+    {
+      "status": "M",
+      "path": "docs/private-imaging.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/requirements-traceability.md"
+    },
+    {
+      "status": "M",
+      "path": "docs/srs.md"
+    },
+    {
+      "status": "M",
+      "path": "infra/Dockerfile"
+    },
+    {
+      "status": "M",
+      "path": "infra/compose.pilot.yml"
+    },
+    {
+      "status": "M",
+      "path": "package-lock.json"
+    },
+    {
+      "status": "M",
+      "path": "package.json"
+    },
+    {
+      "status": "M",
+      "path": "packages/contracts/src/api.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/contracts/src/imaging.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/database/drizzle/meta/_journal.json"
+    },
+    {
+      "status": "M",
+      "path": "packages/database/package.json"
+    },
+    {
+      "status": "M",
+      "path": "packages/database/src/schema/clinical.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/database/src/schema/index.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/database/src/schema/private-imaging.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/database/test/migrations.integration.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/database/test/upgrade.integration.test.ts"
+    },
+    {
+      "status": "M",
+      "path": "packages/domain/src/scheduling.ts"
+    },
+    {
+      "status": "M",
+      "path": "scripts/backup.mjs"
+    },
+    {
+      "status": "M",
+      "path": "scripts/check-artifacts.mjs"
+    },
+    {
+      "status": "M",
+      "path": "scripts/extract-i18n.mjs"
+    },
+    {
+      "status": "M",
+      "path": "scripts/restore-drill.mjs"
+    },
+    {
+      "status": "M",
+      "path": "services/ai/Dockerfile"
+    },
+    {
+      "status": "M",
+      "path": "services/ai/README.md"
+    },
+    {
+      "status": "M",
+      "path": "services/ai/app/runtime.py"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/development/seed-identity.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/development/seed-records.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/access/access-core.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/access/access-shared.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/administration/administration-core.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/administration/administration-export.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/administration/administration-membership.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/administration/administration-shared.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/billing/billing-catalog.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/billing/billing-core.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/billing/billing-projection.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/billing/billing-shared.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/clinical/clinical-content.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/clinical/clinical-core.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/clinical/clinical-history.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/clinical/clinical-shared.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/imaging/imaging-core.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/imaging/imaging-operations.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/imaging/imaging-recovery.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/imaging/imaging-upload.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/imaging/reconcile-cli.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/imaging/storage-deadline.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/imaging/storage-policy.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/scheduling/scheduling-core.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/scheduling/scheduling-read.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/src/domains/scheduling/scheduling-shared.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/test/unit/inference-contract.test.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/test/unit/openapi-routes.test.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/test/unit/storage-privacy.test.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/api/vitest.coverage.config.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img1.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img2.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img3.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img4.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img5.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img6.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img7.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/assets/clinic-originals/img8.jpg"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/AppointmentsDialog.tsx"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/SchedulingSettings.tsx"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/appointment-format.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/appointment-shared.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/i18n/display.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/i18n/interface-arabic-account.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/i18n/interface-arabic-billing.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/i18n/interface-arabic-clinical.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/i18n/interface-arabic-imaging.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/i18n/interface-arabic-scheduling.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/landing-animation.tsx"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/lib/api-client-shared.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/lib/api-records.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/lib/api-scheduling.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/lib/api-transport.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/tests/phase16-localization.test.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "apps/web/src/useAppointments.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/dataset-card.json"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/ml-data-governance.md"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/ml-inventory.json"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/model-card.json"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/phase16-changed-files.json"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/phase16-container-findings.json"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/phase16-container-remediation.md"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/phase16-final-verification.md"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/phase16-maintainability-and-performance.md"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/phase16-security-design.md"
+    },
+    {
+      "status": "untracked",
+      "path": "docs/phase16-storage-and-recovery.md"
+    },
+    {
+      "status": "untracked",
+      "path": "packages/contracts/src/authorization-documentation.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "packages/database/drizzle/0010_imaging_resilience.sql"
+    },
+    {
+      "status": "untracked",
+      "path": "packages/database/drizzle/meta/0010_snapshot.json"
+    },
+    {
+      "status": "untracked",
+      "path": "packages/database/src/schema/clinical-history.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "packages/database/src/schema/imaging-operations.ts"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/build-release.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/check-bundle.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/check-governance.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/check-i18n.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/check-runtime-image.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/check-source-size.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/check-toolchain.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/install-runtime.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/inventory-ml.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/optimize-clinic-images.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/release-config.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/scan-containers.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/scan-worktree-secrets.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "scripts/test-quality-gates.mjs"
+    },
+    {
+      "status": "untracked",
+      "path": "services/ai/tests/test_compact_response.py"
+    },
+    {
+      "status": "untracked",
+      "path": "services/ai/tests/test_inference_deadline.py"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img1-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img1-640.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img2-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img2-640.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img3-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img3-640.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img4-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img4-640.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img5-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img5-640.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img6-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img6-640.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img7-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img7-640.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img8-320.webp"
+    },
+    {
+      "status": "approved derived asset",
+      "path": "apps/web/public/pics/img8-640.webp"
+    },
+    {
+      "status": "approved public checksum manifest",
+      "path": "apps/web/public/pics/manifest.json"
+    }
+  ]
+}

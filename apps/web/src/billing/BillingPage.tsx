@@ -1,4 +1,6 @@
 import { t } from '../i18n';
+import { displayStatus } from '../i18n/display';
+import { getErrorMessage } from '../lib/errors';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type {
@@ -46,8 +48,7 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
         setReports(report);
       }
     } catch (e) {
-      if (current === sequence.current)
-        setError(e instanceof Error ? e.message : 'Billing unavailable.');
+      if (current === sequence.current) setError(getErrorMessage(e));
     } finally {
       if (current === sequence.current) setLoading(false);
     }
@@ -145,7 +146,8 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
             <option value="">{t('ui.81d75c961d178c6a')}</option>
             {invoices.map((i) => (
               <option key={i.id} value={i.id}>
-                {i.invoiceNumber} · {i.status} · {showMoney(i.balanceMinor, i.currency)}
+                {i.invoiceNumber} · {displayStatus(i.status)} ·{' '}
+                {showMoney(i.balanceMinor, i.currency)}
               </option>
             ))}
           </select>
@@ -166,7 +168,7 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
         {invoice && (
           <section className="bg-white border rounded-2xl p-5 space-y-3">
             <h2 className="font-bold">
-              {invoice.invoiceNumber} · {invoice.status}
+              {invoice.invoiceNumber} · {displayStatus(invoice.status)}
             </h2>
             <p>
               {t('ui.9feb5fc023004901')}
@@ -196,8 +198,7 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
                         if (linkSequence.current === current) setLinks(data);
                       })
                       .catch((e: unknown) => {
-                        if (linkSequence.current === current)
-                          setError(e instanceof Error ? e.message : 'Link references unavailable.');
+                        if (linkSequence.current === current) setError(getErrorMessage(e));
                       });
                   }}
                 >

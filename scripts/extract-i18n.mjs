@@ -36,6 +36,7 @@ function readCatalog(name) {
 }
 const english = readCatalog('generatedEnglish'),
   sources = readCatalog('generatedSources');
+for (const id of Object.keys(sources)) sources[id] = [];
 const checking = process.argv.includes('--check');
 let count = 0;
 const usedKeys = new Set();
@@ -58,6 +59,7 @@ const visibleAttributes = new Set([
   'subtitle',
 ]);
 function isUiExpression(node) {
+  let previous = node;
   let current = node.parent;
   while (current) {
     if (ts.isJsxAttribute(current)) return visibleAttributes.has(current.name.getText());
@@ -65,13 +67,26 @@ function isUiExpression(node) {
       return (
         !ts.isJsxAttribute(current.parent) || visibleAttributes.has(current.parent.name.getText())
       );
-    // Do not cross event handlers, function calls, object fields or saved data.
+    // Follow display-only object lookup labels, never object keys or saved/event payloads.
+    if (ts.isPropertyAssignment(current)) {
+      if (current.initializer !== previous) return false;
+      previous = current;
+      current = current.parent;
+      continue;
+    }
+    if (ts.isObjectLiteralExpression(current) || ts.isElementAccessExpression(current)) {
+      previous = current;
+      current = current.parent;
+      continue;
+    }
+    // Do not cross event handlers, function calls, arrays used as enum values or saved data.
     if (
       !ts.isConditionalExpression(current) &&
       !ts.isParenthesizedExpression(current) &&
       !ts.isBinaryExpression(current)
     )
       return false;
+    previous = current;
     current = current.parent;
   }
   return false;
@@ -129,17 +144,10 @@ for (const file of await files(root)) {
     ) {
       const id = node.arguments[0].text;
       usedKeys.add(id);
-      if (
-        english[id] &&
-        ((ts.isConditionalExpression(node.parent) && !isUiExpression(node)) ||
-          (ts.isJsxExpression(node.parent) && !isUiExpression(node)))
-      ) {
-        edits.push({
-          start: node.getStart(tree),
-          end: node.end,
-          value: JSON.stringify(english[id]),
-        });
-      }
+      if (english[id])
+        sources[id] = [
+          ...new Set([...(sources[id] ?? []), path.relative(root, file).replaceAll('\\', '/')]),
+        ].sort();
     }
     if (ts.isJsxText(node)) {
       const raw = node.getText(tree),
@@ -158,7 +166,23 @@ for (const file of await files(root)) {
         replace(node, node.text);
       else if (
         ts.isCallExpression(parent) &&
-        /^set(Message|Error|Notice|Success|Status)$/.test(parent.expression.getText(tree))
+        /^set(?:[A-Za-z]*)(Message|Error|Notice|Success|Notification)$/.test(
+          parent.expression.getText(tree),
+        )
+      )
+        replace(node, node.text);
+      else if (
+        ts.isCallExpression(parent) &&
+        /^(run|save)$/.test(parent.expression.getText(tree)) &&
+        parent.arguments[1] === node
+      )
+        replace(node, node.text);
+      else if (
+        ts.isPropertyAssignment(parent) &&
+        /^(confirm|cancel|no_show|check_in|start|complete|title|desc)$/.test(
+          parent.name.getText(tree),
+        ) &&
+        /^[A-Z]/.test(node.text)
       )
         replace(node, node.text);
       else if (ts.isNewExpression(parent) && parent.expression.getText(tree) === 'Error')

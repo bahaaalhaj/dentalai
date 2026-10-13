@@ -2,6 +2,7 @@
   "name": "dentalai",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "npm@11.17.0",
   "type": "module",
   "engines": {
     "node": ">=22.0.0"
@@ -15,6 +16,7 @@
     "apps/api"
   ],
   "scripts": {
+    "preinstall": "node scripts/check-toolchain.mjs",
     "dev": "npm run build:packages && npm run dev:full --workspace @dentalai/api",
     "dev:web": "npm run build:packages && npm run dev --workspace @dentalai/web",
     "dev:api": "npm run build:packages && npm run dev --workspace @dentalai/api",
@@ -23,9 +25,13 @@
     "smoke:local": "node scripts/smoke-local.mjs",
     "smoke:staging": "node scripts/smoke-staging.mjs",
     "test:backup": "node --test scripts/test-backup.mjs",
+    "test:gates": "node --test scripts/test-quality-gates.mjs scripts/test-artifact-baseline.mjs",
     "test:restore-drill": "node scripts/restore-drill.mjs",
     "backup": "node scripts/backup.mjs",
-    "release:build": "docker build -f infra/Dockerfile -t dentalai-app:phase14 .",
+    "release:build": "node scripts/build-release.mjs app",
+    "release:build:ai": "node scripts/build-release.mjs ai",
+    "release:build:postgres": "node scripts/build-release.mjs postgres",
+    "security:containers": "node scripts/scan-containers.mjs",
     "infra:up:local": "docker compose --env-file infra/.env -f infra/compose.local.yml up -d",
     "infra:down:local": "docker compose --env-file infra/.env -f infra/compose.local.yml down",
     "auth:bootstrap-owner": "npm run auth:bootstrap-owner --workspace @dentalai/api --",
@@ -41,12 +47,18 @@
     "format:check": "prettier --check .",
     "i18n:extract": "node scripts/extract-i18n.mjs",
     "i18n:check": "node scripts/extract-i18n.mjs --check",
+    "i18n:arabic": "node --import tsx scripts/check-i18n.mjs",
+    "source:check": "node scripts/check-source-size.mjs",
+    "bundle:check": "node scripts/check-bundle.mjs",
+    "governance:check": "node scripts/check-governance.mjs",
+    "imaging:reconcile": "npm run imaging:reconcile --workspace @dentalai/api --",
     "test": "npm run build:packages && npm run test --workspaces --if-present",
     "test:db": "npm run test:integration --workspace @dentalai/database && npm run test:integration --workspace @dentalai/api",
+    "test:coverage": "npm run build:packages && npm run test:coverage --workspace @dentalai/web && npm run test:coverage --workspace @dentalai/api",
     "test:watch": "npm run build:packages && npm run test:watch --workspace @dentalai/web",
     "test:e2e": "npm run test:e2e --workspace @dentalai/web",
     "audit": "npm audit --audit-level=high",
-    "verify": "npm run typecheck && npm run lint && npm run i18n:check && npm run format:check && npm test && npm run build && npm run audit",
+    "verify": "npm run typecheck && npm run lint && npm run i18n:check && npm run i18n:arabic && npm run source:check && npm run format:check && npm test && npm run build && npm run bundle:check && npm run audit",
     "infra:config": "docker compose --env-file infra/.env -f infra/compose.yml config --quiet",
     "infra:up": "docker compose --env-file infra/.env -f infra/compose.yml up -d",
     "infra:up:ai": "docker compose --env-file infra/.env -f infra/compose.yml --profile ai up -d",
@@ -54,16 +66,28 @@
     "infra:logs": "docker compose --env-file infra/.env -f infra/compose.yml logs -f",
     "clean": "node -e \"const fs=require('node:fs'); for(const path of ['dist','apps/web/dist','apps/api/dist','packages/contracts/dist','packages/domain/dist','packages/database/dist','packages/ui/dist']) fs.rmSync(path,{recursive:true,force:true})\""
   },
+  "overrides": {
+    "@esbuild-kit/core-utils": {
+      "esbuild": "$esbuild"
+    }
+  },
   "devDependencies": {
+    "drizzle-kit": "0.31.11",
     "@eslint/js": "10.0.1",
+    "@vitest/coverage-v8": "4.1.11",
+    "drizzle-orm": "0.45.3",
     "eslint": "10.0.1",
+    "esbuild": "0.25.12",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-react-hooks": "7.1.1",
     "eslint-plugin-react-refresh": "0.5.7",
-    "drizzle-orm": "0.45.3",
     "globals": "17.13.0",
     "prettier": "3.9.9",
     "typescript": "5.8.3",
     "typescript-eslint": "8.71.1"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
   }
 }

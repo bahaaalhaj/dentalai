@@ -18,9 +18,11 @@ There is no fallback between adapters. Vite's private-directory denylist also pr
 files/mail/credentials. Offline filesystem tests do not certify real S3 or storage encryption.
 
 S3 configuration: `CLINICAL_STORAGE_ENABLED`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`,
-`S3_SECRET_KEY`. The bucket must already exist, have no bucket policy or shared ACL, and remain
-private. The adapter rejects policy-bearing buckets before reads/writes and uses private object
-ACLs. Use a dedicated bucket and least-privilege service credential, not the MinIO root account.
+`S3_SECRET_KEY`. The bucket must already exist and remain private. Phase 16 does not send object
+ACLs: it requires owner-enforced ownership, public-access blocking and non-public effective policy;
+safe deny policies are accepted. HTTPS, bounded requests and encryption configuration are detailed
+in [storage and recovery](phase16-storage-and-recovery.md). Use a dedicated bucket and
+least-privilege service credential, not the MinIO root account.
 Prohibit public policies through deployment controls and continuously monitor configuration.
 Bucket administrators can bypass application guarantees. For AWS enforce Block Public Access.
 Storage encryption, TLS, backup/retention and private console access need deployment review.
@@ -59,9 +61,10 @@ All endpoints require a session cookie and tenant authorization; mutations also 
 Review is a single terminal decision under a row lock. Corrections need a new run/review, never
 erasure. Normalized model detections do not automatically become odontogram clinical truth.
 Successful runs preserve model name/version/checksum/class map, thresholds, latency, input hash,
-raw/processed detections and postprocessing version. Failed runs store a safe code, no findings.
+bounded compact detections and postprocessing version. New metadata/detections are stored once;
+legacy JSON remains retained but raw outputs are excluded from API history. Failed runs store a safe code, no findings.
 Abandoned running jobs after a process crash require operator reconciliation with an audited failed
-transition; there is no automatic background inference retry.
+transition through the tenant-scoped Phase 16 owner reconciliation command; there is no automatic background inference retry.
 
 ## Migration and recovery
 

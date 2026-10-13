@@ -3,6 +3,7 @@ import { english, arabic } from './messages';
 import { generatedEnglish } from './generated';
 import { interfaceArabic } from './interface-arabic';
 export type Locale = 'en' | 'ar';
+export const currentLocale = () => locale;
 export type TranslationKey = keyof typeof english | keyof typeof generatedEnglish;
 let locale: Locale = 'en';
 const listeners = new Set<() => void>();

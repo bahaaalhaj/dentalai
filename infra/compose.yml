@@ -2,7 +2,10 @@ name: dentalai-local
 
 services:
   postgres:
-    image: postgres:17.11-alpine
+    image: dentalai-postgres:${RELEASE_TAG:-local-verification}
+    build:
+      context: ..
+      dockerfile: infra/postgres/Dockerfile
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in infra/.env}

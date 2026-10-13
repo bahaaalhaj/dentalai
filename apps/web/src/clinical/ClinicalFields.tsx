@@ -32,12 +32,14 @@ export function SelectField({
   onChange,
   values,
   placeholder,
+  displayValue,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   values: readonly string[];
   placeholder?: string;
+  displayValue?: (value: string) => string;
 }) {
   return (
     <label className="block text-sm text-slate-700">
@@ -55,7 +57,7 @@ export function SelectField({
         )}
         {values.map((v) => (
           <option key={v} value={v}>
-            {v.replaceAll('_', ' ')}
+            {displayValue ? displayValue(v) : v.replaceAll('_', ' ')}
           </option>
         ))}
       </select>

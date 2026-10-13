@@ -52,6 +52,11 @@ const EnvironmentSchema = z
     PRIVATE_STORAGE_DIRECTORY: emptyToUndefined(z.string().min(1).optional()),
     XRAY_INFERENCE_ENABLED: booleanString,
     S3_ENDPOINT: emptyToUndefined(z.url().optional()),
+    S3_ALLOW_INSECURE_LOCAL_DEVELOPMENT: booleanString,
+    S3_ENCRYPTION: emptyToUndefined(
+      z.enum(['AES256', 'aws:kms', 'local-test-none']).default('AES256'),
+    ),
+    S3_KMS_KEY_ID: emptyToUndefined(z.string().min(1).optional()),
     S3_BUCKET: emptyToUndefined(z.string().min(3).optional()),
     S3_ACCESS_KEY: emptyToUndefined(z.string().min(1).optional()),
     S3_SECRET_KEY: emptyToUndefined(z.string().min(16).optional()),
@@ -84,6 +89,33 @@ const EnvironmentSchema = z
   .transform((environment, context) => {
     const deploymentEnv = environment.DEPLOYMENT_ENV ?? environment.NODE_ENV;
     const hardened = deploymentEnv === 'staging' || deploymentEnv === 'production';
+    if (
+      environment.S3_ENDPOINT &&
+      new URL(environment.S3_ENDPOINT).protocol !== 'https:' &&
+      !(
+        environment.S3_ALLOW_INSECURE_LOCAL_DEVELOPMENT &&
+        !hardened &&
+        new URL(environment.S3_ENDPOINT).protocol === 'http:' &&
+        ['localhost', '127.0.0.1', '[::1]', 'minio'].includes(
+          new URL(environment.S3_ENDPOINT).hostname,
+        )
+      )
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'S3 requires HTTPS or explicit local-development HTTP.',
+      });
+    if (
+      (hardened && environment.S3_ALLOW_INSECURE_LOCAL_DEVELOPMENT) ||
+      (environment.S3_ENCRYPTION === 'local-test-none' &&
+        (!environment.S3_ALLOW_INSECURE_LOCAL_DEVELOPMENT || hardened))
+    )
+      context.addIssue({
+        code: 'custom',
+        message: 'Local-development storage overrides are prohibited in hardened environments.',
+      });
+    if (environment.S3_ENCRYPTION === 'aws:kms' && !environment.S3_KMS_KEY_ID)
+      context.addIssue({ code: 'custom', message: 'S3 KMS encryption requires a key identifier.' });
     if (
       (hardened && environment.NODE_ENV !== 'production') ||
       (deploymentEnv === 'test' && environment.NODE_ENV !== 'test') ||
@@ -227,6 +259,9 @@ const EnvironmentSchema = z
       privateStorageDirectory: environment.PRIVATE_STORAGE_DIRECTORY,
       xrayInferenceEnabled: environment.XRAY_INFERENCE_ENABLED,
       s3Endpoint: environment.S3_ENDPOINT,
+      s3AllowInsecureLocalDevelopment: environment.S3_ALLOW_INSECURE_LOCAL_DEVELOPMENT,
+      s3Encryption: environment.S3_ENCRYPTION,
+      s3KmsKeyId: environment.S3_KMS_KEY_ID,
       s3Bucket: environment.S3_BUCKET,
       s3AccessKey: environment.S3_ACCESS_KEY,
       s3SecretKey: environment.S3_SECRET_KEY,

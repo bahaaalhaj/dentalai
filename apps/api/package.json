@@ -12,8 +12,10 @@
     "dev:seed": "tsx src/development/seed-cli.ts",
     "dev:configure": "tsx src/development/configure-cli.ts",
     "subscription:admin": "tsx src/domains/administration/administrative-provider-cli.ts",
+    "imaging:reconcile": "tsx src/domains/imaging/reconcile-cli.ts",
     "test": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:coverage": "vitest run --config vitest.coverage.config.ts --coverage",
     "start": "node dist/server.js --production"
   },
   "dependencies": {

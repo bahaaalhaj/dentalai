@@ -214,7 +214,9 @@ describe('actual clinical UI modules', () => {
       target: { value: 'Fictional correction' },
     });
     fireEvent.submit(screen.getByRole('form', { name: 'Clinical entry' }));
-    expect((await screen.findByRole('alert')).textContent).toContain('record changed');
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'operation could not be completed',
+    );
     expect((screen.getByLabelText('Clinical note') as HTMLTextAreaElement).value).toBe(
       'Fictional retained draft',
     );
@@ -229,7 +231,9 @@ describe('actual clinical UI modules', () => {
       </MemoryRouter>,
     );
     expect(screen.getByRole('status').textContent).toContain('Loading');
-    expect((await screen.findByRole('alert')).textContent).toContain('Temporarily unavailable');
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'operation could not be completed',
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(
       await screen.findByText('No approved clinical information is available yet.'),

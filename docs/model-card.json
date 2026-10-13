@@ -1,0 +1,12 @@
+{
+  "cardVersion": 1,
+  "architecture": "Application supports static YOLOv8 detection ONNX on CPU; this does not identify or approve the repository training weights.",
+  "source": "UNKNOWN — RELEASE BLOCKER",
+  "owner": "UNKNOWN — RELEASE BLOCKER",
+  "license": "UNKNOWN — RELEASE BLOCKER",
+  "redistributionRights": "UNKNOWN — RELEASE BLOCKER",
+  "trainingProvenance": "UNKNOWN — RELEASE BLOCKER",
+  "evaluation": "UNKNOWN — RELEASE BLOCKER",
+  "clinicalApproval": "UNKNOWN — RELEASE BLOCKER",
+  "limitation": "Pipeline fixture tests are not clinical evaluation. Configured experimental artifacts require checksum and versioned provenance."
+}

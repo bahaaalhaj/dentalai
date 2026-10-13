@@ -3,6 +3,7 @@ import { access, lstat, mkdir, readFile, realpath, writeFile } from 'node:fs/pro
 import { constants } from 'node:fs';
 import path from 'node:path';
 import type { PrivateStorage } from './storage.js';
+import { withStorageDeadline } from './storage-deadline.js';
 
 /** Explicit local/private adapter, never a fallback. Its directory is not mounted by Express. */
 export class FilesystemPrivateStorage implements PrivateStorage {
@@ -52,25 +53,37 @@ export class FilesystemPrivateStorage implements PrivateStorage {
       throw new Error('Private object path is not canonical.');
     return path.join(namespace, path.basename(key));
   }
-  async put(key: string, data: Buffer, contentType: string) {
+  async put(key: string, data: Buffer, contentType: string, caller?: AbortSignal) {
+    return withStorageDeadline(
+      15000,
+      (signal) => this.write(key, data, contentType, signal),
+      caller,
+    );
+  }
+  private async write(key: string, data: Buffer, contentType: string, signal: AbortSignal) {
     if (contentType !== 'image/png' || !data.length || data.length > 10 * 1024 * 1024)
       throw new Error('Invalid canonical image.');
     const target = await this.target(key);
+    signal.throwIfAborted();
     try {
-      await writeFile(target, data, { flag: 'wx', mode: 0o600 });
+      await writeFile(target, data, { flag: 'wx', mode: 0o600, signal });
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-      const previous = await this.get(key);
+      const previous = await this.get(key, signal);
       const hash = (value: Buffer) => createHash('sha256').update(value).digest('hex');
       if (hash(previous) !== hash(data))
         throw new Error('Immutable private object already exists.', { cause: error });
     }
   }
-  async get(key: string) {
+  async get(key: string, caller?: AbortSignal) {
+    return withStorageDeadline(15000, (signal) => this.read(key, signal), caller);
+  }
+  private async read(key: string, signal: AbortSignal) {
     const target = await this.target(key);
+    signal.throwIfAborted();
     const info = await lstat(target);
     if (!info.isFile() || info.isSymbolicLink() || info.nlink !== 1 || info.size > 10 * 1024 * 1024)
       throw new Error('Invalid private object.');
-    return readFile(target);
+    return readFile(target, { signal });
   }
 }

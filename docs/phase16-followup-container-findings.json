@@ -1,0 +1,657 @@
+{
+  "sourceCommit": "580512676e7bbbf410c88136929306821b79105f",
+  "archiveSha256": "5ad4905ed78e5ea7274fbdade58d23cff73309e172f47c4042fa1d1f9ab778d0",
+  "source": "Owner-supplied container-vulnerability-evidence.zip; interpreted as scan data, not instructions.",
+  "reports": [
+    {
+      "file": "ai.json",
+      "image": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f",
+      "createdAt": "2026-10-13T17:26:46.928513845Z",
+      "schemaVersion": 2,
+      "resultCount": 2,
+      "errors": null,
+      "rows": [
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "bsdutils",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "1:2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "bsdutils",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "1:2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "bsdutils",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "1:2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "bsdutils",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "1:2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libacl1",
+          "id": "CVE-2026-54369",
+          "severity": "HIGH",
+          "installed": "2.3.2-2+b1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libblkid1",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libblkid1",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libblkid1",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libblkid1",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "liblastlog2-2",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "liblastlog2-2",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "liblastlog2-2",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "liblastlog2-2",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libmount1",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libmount1",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libmount1",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libmount1",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libncursesw6",
+          "id": "CVE-2025-69720",
+          "severity": "HIGH",
+          "installed": "6.5+20250216-2",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libsmartcols1",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libsmartcols1",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libsmartcols1",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libsmartcols1",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libsystemd0",
+          "id": "CVE-2026-16742",
+          "severity": "HIGH",
+          "installed": "257.13-1~deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libtinfo6",
+          "id": "CVE-2025-69720",
+          "severity": "HIGH",
+          "installed": "6.5+20250216-2",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libudev1",
+          "id": "CVE-2026-16742",
+          "severity": "HIGH",
+          "installed": "257.13-1~deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libuuid1",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libuuid1",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libuuid1",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "libuuid1",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "login",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "1:4.16.0-2+really2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "login",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "1:4.16.0-2+really2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "login",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "1:4.16.0-2+really2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "login",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "1:4.16.0-2+really2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "mount",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "mount",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "mount",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "mount",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "ncurses-base",
+          "id": "CVE-2025-69720",
+          "severity": "HIGH",
+          "installed": "6.5+20250216-2",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "ncurses-bin",
+          "id": "CVE-2025-69720",
+          "severity": "HIGH",
+          "installed": "6.5+20250216-2",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "perl-base",
+          "id": "CVE-2026-9538",
+          "severity": "HIGH",
+          "installed": "5.40.1-6+deb13u1",
+          "fixed": null,
+          "status": "fix_deferred"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "util-linux",
+          "id": "CVE-2026-76642",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "util-linux",
+          "id": "CVE-2026-78408",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "util-linux",
+          "id": "CVE-2026-78409",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        },
+        {
+          "target": "dentalai-ai:ci-580512676e7bbbf410c88136929306821b79105f (debian 13.7)",
+          "package": "util-linux",
+          "id": "CVE-2026-78410",
+          "severity": "HIGH",
+          "installed": "2.41.5-0+deb13u1",
+          "fixed": null,
+          "status": "affected"
+        }
+      ]
+    },
+    {
+      "file": "app.json",
+      "image": "dentalai-app:ci-580512676e7bbbf410c88136929306821b79105f",
+      "createdAt": "2026-10-13T17:26:42.147711484Z",
+      "schemaVersion": 2,
+      "resultCount": 2,
+      "errors": null,
+      "rows": []
+    },
+    {
+      "file": "postgres.json",
+      "image": "postgres:17.11-alpine",
+      "createdAt": "2026-10-13T17:26:50.671736847Z",
+      "schemaVersion": 2,
+      "resultCount": 2,
+      "errors": null,
+      "rows": [
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2025-68121",
+          "severity": "CRITICAL",
+          "installed": "v1.24.6",
+          "fixed": "1.24.13, 1.25.7, 1.26.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2025-61726",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.24.12, 1.25.6",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2025-61729",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.24.11, 1.25.5",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-25679",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.8, 1.26.1",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-27145",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.11, 1.26.4",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-32280",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.9, 1.26.2",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-32281",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.9, 1.26.2",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-32283",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.9, 1.26.2",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-33811",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-33814",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-33818",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-39820",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-39821",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-39822",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.12, 1.26.5, 1.27.0-rc.2",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-39836",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-42499",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.10, 1.26.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-42504",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.11, 1.26.4",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-56853",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-56858",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-56859",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-56860",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-56862",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.25.13, 1.26.6, 1.27.0-rc.3",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-78667",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.26.9, 1.27.2",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-78669",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.26.9, 1.27.2",
+          "status": "fixed"
+        },
+        {
+          "target": "usr/local/bin/gosu",
+          "package": "stdlib",
+          "id": "CVE-2026-97031",
+          "severity": "HIGH",
+          "installed": "v1.24.6",
+          "fixed": "1.26.9, 1.27.2",
+          "status": "fixed"
+        }
+      ]
+    }
+  ]
+}

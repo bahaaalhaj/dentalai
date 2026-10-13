@@ -71,7 +71,7 @@ test('patient books; staff confirms; patient sees confirmation and cancels with 
   await dialog.getByRole('radio').first().check();
   await dialog.getByRole('button', { name: 'Book selected time' }).click();
   await expect(dialog).not.toBeVisible();
-  await expect(page.getByText('scheduled', { exact: true })).toBeVisible();
+  await expect(page.getByText('Scheduled', { exact: true })).toBeVisible();
   const staffContext = await browser.newContext();
   const staff = await staffContext.newPage();
   await staff.goto(`${origin}/login`);
@@ -84,17 +84,17 @@ test('patient books; staff confirms; patient sees confirmation and cancels with 
   await staff.getByRole('button', { name: 'Confirm', exact: true }).click();
   const confirmation = staff.getByRole('dialog', { name: 'Confirm appointment' });
   await confirmation.getByRole('button', { name: 'Apply change' }).click();
-  await expect(staff.getByText('confirmed', { exact: true })).toBeVisible();
+  await expect(staff.getByText('Confirmed', { exact: true })).toBeVisible();
   await accessibilitySmoke(staff);
   await page.getByRole('button', { name: 'Refresh', exact: true }).click();
-  await expect(page.getByText('confirmed', { exact: true })).toBeVisible();
+  await expect(page.getByText('Confirmed', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   const cancellation = page.getByRole('dialog', { name: 'Cancel appointment' });
   await cancellation.getByLabel('Reason').fill('Fictional patient cancellation');
   await cancellation.getByRole('button', { name: 'Apply change' }).click();
   await expect(cancellation).not.toBeVisible();
   await page.getByRole('button', { name: 'History', exact: true }).click();
-  await expect(page.getByText('cancelled', { exact: true })).toBeVisible();
+  await expect(page.getByText('Cancelled', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Audit trail' }).click();
   await expect(
     page.getByRole('dialog').getByText('appointment.confirmed', { exact: true }),

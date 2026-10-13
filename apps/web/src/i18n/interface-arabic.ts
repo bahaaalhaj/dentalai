@@ -1,5 +1,15 @@
 // Deliberately hand-authored interface vocabulary, not clinical terminology translation.
+import { schedulingArabic } from './interface-arabic-scheduling';
+import { billingArabic } from './interface-arabic-billing';
+import { clinicalArabic } from './interface-arabic-clinical';
+import { imagingArabic } from './interface-arabic-imaging';
+import { accountArabic } from './interface-arabic-account';
 export const interfaceArabic: Record<string, string> = {
+  ...schedulingArabic,
+  ...billingArabic,
+  ...clinicalArabic,
+  ...imagingArabic,
+  ...accountArabic,
   'Sign In': 'تسجيل الدخول',
   'Sign in': 'تسجيل الدخول',
   'Sign out': 'تسجيل الخروج',

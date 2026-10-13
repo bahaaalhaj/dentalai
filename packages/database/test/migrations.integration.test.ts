@@ -110,7 +110,7 @@ describe('migrations from zero', () => {
     }
     await expect(migrateDatabase(testUrl.toString())).resolves.toBeUndefined();
   });
-  it('creates the complete schema and records all eight reviewed migrations', async () => {
+  it('creates the complete schema and records all reviewed migrations', async () => {
     const tables = await testPool.query<{ count: string }>(
       `SELECT count(*)::text AS count
        FROM information_schema.tables
@@ -121,7 +121,7 @@ describe('migrations from zero', () => {
     );
 
     expect(Number(tables.rows[0]?.count)).toBeGreaterThanOrEqual(45);
-    expect(migrations.rows[0]?.count).toBe('10');
+    expect(migrations.rows[0]?.count).toBe('11');
   });
 
   it('loads only explicitly fictional development identities and is idempotent', async () => {

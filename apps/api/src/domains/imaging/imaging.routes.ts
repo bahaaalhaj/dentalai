@@ -45,6 +45,7 @@ export function createImagingRouter(
   );
   const repository = new ImagingRepository(access.pool, storage, inference);
   const id = (value: unknown) => z.uuid().parse(value);
+  const requestKey = (value: unknown) => z.uuid().optional().parse(value);
   router.get(
     '/imaging/capabilities',
     asyncHandler(async (req, res) => {
@@ -97,6 +98,7 @@ export function createImagingRouter(
         String(req.headers['content-type']),
         reason,
         query.studyId,
+        requestKey(req.headers['idempotency-key']),
       );
       res.status(201).json(ImagingImageSchema.parse(result));
     }),
@@ -130,6 +132,7 @@ export function createImagingRouter(
               await authenticatedContext(auth, access, req),
               id(req.params['id']),
               body.reason,
+              requestKey(req.headers['idempotency-key']),
             ),
           ),
         );

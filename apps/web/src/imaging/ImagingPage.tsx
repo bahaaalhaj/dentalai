@@ -1,8 +1,10 @@
 import { t } from '../i18n';
-import { useEffect, useState } from 'react';
+import { displayStatus } from '../i18n/display';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { ImagingHistory } from '@dentalai/contracts';
 import { apiClient } from '../lib/api-client';
+import { getErrorMessage } from '../lib/errors';
 
 export function ImagingPage() {
   const [patients, setPatients] = useState<Awaited<ReturnType<typeof apiClient.clinicalPatients>>>(
@@ -13,6 +15,11 @@ export function ImagingPage() {
   const [file, setFile] = useState<File>();
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const retryKeys = useRef(new Map<string, string>());
+  const requestKey = (operation: string) => {
+    if (!retryKeys.current.has(operation)) retryKeys.current.set(operation, crypto.randomUUID());
+    return retryKeys.current.get(operation)!;
+  };
   const [capabilities, setCapabilities] =
     useState<Awaited<ReturnType<typeof apiClient.imagingCapabilities>>>();
   useEffect(() => {
@@ -48,6 +55,7 @@ export function ImagingPage() {
   useEffect(() => {
     setHistory(undefined);
     setFile(undefined);
+    retryKeys.current.clear();
     setError('');
     if (!patient) return;
     let active = true;
@@ -70,9 +78,10 @@ export function ImagingPage() {
     try {
       await operation();
       setHistory(await apiClient.imagingHistory(patient));
+      retryKeys.current.clear();
       setNotice(t('ui.5ce042a0450dc852'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'The operation failed. Try again.');
+      setError(getErrorMessage(e));
       try {
         setHistory(await apiClient.imagingHistory(patient));
       } catch {
@@ -128,7 +137,25 @@ export function ImagingPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (file) void action(() => apiClient.uploadClinicalImage(patient, file, reason));
+            if (file)
+              void action(() =>
+                apiClient.uploadClinicalImage(
+                  patient,
+                  file,
+                  reason,
+                  undefined,
+                  requestKey(
+                    JSON.stringify([
+                      'upload',
+                      patient,
+                      reason,
+                      file.name,
+                      file.size,
+                      file.lastModified,
+                    ]),
+                  ),
+                ),
+              );
           }}
           className="rounded-xl bg-white p-4"
         >
@@ -180,7 +207,15 @@ export function ImagingPage() {
             <div className="flex gap-3">
               <button
                 disabled={!capabilities?.inferenceConfigured || !valid || busy}
-                onClick={() => void action(() => apiClient.analyzeClinicalImage(image.id, reason))}
+                onClick={() =>
+                  void action(() =>
+                    apiClient.analyzeClinicalImage(
+                      image.id,
+                      reason,
+                      requestKey(JSON.stringify(['analysis', image.id, reason])),
+                    ),
+                  )
+                }
                 className="rounded border px-3 py-2"
               >
                 {t('ui.35345d03d2a60d42')}
@@ -190,7 +225,23 @@ export function ImagingPage() {
                 onClick={() => {
                   if (file)
                     void action(() =>
-                      apiClient.uploadClinicalImage(patient, file, reason, image.studyId),
+                      apiClient.uploadClinicalImage(
+                        patient,
+                        file,
+                        reason,
+                        image.studyId,
+                        requestKey(
+                          JSON.stringify([
+                            'upload',
+                            patient,
+                            image.studyId,
+                            reason,
+                            file.name,
+                            file.size,
+                            file.lastModified,
+                          ]),
+                        ),
+                      ),
                     );
                 }}
                 className="rounded border px-3 py-2"
@@ -204,8 +255,8 @@ export function ImagingPage() {
                 <article key={run.id} className="rounded border p-3">
                   <h3>
                     {t('ui.3e2b8bb857d251fe')}
-                    {run.status} {t('ui.7837d5cddbc3e1a8')}
-                    {run.reviewState}
+                    {displayStatus(run.status)} {t('ui.7837d5cddbc3e1a8')}
+                    {displayStatus(run.reviewState)}
                   </h3>
                   {run.errorCode && <p>{t('ui.9a7809ab7d28e976')}</p>}
                   {run.result && (

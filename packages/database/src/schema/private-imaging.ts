@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   foreignKey,
   integer,
@@ -69,6 +70,9 @@ export const imageInferenceRuns = pgTable(
     errorCode: text('error_code'),
     createdAt: created(),
     completedAt: timestamp('completed_at', { withTimezone: true }),
+    leaseExpiresAt: timestamp('lease_expires_at', { withTimezone: true })
+      .default(sql`now()+interval '2 minutes'`)
+      .notNull(),
   },
   (t) => [
     uniqueIndex('image_inference_runs_clinic_id_id_key').on(t.clinicId, t.id),

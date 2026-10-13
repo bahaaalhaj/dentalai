@@ -1,6 +1,6 @@
 # DentalAI: aligned software requirements specification
 
-Version: Phase 15, 2026-10-13. Implementation baseline: `84b9d16` (Phase 14).
+Version: Phase 16 documentation alignment, 2026-10-13. Starting implementation baseline: `9333ad7`; the Phase 16 candidate is on `phase16-hardening`, not a released version. See branch history for its commit identity.
 This is the current repository specification, not clinical/regulatory authorization.
 
 ## 1. Source and interpretation
@@ -17,7 +17,7 @@ Status **implemented** means code and applicable local tests exist; it does not
 mean deployed, operationally qualified or clinically approved. **Partial** identifies
 a implemented subset; **blocked** identifies missing evidence/approval/infrastructure;
 **future** identifies an unimplemented source feature, not a commitment to add it.
-Exact final test results are in [Phase 15 verification](phase15-final-verification.md);
+Current test results are in [Phase 16 verification](phase16-final-verification.md); historical results remain in [Phase 15 verification](phase15-final-verification.md);
 [traceability](requirements-traceability.md) binds these IDs to production code and tests.
 
 ## 2. Purpose, scope and terminology
@@ -169,20 +169,20 @@ SYP synthetic values 1:1; no currency conversion or legacy-data migration occurr
 
 ## 8. Nonfunctional requirements: targets versus evidence
 
-| ID           | Original target                                         | Verified position / status                                                                                                                                            |
-| ------------ | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| NFR-SEC-001  | Secure auth, RBAC, safe validation and errors           | Implemented local defenses/tests; MFA/common-password blocking absent; independent pentest blocked                                                                    |
-| NFR-SEC-002  | TLS 1.3 and blanket AES-256 database encryption         | Unsupported deployment claim removed. HTTPS/SMTP validation and specific AES-256-GCM backup/notification envelopes exist; DB/disks/TLS edge need provisioned evidence |
-| NFR-SEC-003  | Every request protected by RLS; immutable audit         | Live server membership/resource checks + tenant FKs/SQL guards, not RLS. Restricted pilot DB role rejects audit mutations; administrators remain privileged           |
-| NFR-PERF-001 | Login/booking <=2s, records <=3s, 20 users              | Only bounded workstation regression measured (Phase 14 login p95 420ms, booking 503ms, records 225ms); 20-user/sustained/VPS qualification not done                   |
-| NFR-PERF-002 | Dental inference <=5s, 90% accuracy                     | Blocked: no eligible artifact or measured holdout; no diagnostic/accuracy or inference SLA claim                                                                      |
-| NFR-REL-001  | 99% / 99.9%, MTBF 3,000h, MTTR <30min                   | Conflicting source targets unqualified; no uptime history or measured reliability guarantee                                                                           |
-| NFR-REC-001  | Recoverable backups/automatic saving                    | Local encrypted restore drill; explicit committed saves, not offline autosave. RPO24h/RTO4h proposals and timer not deployed/qualified                                |
-| NFR-RET-001  | Seven-year clinical/two-year audit retention, PII purge | No jurisdiction-approved policy or purge process. History/offboarding retain data; proposed backup/log retention is not legal compliance                              |
-| NFR-MNT-001  | Every component <=400 lines                             | Not met: AppointmentsPage.tsx 918 physical lines. No refactor during final verification; repositories/client also large. Future split must preserve tested behavior   |
-| NFR-TYP-001  | 100% TypeScript with strict null checks                 | TS workspaces use strict + additional checks; Python inference/SQL/mjs tools intentionally not TypeScript. skipLibCheck remains true; percentage claim removed        |
-| NFR-PORT-001 | Identical Chrome/Safari/Edge, all OS                    | Chromium desktop tested locally; Safari/Firefox/Edge branded and iOS/Android/macOS not qualified. Linux Node22 configured in CI, not a claim of remote CI execution   |
-| NFR-UX-001   | Desktop/tablet, 60FPS, specified heap/VRAM/cache        | Source device/RAM/60FPS/heap/network minima not benchmarked. Six automated axe scans and bilingual smoke are partial; manual keyboard/AT/tablet review pending        |
+| ID           | Original target                                         | Verified position / status                                                                                                                                                                                       |
+| ------------ | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NFR-SEC-001  | Secure auth, RBAC, safe validation and errors           | Implemented local defenses/tests; MFA/common-password blocking absent; independent pentest blocked                                                                                                               |
+| NFR-SEC-002  | TLS 1.3 and blanket AES-256 database encryption         | Unsupported deployment claim removed. HTTPS/SMTP validation and specific AES-256-GCM backup/notification envelopes exist; DB/disks/TLS edge need provisioned evidence                                            |
+| NFR-SEC-003  | Every request protected by RLS; immutable audit         | Live server membership/resource checks + tenant FKs/SQL guards, not RLS. Restricted pilot DB role rejects audit mutations; administrators remain privileged                                                      |
+| NFR-PERF-001 | Login/booking <=2s, records <=3s, 20 users              | Only bounded workstation regression measured (Phase 14 login p95 420ms, booking 503ms, records 225ms); 20-user/sustained/VPS qualification not done                                                              |
+| NFR-PERF-002 | Dental inference <=5s, 90% accuracy                     | Blocked: no eligible artifact or measured holdout; no diagnostic/accuracy or inference SLA claim                                                                                                                 |
+| NFR-REL-001  | 99% / 99.9%, MTBF 3,000h, MTTR <30min                   | Conflicting source targets unqualified; no uptime history or measured reliability guarantee                                                                                                                      |
+| NFR-REC-001  | Recoverable backups/automatic saving                    | Local encrypted restore drill; explicit committed saves, not offline autosave. RPO24h/RTO4h proposals and timer not deployed/qualified                                                                           |
+| NFR-RET-001  | Seven-year clinical/two-year audit retention, PII purge | No jurisdiction-approved policy or purge process. History/offboarding retain data; proposed backup/log retention is not legal compliance                                                                         |
+| NFR-MNT-001  | Every component <=400 lines                             | Phase 16 refactors handwritten production modules into cohesive responsibilities; `npm run source:check` enforces 400 physical lines. Reproducible generated catalogs and tests are excluded, not business logic |
+| NFR-TYP-001  | 100% TypeScript with strict null checks                 | TS workspaces use strict + additional checks; Python inference/SQL/mjs tools intentionally not TypeScript. skipLibCheck remains true; percentage claim removed                                                   |
+| NFR-PORT-001 | Identical Chrome/Safari/Edge, all OS                    | Chromium desktop tested locally; Safari/Firefox/Edge branded and iOS/Android/macOS not qualified. Linux Node22 configured in CI, not a claim of remote CI execution                                              |
+| NFR-UX-001   | Desktop/tablet, 60FPS, specified heap/VRAM/cache        | Source device/RAM/60FPS/heap/network minima not benchmarked. Six automated axe scans and bilingual smoke are partial; manual keyboard/AT/tablet review pending                                                   |
 
 No 0% mathematical-error claim: tests exercise representation/units/invalid/extreme
 inputs; approved medical golden cases are absent and numeric dose output is disabled.
@@ -212,5 +212,5 @@ TLS/SMTP, reviewed migrations and backup-first rollout/rollback. There are no de
 down migrations or automatic clinical-history deletion. Validate migration hashes and
 restore into new empty volumes; preserve post-backup writes before any switch.
 
-Final acceptance is conditional on [verification](phase15-final-verification.md).
+Final acceptance is conditional on [verification](phase16-final-verification.md).
 Engineering tests do not authorize patient-care recommendations or regulatory claims.

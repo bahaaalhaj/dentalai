@@ -12,6 +12,10 @@ infra/backups
 **/__pycache__
 **/test-results
 **/playwright-report
+**/coverage
+**/.pytest_cache
+**/wandb
+**/checkpoints
 dataset_yolo
 scripts/dataset
 runs
@@ -20,4 +24,5 @@ dental_training
 **/*.onnx
 **/*.dump
 **/*.backup
+**/*.enc
 **/*.log

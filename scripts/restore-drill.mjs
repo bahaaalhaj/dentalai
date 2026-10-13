@@ -8,9 +8,10 @@ import { Pool } from 'pg';
 import { migrateDatabase } from '@dentalai/database';
 import { seedLocalDevelopment } from '../apps/api/dist/development/seed.js';
 import sharp from 'sharp';
+import { releaseTag } from './release-config.mjs';
 
 const suffix = randomUUID().slice(0, 8);
-const root = path.resolve('.local', `phase14-restore-${suffix}`);
+const root = path.resolve('.local', `restore-drill-${suffix}`);
 await mkdir(root, { recursive: true, mode: 0o700 });
 const keyFile = path.join(root, 'backup-key');
 await writeFile(keyFile, randomBytes(32).toString('hex'), { mode: 0o600 });
@@ -58,9 +59,39 @@ async function prepare(kind, port) {
   };
   for (const [name, value] of Object.entries(secretValues))
     await writeFile(path.join(secrets, name), value, { mode: 0o600 });
+  if (process.platform === 'linux') {
+    // Compose bind-mounted secrets keep host ownership. The non-root API cannot read
+    // runner-owned 0600 files. Change only our six synthetic files, not their mode.
+    await run('docker', [
+      'run',
+      '--rm',
+      '--network',
+      'none',
+      '--read-only',
+      '--user',
+      '0:0',
+      '--cap-drop',
+      'ALL',
+      '--cap-add',
+      'CHOWN',
+      '--cap-add',
+      'DAC_OVERRIDE',
+      '--security-opt',
+      'no-new-privileges:true',
+      '-v',
+      `${secrets}:/fixture-secrets`,
+      '-v',
+      `${path.resolve('scripts/prepare-drill-secrets.mjs')}:/helpers/prepare-drill-secrets.mjs:ro`,
+      '--entrypoint',
+      'node',
+      `dentalai-app:${releaseTag()}`,
+      '-e',
+      "import('/helpers/prepare-drill-secrets.mjs').then(m=>m.setDrillSecretOwnership('/fixture-secrets')).catch(()=>process.exit(1))",
+    ]);
+  }
   const env = {
     SECRETS_DIRECTORY: secrets,
-    RELEASE_TAG: 'phase14',
+    RELEASE_TAG: releaseTag(),
     DEPLOYMENT_ENV: 'staging',
     APP_ORIGIN: 'https://fixture.example.invalid',
     MAIL_FROM: 'fixture@example.invalid',

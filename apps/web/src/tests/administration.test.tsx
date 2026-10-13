@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { t, setLocale, useLocale } from '../i18n';
 import { english, arabic } from '../i18n/messages';
@@ -25,13 +25,13 @@ function Localized() {
     </MemoryRouter>
   );
 }
-it('maintains English and Arabic administration catalogs without auto-translating clinical entries', () => {
+it('maintains manually translated interface labels without modifying saved clinical entries', () => {
   for (const key of Object.keys(english) as (keyof typeof english)[])
     expect(arabic[key], key).toBeTruthy();
   const clinical = Object.entries(generatedEnglish).find(([, v]) => v === 'Clinical note');
   expect(clinical).toBeDefined();
   setLocale('ar');
-  expect(t(clinical![0] as keyof typeof generatedEnglish)).toBe('Clinical note');
+  expect(t(clinical![0] as keyof typeof generatedEnglish)).toBe('ملاحظة سريرية');
   expect(t('admin.title')).toBe('إدارة العيادة');
 });
 it('switches document language/direction and keeps semantic form values unchanged', () => {
@@ -61,7 +61,7 @@ it('shows recoverable preference errors and does not pretend a failed save succe
   const input = screen.getByRole('checkbox') as HTMLInputElement;
   await waitFor(() => expect(input.disabled).toBe(false));
   fireEvent.click(input);
-  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Provider offline'));
+  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain(t('error.generic')));
   expect(input.checked).toBe(true);
 });
 it('does not mirror the FDI tooth chart in Arabic', () => {
@@ -69,4 +69,33 @@ it('does not mirror the FDI tooth chart in Arabic', () => {
   render(<Odontogram records={[]} select={() => undefined} />);
   const tooth = screen.getByRole('button', { name: 'Tooth 18: unrecorded' });
   expect(tooth.parentElement?.getAttribute('dir')).toBe('ltr');
+});
+it('refreshes membership before navigating without a full page reload after onboarding', async () => {
+  const refresh = vi.fn().mockResolvedValue(undefined);
+  api.onboard.mockResolvedValue({});
+  render(
+    <MemoryRouter initialEntries={['/onboarding']}>
+      <Routes>
+        <Route path="/onboarding" element={<OnboardingPage refresh={refresh} />} />
+        <Route path="/administration" element={<h1>Refreshed clinic dashboard</h1>} />
+      </Routes>
+    </MemoryRouter>,
+  );
+  for (const [label, value] of [
+    ['Legal clinic name', 'Fictional clinic'],
+    ['Clinic display name', 'Fictional'],
+    ['Unique clinic address', 'fictional'],
+    ['First location name', 'Main'],
+  ])
+    fireEvent.change(screen.getByLabelText(label!), { target: { value } });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  fireEvent.click(screen.getByRole('checkbox'));
+  fireEvent.click(screen.getByRole('button', { name: 'Create isolated clinic' }));
+  await screen.findByRole('heading', { name: 'Refreshed clinic dashboard' });
+  expect(api.onboard).toHaveBeenCalledOnce();
+  expect(refresh).toHaveBeenCalledOnce();
+  expect(api.onboard.mock.invocationCallOrder[0]).toBeLessThan(
+    refresh.mock.invocationCallOrder[0]!,
+  );
 });

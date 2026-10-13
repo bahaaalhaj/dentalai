@@ -10,7 +10,7 @@ import {
 import { randomUUID } from 'node:crypto';
 import { S3PrivateStorage } from '../../src/domains/imaging/storage.js';
 const endpoint = process.env['TEST_S3_ENDPOINT'];
-describe.skipIf(!endpoint)('real private S3 adapter', () => {
+describe.skipIf(!endpoint)('RELEASE BLOCKER when skipped: real private S3 adapter', () => {
   it('round trips private bytes, denies anonymous access and refuses public policy', async () => {
     const client = new S3Client({
       endpoint,
@@ -25,7 +25,12 @@ describe.skipIf(!endpoint)('real private S3 adapter', () => {
     const key = randomUUID();
     await client.send(new CreateBucketCommand({ Bucket: bucket }));
     try {
-      const storage = new S3PrivateStorage(client, bucket);
+      const storage = new S3PrivateStorage(client, bucket, {
+        endpoint: endpoint!,
+        hardened: false,
+        allowInsecureLocalDevelopment: true,
+        encryption: 'local-test-none',
+      });
       await storage.put(key, Buffer.from('fixture'), 'image/png');
       expect(await storage.get(key)).toEqual(Buffer.from('fixture'));
       const anonymous = await fetch(`${endpoint}/${bucket}/${key}`);

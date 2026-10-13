@@ -1,4 +1,6 @@
 import { t } from '../i18n';
+import { displayStatus } from '../i18n/display';
+import { getErrorMessage, UiValidationError } from '../lib/errors';
 import { useState } from 'react';
 import { ActionDialog } from '@dentalai/ui';
 import type { BillingInvoice } from '@dentalai/contracts';
@@ -37,7 +39,7 @@ export function PaymentDialog({
     [requestKey] = useState(() => crypto.randomUUID());
   return (
     <ActionDialog
-      title={t('ui.fe9d57dfddc5229a', { v0: action[0]!.toUpperCase() + action.slice(1) })}
+      title={t('ui.fe9d57dfddc5229a', { v0: displayStatus(action) })}
       busy={busy}
       onClose={close}
     >
@@ -52,9 +54,9 @@ export function PaymentDialog({
               minor = ['issue', 'discard'].includes(action)
                 ? 0
                 : inputMinor(amount, invoice.currency);
-            if (!reason.trim()) throw new Error(t('ui.4e2224fde3819ef0'));
+            if (!reason.trim()) throw new UiValidationError(t('ui.4e2224fde3819ef0'));
             if (!['issue', 'discard'].includes(action) && minor <= 0)
-              throw new Error(t('ui.8164872b175e6bdb'));
+              throw new UiValidationError(t('ui.8164872b175e6bdb'));
             // Validate before locking retry details: invalid local input never reached the server.
             if (action === 'issue' || action === 'discard')
               InvoiceActionSchema.parse({ ...common, expectedVersion: invoice.version });
@@ -106,7 +108,7 @@ export function PaymentDialog({
               });
             await saved(result.receiptReference);
           } catch (err) {
-            setError(err instanceof Error ? err.message : 'Financial change failed.');
+            setError(getErrorMessage(err));
           } finally {
             setBusy(false);
           }
@@ -130,6 +132,7 @@ export function PaymentDialog({
                 label={t('ui.b948ac04b854394f')}
                 value={method}
                 values={['cash', 'card', 'bank_transfer', 'insurance', 'other']}
+                displayValue={displayStatus}
                 onChange={(v) => setMethod(v as typeof method)}
               />
             )}
@@ -158,6 +161,7 @@ export function PaymentDialog({
                 label={t('ui.b1be7c07122318e8')}
                 value={direction}
                 values={['credit', 'debit']}
+                displayValue={displayStatus}
                 onChange={setDirection}
               />
             )}

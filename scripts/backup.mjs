@@ -123,7 +123,7 @@ if (action === 'create') {
         '-T',
         '--entrypoint',
         'tar',
-        'api',
+        'backup-tools',
         '-C',
         '/private',
         '-cf',
@@ -171,11 +171,10 @@ if (action === 'create') {
     '--no-deps',
     '-T',
     '--entrypoint',
-    'find',
+    'node',
     'api',
-    '/private/objects',
-    '-type',
-    'f',
+    '-e',
+    "const fs=require('node:fs'); if(fs.readdirSync('/private/objects').length)console.log('nonempty');",
   ]);
   if (objects.trim()) throw new Error('Refusing restore into a nonempty object volume.');
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'dentalai-restore-'));
@@ -197,7 +196,7 @@ if (action === 'create') {
     for (const name of ['database', 'objects'])
       await decryptFile(path.join(bundle, `${name}.enc`), path.join(temporary, name), key);
     const listing = command(
-      ['run', '--rm', '--no-deps', '-T', '--entrypoint', 'tar', 'api', '-tvf', '-'],
+      ['run', '--rm', '--no-deps', '-T', '--entrypoint', 'tar', 'backup-tools', '-tvf', '-'],
       createReadStream(path.join(temporary, 'objects')),
     );
     let list = '';
@@ -250,7 +249,7 @@ if (action === 'create') {
         '-T',
         '--entrypoint',
         'tar',
-        'api',
+        'backup-tools',
         '-C',
         '/private',
         '-xf',

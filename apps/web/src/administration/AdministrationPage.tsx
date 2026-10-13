@@ -11,6 +11,7 @@ import type {
 import { apiClient } from '../lib/api-client';
 import { getErrorMessage } from '../lib/errors';
 import { t } from '../i18n';
+import { displayStatus, formatInstant } from '../i18n/display';
 import { ClinicFields } from './ClinicFields';
 import type { ClinicFieldsValue } from './initial-clinic';
 import { Field } from '../clinical/ClinicalFields';
@@ -121,9 +122,10 @@ export function AdministrationPage({
           <h2 className="font-bold">{t('admin.plan')}</h2>
           <p>{t('admin.provider')}</p>
           <p>
-            {subscription.planCode} · {subscription.effectiveState} · {subscription.state}
+            {subscription.planCode} · {displayStatus(subscription.effectiveState)} ·{' '}
+            {displayStatus(subscription.state)}
           </p>
-          {subscription.periodEnd && <p>{new Date(subscription.periodEnd).toLocaleString()}</p>}
+          {subscription.periodEnd && <p>{formatInstant(subscription.periodEnd)}</p>}
           {!subscription.growthAllowed && <p role="status">{t('admin.readOnly')}</p>}
           <Field label={t('admin.reason')} value={reason} onChange={setReason} required />
           {plans.map((plan) => (
@@ -237,8 +239,8 @@ export function AdministrationPage({
           {!history.length && <p>{t('admin.empty')}</p>}
           {history.map((item) => (
             <p key={item.id}>
-              <bdi>{item.recipient}</bdi> · {item.category} · {item.state} · {item.attempts} ·{' '}
-              {new Date(item.createdAt).toLocaleString()}
+              <bdi>{item.recipient}</bdi> · {item.category} · {displayStatus(item.state)} ·{' '}
+              {item.attempts} · {new Date(item.createdAt).toLocaleString()}
             </p>
           ))}
         </section>
