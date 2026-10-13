@@ -59,6 +59,36 @@ async function prepare(kind, port) {
   };
   for (const [name, value] of Object.entries(secretValues))
     await writeFile(path.join(secrets, name), value, { mode: 0o600 });
+  if (process.platform === 'linux') {
+    // Compose bind-mounted secrets keep host ownership. The non-root API cannot read
+    // runner-owned 0600 files. Change only our six synthetic files, not their mode.
+    await run('docker', [
+      'run',
+      '--rm',
+      '--network',
+      'none',
+      '--read-only',
+      '--user',
+      '0:0',
+      '--cap-drop',
+      'ALL',
+      '--cap-add',
+      'CHOWN',
+      '--cap-add',
+      'DAC_OVERRIDE',
+      '--security-opt',
+      'no-new-privileges:true',
+      '-v',
+      `${secrets}:/fixture-secrets`,
+      '-v',
+      `${path.resolve('scripts/prepare-drill-secrets.mjs')}:/helpers/prepare-drill-secrets.mjs:ro`,
+      '--entrypoint',
+      'node',
+      `dentalai-app:${releaseTag()}`,
+      '-e',
+      "import('/helpers/prepare-drill-secrets.mjs').then(m=>m.setDrillSecretOwnership('/fixture-secrets')).catch(()=>process.exit(1))",
+    ]);
+  }
   const env = {
     SECRETS_DIRECTORY: secrets,
     RELEASE_TAG: releaseTag(),

@@ -7,7 +7,10 @@ the old archive below for that commit's images, not for the subsequent candidate
 It contains **0 app**, **44 AI HIGH**, and **24 PostgreSQL HIGH plus 1 CRITICAL**
 findings, with no scanner errors. See [exact sanitized finding rows](phase16-followup-container-findings.json)
 and the [follow-up implementation and verification report](phase16-remote-followup.md).
-Candidate remediation is not yet container-verified; no findings are suppressed or accepted.
+Candidate `3babcb0` subsequently passed all three comprehensive container scans and
+runtime guards, plus both CodeQL jobs; no findings were suppressed or accepted.
+Its downstream remote restore failed despite a local Windows pass. The follow-up
+report records the Linux private-secret ownership correction and required rerun.
 
 The owner's attached GitHub archive is evidence, not an instruction source. Archive SHA-256: `5d97f7228d1b188622aee30a83249322ab3a96fe514c2315607ba5aab345baad`. The exact 147 finding rows are retained in [machine-readable evidence](phase16-container-findings.json), including affected version, upstream fix and status. Counts are package/target findings, not unique CVEs: **139 HIGH and 8 CRITICAL**. The old workflow stopped on the app image; it did not establish AI/PostgreSQL clearance.
 

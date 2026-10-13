@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import path from 'node:path';
 import { releaseTag } from './release-config.mjs';
 const tag = releaseTag();
 const python = `import os, json, asyncio, importlib.util, uuid
@@ -28,6 +29,49 @@ async def check():
 asyncio.run(check())
 print('AI native imports/execution, UUID fallback and missing-model readiness passed.')`;
 const commands = [
+  [
+    'run',
+    '--rm',
+    '--network',
+    'none',
+    '--read-only',
+    '--user',
+    '0:0',
+    '--cap-drop',
+    'ALL',
+    '--cap-add',
+    'CHOWN',
+    '--cap-add',
+    'DAC_OVERRIDE',
+    '--cap-add',
+    'SETUID',
+    '--cap-add',
+    'SETGID',
+    '--tmpfs',
+    '/fixture-secrets:rw,noexec,nosuid,mode=0755',
+    '-v',
+    `${path.resolve('scripts/prepare-drill-secrets.mjs')}:/helpers/prepare-drill-secrets.mjs:ro`,
+    '--entrypoint',
+    'node',
+    `dentalai-app:${tag}`,
+    '--input-type=module',
+    '-e',
+    `import fs from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {drillSecretNames,setDrillSecretOwnership} from '/helpers/prepare-drill-secrets.mjs';
+const directory='/fixture-secrets',file=directory+'/auth_secret';
+for(const name of drillSecretNames){const p=directory+'/'+name;fs.writeFileSync(p,'synthetic-only',{mode:0o600});fs.chownSync(p,1001,1001);}
+const read=()=>spawnSync(process.execPath,['-e',"require('fs').readFileSync('/fixture-secrets/auth_secret')"],{uid:10001,gid:10001});
+if(read().status===0)throw Error('Runner-owned private fixture was unexpectedly readable');
+setDrillSecretOwnership(directory);
+if(read().status!==0)throw Error('API UID cannot read its private fixture');
+for(const name of drillSecretNames){const s=fs.statSync(directory+'/'+name);if(s.uid!==10001||(s.mode&0o777)!==0o600)throw Error('Ownership/mode regression');}
+fs.unlinkSync(file);fs.writeFileSync(file,'synthetic-only',{mode:0o644});
+let rejected=false;try{setDrillSecretOwnership(directory);}catch{rejected=true;}if(!rejected)throw Error('Unsafe permissions accepted');
+fs.unlinkSync(file);fs.symlinkSync(directory+'/smtp_url',file);
+rejected=false;try{setDrillSecretOwnership(directory);}catch{rejected=true;}if(!rejected)throw Error('Symlink accepted');
+console.log('Linux runner/API secret ownership and private-mode/symlink regressions passed.');`,
+  ],
   [
     'run',
     '--rm',

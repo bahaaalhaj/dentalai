@@ -23,9 +23,9 @@ All workspace package versions remain private `0.0.0`; release identity is the i
 and image digest until an owner-approved distribution/versioning policy exists.
 
 The [Phase 16 remote follow-up](docs/phase16-remote-followup.md) records the first branch's
-actual scan findings and the candidate AI/PostgreSQL packaging remediation. Container
-scanner verification still requires a usable vulnerability database and remote CI; do not
-treat this candidate as scanner-cleared or deploy it before the remote gates pass.
+actual scan findings, AI/PostgreSQL remediation and Linux restore-harness correction.
+Local scanner access remains blocked; the report distinguishes remote scan clearance
+from outstanding restore verification. Do not deploy before all remote gates pass.
 
 Additional gates: `npm run source:check`, `npm run i18n:arabic`, `npm run bundle:check`
 (after build), and `npm run test:coverage` (with disposable `DATABASE_URL`). Coverage JSON/HTML/LCOV

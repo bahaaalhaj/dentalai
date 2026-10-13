@@ -85,6 +85,53 @@ domain error codes. Production clock rejection is unchanged, and the explicit re
 clock/rollback test is retained. The complete clinical suite then passed all 21 tests;
 full coverage/integration verification is rerun rather than declared green from that subset.
 
+### Results at pushed candidate `3babcb05dc6a2e8d9fd8d5b831cb50e5c9d5df2e`
+
+[Quality 38446050457](https://github.com/bahaaalhaj/dentalai/actions/runs/38446050457)
+completed successfully. The reviewed-baseline and artifact steps passed, followed by
+the hardened PostgreSQL start and every quality check. Coverage completed at
+18:27:54 UTC; its artifact upload started at 18:27:54 and completed at 18:27:56,
+after coverage actually ran. Secret scanning passed.
+
+[Security 38446048487](https://github.com/bahaaalhaj/dentalai/actions/runs/38446048487)
+passed both unchanged CodeQL jobs, all candidate builds, all actual-runtime guards and
+the comprehensive scan of **all three images**, including unfixed High/Critical findings.
+Thus no remaining High/Critical finding or scanner error was reported by this gate for
+this candidate. Compose validation and restore-harness installation ran successfully
+**after** clearance. The subsequent restore drill failed; the overall Security job
+was therefore correctly red. No suppressions or severity-policy changes were made.
+
+The local mirror download timed out; a repeated download was stopped rather than
+represented as a completed scan. The official GHCR fallback returned token-request
+DENIED. Raw log download remains unavailable anonymously; the API's restore annotation
+only says exit 1, not its underlying error. Remote scan success is not claimed as a
+local scanner execution.
+
+The same actual encrypted restore drill passed locally on Windows, with 2 patients,
+3 appointments, 4 ledger events, 4 clinical revisions and 1 available synthetic file.
+Encrypted bundles/keys and disposable-volume evidence remain private and recoverable,
+outside Git. Full rerun coverage passed: **261 API tests plus 53 web tests**, one optional
+S3 integration skip; API statements 84.62%, branches 76.84%, functions 88.97%, lines
+86.28%. All six local E2E workflows passed, including private imaging without fake inference.
+
+### Linux restore-harness correction
+
+An actual Linux-container probe reproduced a concrete harness defect: runner-owned
+UID 1001, mode 0600 secrets cannot be read by the API's UID 10001. Windows bind mounts
+masked that defect. The drill now assigns only its six freshly generated synthetic
+files to UID/GID 10001 using a networkless, read-only, narrowly privileged helper.
+It retains mode 0600, rejects symlinks/nonregular files/other modes before any change,
+and never discovers or touches production secret directories. PostgreSQL starts as
+root before its existing privilege switch, so its private mounted file remains readable.
+
+The actual production helper is exercised in a Linux container: access fails before
+ownership correction, succeeds afterward, all files retain mode 0600/UID 10001, and
+unsafe modes and symlinks are rejected. This guard passed locally. This is a proven
+permission defect, but without full remote logs it is not asserted as the sole remote
+failure cause until the follow-up CI restore succeeds. No world-readable secret mode
+or weakened API user/capabilities is introduced. The helper's elevated permissions
+exist only in the isolated test-data preparation container, not the API.
+
 | Command/check                              | Result                                                                                  |
 | ------------------------------------------ | --------------------------------------------------------------------------------------- |
 | `npm run typecheck`                        | PASS, exit 0                                                                            |
