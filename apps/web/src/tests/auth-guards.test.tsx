@@ -6,6 +6,7 @@ import { apiClient, ApiClientError } from '../lib/api-client';
 // Load the real screen up front: guard assertions must not depend on lazy-import disk latency.
 // The production component and its expiry message remain unmocked.
 import '../AuthPage';
+import '../dashboard/DashboardPage';
 import { setLocale } from '../i18n';
 import { fireEvent } from '@testing-library/react';
 import type { AuthIdentity } from '@dentalai/contracts';
@@ -97,7 +98,7 @@ describe('authentication route guards', () => {
     });
     vi.spyOn(apiClient, 'sessions').mockResolvedValue([]);
     render(<App />);
-    expect(await screen.findByText(/Patient account/)).toBeInTheDocument();
+    expect(await screen.findByText(/Patient account/, { selector: 'main p' })).toBeInTheDocument();
     expect(screen.queryByText('Invite clinic staff')).not.toBeInTheDocument();
     await act(async () => {
       window.dispatchEvent(new Event('dentalai:session-expired'));

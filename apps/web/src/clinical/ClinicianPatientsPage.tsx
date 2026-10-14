@@ -1,12 +1,16 @@
 import { t } from '../i18n';
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ActionDialog } from '@dentalai/ui';
 import type { ClinicalRecord, ClinicalWorkspace } from '@dentalai/contracts';
 import { apiClient } from '../lib/api-client';
 import { getErrorMessage } from '../lib/errors';
 import { Odontogram } from './Odontogram';
-import { RecordView } from './RecordView';
+import { EncounterContext } from './EncounterContext';
+import { CurrentRecords } from './CurrentRecords';
+import { ClinicalHistory } from './ClinicalHistory';
+import { SectionTabs } from '../ui/SectionTabs';
+import { StatusBadge } from '../ui/StatusBadge';
 import { ClinicalRecordEditor } from './ClinicalRecordEditor';
 import { AnestheticCalculator } from '../components/AnestheticCalculator';
 
@@ -27,6 +31,16 @@ export function ClinicianPatientsPage() {
     tooth?: string;
   } | null>(null);
   const [action, setAction] = useState<Action | null>(null);
+  const [search, setSearch] = useState('');
+  const [parameters, setParameters] = useSearchParams();
+  const requestedTab = parameters.get('tab');
+  const tab = ['summary', 'encounters', 'notes', 'chart', 'plans', 'imaging', 'history'].includes(
+    requestedTab ?? '',
+  )
+    ? requestedTab!
+    : 'summary';
+  const setTab = (value: string) =>
+    setParameters({ ...Object.fromEntries(parameters), tab: value });
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const requestSequence = useRef(Symbol('clinical request'));
@@ -63,11 +77,43 @@ export function ClinicianPatientsPage() {
       requestSequence.current = Symbol('discard stale request');
     };
   }, [refresh]);
+  useEffect(() => {
+    const requestedPatient = parameters.get('patient');
+    if (
+      !patientId &&
+      requestedPatient &&
+      patients.some((patient) => patient.id === requestedPatient)
+    ) {
+      scope.current = { patientId: requestedPatient, historical: '' };
+      setPatientId(requestedPatient);
+    }
+  }, [parameters, patients, patientId]);
   const open = (next: Action) => {
     setAction(next);
     setReason('');
     setError('');
   };
+  const tabs = [
+    ['summary', 'polish.summary'],
+    ['encounters', 'polish.encounters'],
+    ['notes', 'polish.notes'],
+    ['chart', 'polish.chart'],
+    ['plans', 'polish.plans'],
+    ['imaging', 'polish.imaging'],
+    ['history', 'polish.history'],
+  ] as const;
+  const visibleRecords =
+    workspace?.records.filter((record) =>
+      tab === 'notes'
+        ? record.data.kind === 'note'
+        : tab === 'plans'
+          ? record.data.kind === 'plan'
+          : tab === 'chart'
+            ? ['finding', 'procedure'].includes(record.data.kind)
+            : tab === 'summary'
+              ? !['finding', 'procedure', 'plan'].includes(record.data.kind)
+              : false,
+    ) ?? [];
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-5xl mx-auto space-y-5">
@@ -88,12 +134,31 @@ export function ClinicianPatientsPage() {
         {message && <p role="status">{message}</p>}
         {!loading && !patients.length && <p>{t('ui.b1ab306e0f568497')}</p>}
         <label className="block">
+          {t('polish.searchPatients')}
+          <input
+            className="ui-input"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder={t('polish.searchHint')}
+          />
+        </label>
+        <label className="block">
           {t('ui.835043ec8e6b7921')}
           <select
             aria-label={t('ui.835043ec8e6b7921')}
             className="w-full p-3 border rounded-xl"
             value={patientId}
+            disabled={busy}
             onChange={(e) => {
+              setAction(null);
+              setReason('');
+              setMessage('');
+              setError('');
+              if (parameters.has('patient')) {
+                const next = new URLSearchParams(parameters);
+                next.delete('patient');
+                setParameters(next, { replace: true });
+              }
               scope.current = { patientId: e.target.value, historical: '' };
               requestSequence.current = Symbol('discard previous patient');
               setWorkspace(null);
@@ -104,205 +169,130 @@ export function ClinicianPatientsPage() {
             }}
           >
             <option value="">{t('ui.36512653e9fdc43c')}</option>
-            {patients.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.givenName} {p.familyName} · {p.medicalRecordNumber}
-              </option>
-            ))}
+            {patients
+              .filter(
+                (p) =>
+                  !search ||
+                  [p.givenName, p.familyName, p.medicalRecordNumber]
+                    .join(' ')
+                    .toLocaleLowerCase()
+                    .includes(search.toLocaleLowerCase()),
+              )
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.givenName} {p.familyName} · {p.medicalRecordNumber}
+                </option>
+              ))}
           </select>
         </label>
         {workspace && !loading && (
           <>
-            <h2 className="font-bold">
-              {workspace.patient.givenName} {workspace.patient.familyName}
-            </h2>
-            <AnestheticCalculator key={patientId} patientId={patientId} />
-            <section className="bg-white border rounded-2xl p-5 space-y-3">
-              <h2 className="text-xl font-bold">{t('ui.e12625129e52a1ab')}</h2>
-              <button
-                onClick={() => open({ kind: 'start', id: patientId })}
-                className="text-indigo-600"
-              >
-                {t('ui.ee4974f57be9edc0')}
-              </button>
-              {!workspace.encounters.length && <p>{t('ui.383e16f61ca805b6')}</p>}
-              <label className="block">
-                {t('ui.ffcce44b5ffe7fc7')}
-                <select
-                  aria-label={t('ui.ffcce44b5ffe7fc7')}
-                  className="w-full p-3 border rounded-xl"
-                  value={encounterId}
-                  onChange={(e) => {
-                    setEncounterId(e.target.value);
-                    setEditor(null);
-                  }}
-                >
-                  <option value="">{t('ui.5d2de50a3f800d7d')}</option>
-                  {workspace.encounters
-                    .filter((e) => e.status === 'open')
-                    .map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {new Date(e.startedAt).toLocaleString()} · {e.authorName}
-                      </option>
-                    ))}
-                </select>
-              </label>
-              {encounterId && !historical && (
-                <button onClick={() => open({ kind: 'close', id: encounterId })}>
-                  {t('ui.aa62874387c0a3b7')}
-                </button>
-              )}
-              <label className="block">
-                {t('ui.96ddcf26ee68ab76')}
-                <select
-                  aria-label={t('ui.96ddcf26ee68ab76')}
-                  className="w-full p-3 border rounded-xl"
-                  value={historical}
-                  onChange={(e) => {
-                    scope.current = { patientId, historical: e.target.value };
-                    requestSequence.current = Symbol('discard previous historical view');
-                    setHistorical(e.target.value);
-                    setEditor(null);
-                  }}
-                >
-                  <option value="">{t('ui.e577f7bee7c56721')}</option>
-                  {workspace.encounters
-                    .filter((e) => e.status !== 'open')
-                    .map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {t('ui.616c9bf0809394db')}
-                        {new Date(e.endedAt ?? e.startedAt).toLocaleString()}
-                      </option>
-                    ))}
-                </select>
-              </label>
-            </section>
-            <Odontogram
-              records={workspace.records}
-              {...(encounterId && !historical
-                ? { select: (tooth: string) => setEditor({ correction: null, tooth }) }
-                : {})}
-            />
-            {encounterId && !historical && (
-              <button
-                className="bg-indigo-600 text-white p-3 rounded-xl"
-                onClick={() => setEditor({ correction: null })}
-              >
-                {t('ui.31e327288770e40c')}
-              </button>
-            )}
-            {editor && encounterId && (
-              <ClinicalRecordEditor
-                key={`${editor.correction?.id ?? editor.tooth ?? 'new'}:${encounterId}`}
-                workspace={workspace}
-                encounterId={encounterId}
-                correction={editor.correction}
-                tooth={editor.tooth}
-                cancel={() => setEditor(null)}
-                onSave={async (body) => {
-                  await apiClient.writeClinicalRecord(patientId, body);
-                  if (
-                    patientId !== scope.current.patientId ||
-                    historical !== scope.current.historical
-                  )
-                    return;
-                  setEditor(null);
-                  setMessage(t('ui.668f7e244fbd7305'));
-                  await refresh();
-                }}
-              />
-            )}
-            <h2 className="text-xl font-bold">{t('ui.29fb351865b85f0c')}</h2>
-            {!workspace.records.length && <p>{t('ui.224b68222cef14cf')}</p>}
-            {workspace.records.map((r) => (
-              <article key={r.id} className="bg-white rounded-2xl border p-5 space-y-2">
-                <h3 className="font-bold">
-                  {r.data.kind} {t('ui.8d3940c51091ed0a')}
-                  {r.version} · {r.approval}
-                </h3>
-                <RecordView data={r.data} />
-                <p className="text-sm text-slate-500">
-                  {r.authorName} · {new Date(r.recordedAt).toLocaleString()}{' '}
-                  {t('ui.a09fac59690f30e1')}
-                  {r.reason}
+            <div className="ui-patient-header">
+              <span className="ui-avatar" aria-hidden="true">
+                {workspace.patient.givenName.slice(0, 1)}
+              </span>
+              <div>
+                <h2 className="font-bold">
+                  {workspace.patient.givenName} {workspace.patient.familyName}
+                </h2>
+                <p className="ui-caption">
+                  {t('polish.recordNumber')}: <bdi>{workspace.patient.medicalRecordNumber}</bdi>
                 </p>
-                {r.reviewReason && (
-                  <p>
-                    {t('ui.2a60e203a021a1bd')}
-                    {r.reviewReason}
-                  </p>
-                )}
-                {!historical && encounterId && (
-                  <button className="text-indigo-600" onClick={() => setEditor({ correction: r })}>
-                    {t('ui.63923d8dd78e91fc')}
-                    {r.data.kind}
-                  </button>
-                )}
-                {!historical &&
-                  r.approval === 'pending' &&
-                  workspace.encounters.some(
-                    (e) => e.id === r.encounterId && e.status === 'open',
-                  ) && (
-                    <div className="flex gap-4">
-                      <button onClick={() => open({ kind: 'approved', id: r.id })}>
-                        {t('ui.cb4b2563545a3150')}
-                        {r.data.kind}
-                      </button>
-                      <button onClick={() => open({ kind: 'rejected', id: r.id })}>
-                        {t('ui.02b24c18771cae8c')}
-                        {r.data.kind}
-                      </button>
-                    </div>
-                  )}
-              </article>
-            ))}
-            <details className="bg-white border rounded-2xl p-5">
-              <summary className="cursor-pointer font-bold">
-                {t('ui.e88eec8187bfd6d4')}
-                {workspace.history.length})
-              </summary>
-              {workspace.history.map((r) => (
-                <article key={r.id} className="border-b py-4">
-                  <p>
-                    {r.data.kind} {t('ui.0bb917d86bec6d62')}
-                    {r.version} · {r.approval} · {r.authorName} · {r.recordedAt}
-                  </p>
-                  <RecordView data={r.data} />
-                  <p>
-                    {t('ui.4bc4df5f6ced4467')}
-                    {r.reason} {t('ui.7837d5cddbc3e1a8')}
-                    {r.reviewReason ?? 'pending'}
-                  </p>
-                </article>
-              ))}
-            </details>
-            {!!workspace.legacyRecords.length && (
-              <details className="bg-amber-50 border rounded-2xl p-5">
-                <summary>
-                  {t('ui.48b139dea9c8d096')}
-                  {workspace.legacyRecords.length}
-                  {t('ui.8be6a2a0fe1fc43b')}
-                </summary>
-                <p>{t('ui.fc191a5b1ff0498e')}</p>
-                {workspace.legacyRecords.map((r) => (
-                  <article key={`${r.kind}:${r.id}`} className="border-b py-3">
-                    <h3>
-                      {r.kind} · {r.id}
-                    </h3>
-                    <dl>
-                      {r.fields.map((f) => (
-                        <div key={f.name}>
-                          <dt className="font-semibold">{f.name}</dt>
-                          <dd className="whitespace-pre-wrap break-words">
-                            {f.value ?? 'not recorded'}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
+              </div>
+            </div>
+            <AnestheticCalculator key={patientId} patientId={patientId} />
+            <EncounterContext
+              workspace={workspace}
+              patientId={patientId}
+              encounterId={encounterId}
+              historical={historical}
+              open={open}
+              selectEncounter={(id) => {
+                setEncounterId(id);
+                setEditor(null);
+              }}
+              selectHistorical={(id) => {
+                scope.current = { patientId, historical: id };
+                requestSequence.current = Symbol('discard previous historical view');
+                setHistorical(id);
+                setEditor(null);
+              }}
+            />
+            <SectionTabs
+              tabs={tabs.map(([id, label]) => ({ id, label: t(label) }))}
+              active={tab}
+              change={setTab}
+              label={t('ui.794807d3934392d8')}
+            >
+              {tab === 'summary' && (
+                <section className="ui-card">
+                  <h2>{t('polish.medicalContext')}</h2>
+                  {!workspace.records.some((record) =>
+                    ['alert', 'allergy', 'medication'].includes(record.data.kind),
+                  ) && <p className="ui-caption mt-2">{t('polish.noAlerts')}</p>}
+                </section>
+              )}
+              {tab === 'encounters' &&
+                workspace.encounters.map((encounter) => (
+                  <article className="ui-card" key={encounter.id}>
+                    <StatusBadge value={encounter.status} />
+                    <p>
+                      {new Date(encounter.startedAt).toLocaleString()} · {encounter.authorName}
+                    </p>
                   </article>
                 ))}
-              </details>
-            )}
+              {tab === 'chart' && (
+                <Odontogram
+                  records={workspace.records}
+                  {...(encounterId && !historical
+                    ? { select: (tooth: string) => setEditor({ correction: null, tooth }) }
+                    : {})}
+                />
+              )}
+              {tab === 'imaging' && (
+                <Link className="ui-btn-primary" to="/imaging">
+                  {t('polish.imaging')}
+                </Link>
+              )}
+              {encounterId && !historical && (
+                <button
+                  className="bg-indigo-600 text-white p-3 rounded-xl"
+                  onClick={() => setEditor({ correction: null })}
+                >
+                  {t('ui.31e327288770e40c')}
+                </button>
+              )}
+              {editor && encounterId && (
+                <ClinicalRecordEditor
+                  key={`${editor.correction?.id ?? editor.tooth ?? 'new'}:${encounterId}`}
+                  workspace={workspace}
+                  encounterId={encounterId}
+                  correction={editor.correction}
+                  tooth={editor.tooth}
+                  cancel={() => setEditor(null)}
+                  onSave={async (body) => {
+                    await apiClient.writeClinicalRecord(patientId, body);
+                    if (
+                      patientId !== scope.current.patientId ||
+                      historical !== scope.current.historical
+                    )
+                      return;
+                    setEditor(null);
+                    setMessage(t('ui.668f7e244fbd7305'));
+                    await refresh();
+                  }}
+                />
+              )}
+              <CurrentRecords
+                records={visibleRecords}
+                workspace={workspace}
+                encounterId={encounterId}
+                historical={historical}
+                correct={(record) => setEditor({ correction: record })}
+                review={(kind, id) => open({ kind, id })}
+              />
+              {tab === 'history' && <ClinicalHistory workspace={workspace} />}
+            </SectionTabs>
           </>
         )}
         {action && (

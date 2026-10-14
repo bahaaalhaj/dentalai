@@ -5,6 +5,7 @@ import { clinicalArabic } from './interface-arabic-clinical';
 import { imagingArabic } from './interface-arabic-imaging';
 import { accountArabic } from './interface-arabic-account';
 export const interfaceArabic: Record<string, string> = {
+  KiB: 'كيبيبايت',
   ...schedulingArabic,
   ...billingArabic,
   ...clinicalArabic,

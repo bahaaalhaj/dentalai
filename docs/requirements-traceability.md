@@ -5,6 +5,14 @@ This maps actual tests, not a claim that all source aspirations pass. Final comm
 results and skipped/blocked checks are in [verification](phase16-final-verification.md).
 Future/blocked rows deliberately have no invented passing clinical test.
 
+Phase 17 UI supplement (candidate results are recorded separately in
+`phase17-final-verification.md`): `W/phase17-workspace`, `W/phase17-dashboard`,
+`U/development-frontend`, and `apps/web/e2e-phase17/` map role navigation, native mobile
+dialogs, graphical FDI selection/review semantics, real loaded-page metrics, private
+previews, English/Arabic layouts, accessibility, and the development-only CSP/HMR
+boundary. Existing domain permission/transaction tests remain authoritative; UI
+tests do not replace them or establish clinical approval.
+
 Phase 16 supplements: `U/storage-privacy`, `U/inference-contract`, `U/openapi-routes`, `PY/compact_response`, `PY/inference_deadline`, `W/phase16-localization.test.ts` and the expanded `I/imaging` exercise bucket privacy/deadlines, compact inference, route documentation parity, lease recovery, atomic normalized detections, idempotency and safe bilingual errors. Real S3 integration is a release blocker when skipped, not optional release evidence. Toolchain/governance tests are in `scripts/test-quality-gates.mjs`; runtime absence/import checks require the built container.
 
 Test-path shorthand:
@@ -45,7 +53,7 @@ Test-path shorthand:
 | FR-I18N-001    | `apps/web/src/i18n/`, bilingual administration and language control                                        | `npm run i18n:check`, `W/administration`, `E/administration`: English/Arabic RTL smoke. Medical Arabic review missing                                                                                                   |
 | FR-REC-001     | `scripts/backup.mjs`, `backup-lib.mjs`, `check-private-files.mjs`, pilot/drill Compose                     | `scripts/test-backup.mjs`: key/envelope failures; `scripts/restore-drill.mjs`: actual seed twice, encrypted dump/objects, empty restore, count/checksum reconciliation, session revocation, fresh login/download        |
 | FR-FUT-001     | No Twilio/Stripe/DICOM/PACS implementation                                                                 | No replacement success endpoint/test; raw DICOM is rejected. Email/manual money records do not establish these features                                                                                                 |
-| FR-FUT-002     | No offline sync/mobile/OAuth/chart analytics implementation                                                | Deliberate API refresh and issued-invoice totals exist, not realtime/offline or the source's treatment/revenue charts                                                                                                   |
+| FR-FUT-002     | No offline sync/mobile/OAuth/advanced treatment or revenue analytics implementation                        | Loaded-page appointment status distribution, deliberate API refresh and issued-invoice totals exist, not realtime/offline or advanced treatment/revenue analytics                                                       |
 | NFR-SEC-001    | Auth/membership/CSRF/Zod/Helmet/limits and safe errors                                                     | `I/auth`, all domain permission suites, `U/application`, `U/auth-contracts`, `U/hardening`; MFA/password-blocklist and independent review gaps remain                                                                   |
 | NFR-SEC-002    | HTTPS/SMTP environment validation, mounted secrets, AES-GCM backup/notification envelopes                  | `U/environment`, `U/hardening`, `U/administration`, backup tests; actual TLS edge/disk/DB encryption unqualified                                                                                                        |
 | NFR-SEC-003    | Tenant FKs, live authorization, append-only triggers and restricted DB role guard                          | `I/hardening`, `DB/migrations`, domain negative suites; no per-tenant RLS or administrator-proof audit claim                                                                                                            |

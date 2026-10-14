@@ -1,3 +1,4 @@
+import { navigateWorkspace } from './navigation.js';
 import { test, expect } from '@playwright/test';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
@@ -81,10 +82,11 @@ test('English owner dashboard and Arabic RTL remain usable; onboarding creates a
   await page.locator('input[type=email]').fill('clinic_owner@example.test');
   await page.locator('input[type=password]').fill(fixturePassword);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  await page.getByRole('link', { name: 'Clinic administration', exact: true }).click();
+  await navigateWorkspace(page, 'Clinic administration');
   await expect(
     page.getByRole('heading', { name: 'Clinic administration', exact: true }),
   ).toBeVisible();
+  await page.getByRole('tab', { name: 'Plan and usage', exact: true }).click();
   await expect(
     page.getByText('Administrative provider only. No payments are processed.'),
   ).toBeVisible();
@@ -130,7 +132,9 @@ test('English owner dashboard and Arabic RTL remain usable; onboarding creates a
   await expect(
     patient.getByRole('heading', { name: 'Clinic administration', exact: true }),
   ).toBeVisible();
-  await expect(patient.getByText('Fictional browser clinic', { exact: true })).toBeVisible();
+  await expect(
+    patient.getByText('Fictional browser clinic', { exact: true }).first(),
+  ).toBeVisible();
   const response = await patient.request.get(`${origin}/api/v1/admin/overview`);
   expect(response.ok()).toBe(true);
   const overview = await response.json();

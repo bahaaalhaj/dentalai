@@ -1,6 +1,7 @@
 import { t } from '../i18n';
-import type { ClinicalContent, ClinicalRecord } from '@dentalai/contracts';
+import type { ClinicalContent } from '@dentalai/contracts';
 import { Field, SelectField } from './ClinicalFields';
+export { Odontogram } from './GraphicalOdontogram';
 
 type Dental = Extract<ClinicalContent, { kind: 'finding' | 'procedure' }>;
 export function SurfacePicker({
@@ -120,59 +121,5 @@ export function OdontogramEditor({
         </>
       )}
     </>
-  );
-}
-export function Odontogram({
-  records,
-  select,
-}: {
-  records: Pick<ClinicalRecord, 'data'>[];
-  select?: (tooth: string) => void;
-}) {
-  const rows = [
-    [1, 2, 8],
-    [4, 3, 8],
-    [5, 6, 5],
-    [8, 7, 5],
-  ] as const;
-  return (
-    <section
-      aria-label={t('ui.d27a92a5853e6770')}
-      className="rounded-2xl border bg-white p-5 space-y-3"
-    >
-      <h2 className="font-bold">{t('ui.16afbf9956d84ea5')}</h2>
-      <p className="text-sm text-slate-500">{t('ui.807d7b25f46bfb23')}</p>
-      {rows.map(([right, left, count]) => (
-        <div dir="ltr" key={right} className="flex flex-wrap gap-1">
-          {[
-            ...Array.from({ length: count }, (_, i) => `${right}${count - i}`),
-            ...Array.from({ length: count }, (_, i) => `${left}${i + 1}`),
-          ].map((tooth) => {
-            const findings = records.filter(
-              (r) =>
-                r.data.kind === 'finding' &&
-                r.data.toothCode === tooth &&
-                r.data.status !== 'entered_in_error',
-            );
-            const label = `Tooth ${tooth}: ${findings.length ? findings.map((r) => (r.data.kind === 'finding' ? `${r.data.status === 'resolved' ? 'resolved ' : ''}${r.data.findingCode}` : '')).join(', ') : 'unrecorded'}`;
-            return select ? (
-              <button
-                type="button"
-                key={tooth}
-                aria-label={label}
-                onClick={() => select(tooth)}
-                className={`p-2 rounded border focus:ring-2 focus:ring-indigo-500 ${findings.length ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-50'}`}
-              >
-                {tooth}
-              </button>
-            ) : (
-              <span key={tooth} aria-label={label} className="p-2 rounded border bg-slate-50">
-                {tooth}
-              </span>
-            );
-          })}
-        </div>
-      ))}
-    </section>
   );
 }

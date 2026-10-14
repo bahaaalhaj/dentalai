@@ -1,9 +1,9 @@
 import { t } from './i18n';
-import { displayStatus } from './i18n/display';
 import { formatAppointmentTime } from './appointment-format';
 import { Link } from 'react-router-dom';
 import { Calendar, Shield } from 'lucide-react';
-import { canTransition, actionTargets } from '@dentalai/domain';
+import { StatusBadge } from './ui/StatusBadge';
+import { canTransition, actionTargets, clinicToday, dateInZone } from '@dentalai/domain';
 import type { AuthIdentity } from '@dentalai/contracts';
 import { apiClient } from './lib/api-client';
 import { input, button } from './appointment-shared';
@@ -124,7 +124,7 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
             {items.map((appointment) => (
               <article
                 key={appointment.id}
-                className="border border-slate-200 rounded-2xl p-5 space-y-3"
+                className="ui-card space-y-3"
                 aria-label={t('ui.9724a6bd199b45e0', { v0: appointment.typeName })}
               >
                 <div className="flex justify-between">
@@ -135,7 +135,13 @@ export function AppointmentsPage({ identity }: { identity: AuthIdentity }) {
                         v0: appointment.patientName ?? t('role.patient'),
                       })}
                   </h2>
-                  <span className="text-indigo-700">{displayStatus(appointment.status)}</span>
+                  <div className="flex flex-wrap gap-2">
+                    <StatusBadge value={appointment.status} />
+                    {dateInZone(appointment.startsAt, appointment.timezone) ===
+                      clinicToday(appointment.timezone) && (
+                      <span className="ui-status-badge">{t('polish.todayTag')}</span>
+                    )}
+                  </div>
                 </div>
                 <p>
                   {formatAppointmentTime(appointment.startsAt, appointment.timezone)} –{' '}

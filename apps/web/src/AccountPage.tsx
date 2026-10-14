@@ -14,9 +14,10 @@ import { t } from './i18n';
 import { displayStatus, formatInstant } from './i18n/display';
 import { NotificationPreference } from './administration/NotificationPreference';
 
-function Frame({ children }: { children: ReactNode }) {
+function Frame({ children, embedded = false }: { children: ReactNode; embedded?: boolean }) {
+  const Container = embedded ? 'section' : 'main';
   return (
-    <main className="min-h-screen bg-slate-50 p-6">
+    <Container className={embedded ? 'ui-card mt-5' : 'min-h-screen bg-slate-50 p-6'}>
       <div className="max-w-3xl mx-auto space-y-6">
         <Link to="/" className="flex gap-2 text-indigo-600 text-2xl font-bold">
           <Shield />
@@ -26,7 +27,7 @@ function Frame({ children }: { children: ReactNode }) {
           {children}
         </section>
       </div>
-    </main>
+    </Container>
   );
 }
 const inputStyle = 'w-full p-3 bg-slate-50 border border-slate-200 rounded-xl';
@@ -69,12 +70,12 @@ export function AccountDashboard({
     }
   };
   return (
-    <Frame>
+    <Frame embedded>
       <div className="flex justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">
+        <h2 className="text-2xl font-bold text-slate-900">
           {t('ui.7f95b16f05f5d976')}
           {identity.user.name}
-        </h1>
+        </h2>
         <button
           onClick={() =>
             void run(async () => {
@@ -103,26 +104,9 @@ export function AccountDashboard({
         </Link>
       )}
       {identity.memberships.length > 1 && (
-        <select
-          aria-label={t('ui.fd077f7c65f5f772')}
-          className={inputStyle}
-          value={member?.id ?? ''}
-          onChange={(event) =>
-            void run(async () => {
-              await apiClient.selectMembership(event.target.value);
-              await refresh();
-            })
-          }
-        >
-          <option value="" disabled>
-            {t('ui.499d3091addb65cb')}
-          </option>
-          {identity.memberships.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.clinicName}
-            </option>
-          ))}
-        </select>
+        <button className={buttonStyle} onClick={() => void run(refresh)}>
+          {t('ui.0e91610117029a62')}
+        </button>
       )}
       <p className="p-4 bg-amber-50 rounded-xl text-slate-700">{t('account.limitations')}</p>
       {member && (

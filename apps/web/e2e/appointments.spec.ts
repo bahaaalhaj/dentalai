@@ -1,3 +1,4 @@
+import { navigateWorkspace } from './navigation.js';
 import { test, expect } from '@playwright/test';
 import { accessibilitySmoke } from './accessibility.js';
 import express from 'express';
@@ -46,7 +47,7 @@ test('patient books; staff confirms; patient sees confirmation and cancels with 
   await page.locator('input[type=email]').fill('patient@example.test');
   await page.locator('input[type=password]').fill(fixturePassword);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  await page.getByRole('link', { name: 'Appointments and calendar' }).click();
+  await navigateWorkspace(page, 'Appointments and calendar');
   await page.getByRole('button', { name: 'Book appointment', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Book appointment' });
   await expect(dialog).toBeVisible();
@@ -78,7 +79,7 @@ test('patient books; staff confirms; patient sees confirmation and cancels with 
   await staff.locator('input[type=email]').fill('dentist@example.test');
   await staff.locator('input[type=password]').fill(fixturePassword);
   await staff.getByRole('button', { name: 'Sign In', exact: true }).click();
-  await staff.getByRole('link', { name: 'Appointments and calendar' }).click();
+  await navigateWorkspace(staff, 'Appointments and calendar');
   await expect(staff.getByRole('heading', { name: 'Clinic calendar' })).toBeVisible();
   await staff.getByLabel('Calendar date').fill(date);
   await staff.getByRole('button', { name: 'Confirm', exact: true }).click();

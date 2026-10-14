@@ -1,8 +1,14 @@
 import { setLocale, t, useLocale } from './index';
-export function LanguageControl() {
+export function LanguageControl({ floating = true }: { floating?: boolean }) {
   const locale = useLocale();
   return (
-    <aside className="fixed bottom-4 end-4 z-50 rounded-xl bg-white border border-slate-200 p-2 shadow-md">
+    <aside
+      className={
+        floating
+          ? 'fixed bottom-4 end-4 z-50 rounded-xl bg-white border border-slate-200 p-2 shadow-md'
+          : 'ui-language'
+      }
+    >
       <label>
         {t('language')}{' '}
         <select

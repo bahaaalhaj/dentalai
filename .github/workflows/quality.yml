@@ -115,6 +115,9 @@ jobs:
       - name: Bilingual administration, onboarding, appointments, clinical, billing and private imaging
         run: npm run test:e2e
 
+      - name: Phase 17 role layouts, accessibility and development CSP/HMR
+        run: npm run test:ui
+
       - name: Validate local infrastructure configuration
         env:
           POSTGRES_DB: ci_validation

@@ -1,3 +1,4 @@
+import { navigateWorkspace } from './navigation.js';
 import { test, expect, type Page } from '@playwright/test';
 import { accessibilitySmoke } from './accessibility.js';
 import express from 'express';
@@ -84,11 +85,11 @@ test('clinician explicitly records, approves and corrects; patient sees approved
       await page.locator('input[type=password]').fill(fixturePassword);
       await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     }
-    await patient.getByRole('link', { name: 'Approved clinical history', exact: true }).click();
+    await navigateWorkspace(patient, 'Approved clinical history');
     await expect(
       patient.getByText('No approved clinical information is available yet.'),
     ).toBeVisible();
-    await dentist.getByRole('link', { name: 'Clinical patients', exact: true }).click();
+    await navigateWorkspace(dentist, 'Clinical patients');
     await dentist.getByLabel('Patient', { exact: true }).selectOption(fixture.patientId);
     await accessibilitySmoke(patient);
     await accessibilitySmoke(dentist);
@@ -127,6 +128,7 @@ test('clinician explicitly records, approves and corrects; patient sees approved
     dentist.on('request', (req) => {
       if (req.url().includes('/api/v1/clinical/') && req.method() === 'POST') clinicalWrites++;
     });
+    await dentist.getByRole('tab', { name: 'Dental chart', exact: true }).click();
     const tooth = dentist.getByRole('button', { name: 'Tooth 16: unrecorded', exact: true });
     await tooth.focus();
     await dentist.keyboard.press('Enter');
@@ -141,6 +143,7 @@ test('clinician explicitly records, approves and corrects; patient sees approved
     await dialog.getByLabel('Reason', { exact: true }).fill('Fictional finding reviewed');
     await applyClinicalChange(dentist, 'Apply clinical change', '/review');
     await expect(dialog).not.toBeVisible();
+    await dentist.getByRole('tab', { name: 'Clinical notes', exact: true }).click();
     await dentist.getByRole('button', { name: 'Correct or transition note', exact: true }).click();
     await dentist.getByLabel('Clinical note', { exact: true }).fill('Fictional corrected note');
     await dentist.getByLabel('Clinical change reason').fill('Fictional correction explanation');

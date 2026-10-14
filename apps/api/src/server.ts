@@ -1,6 +1,10 @@
 import { createDatabase } from '@dentalai/database';
 import express, { type Express } from 'express';
-import type { Server } from 'node:http';
+import { createServer, type Server } from 'node:http';
+import {
+  developmentFrontendRequested,
+  mountDevelopmentFrontend,
+} from './infrastructure/development-frontend.js';
 import path from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -38,33 +42,24 @@ function loadRootEnvironmentFile(): void {
   }
 }
 
-function listen(application: Express, port: number, host: string): Promise<Server> {
+function listen(
+  application: Express,
+  port: number,
+  host: string,
+  existing?: Server,
+): Promise<Server> {
   return new Promise((resolve, reject) => {
-    const server = application.listen(port, host, () => resolve(server));
+    const server = existing ?? createServer();
+    server.on('request', application);
+    server.listen(port, host, () => resolve(server));
     server.once('error', reject);
   });
 }
 
-function frontendMount(
-  args: readonly string[],
-  registerClose: (close: () => Promise<void>) => void,
-) {
+function frontendMount(args: readonly string[]) {
   if (args.includes('--api-only')) return undefined;
 
   const webRoot = path.resolve(currentDirectory, '../../web');
-  if (args.includes('--with-vite')) {
-    return async (application: Express) => {
-      const { createServer: createViteServer } = await import('vite');
-      const vite = await createViteServer({
-        root: webRoot,
-        configFile: path.join(webRoot, 'vite.config.ts'),
-        server: { middlewareMode: true },
-        appType: 'spa',
-      });
-      registerClose(() => vite.close());
-      application.use(vite.middlewares);
-    };
-  }
 
   if (args.includes('--production')) {
     return (application: Express) => {
@@ -178,9 +173,20 @@ async function startServer(): Promise<void> {
   });
   let monitoringServer: Server | undefined;
   let closeFrontend = async () => {};
-  const mountFrontend = frontendMount(process.argv.slice(2), (close) => {
-    closeFrontend = close;
-  });
+  const developmentServer = developmentFrontendRequested(process.argv.slice(2))
+    ? createServer()
+    : undefined;
+  const mountFrontend = developmentServer
+    ? async (application: Express) => {
+        closeFrontend = await mountDevelopmentFrontend(application, {
+          nodeEnv: environment.nodeEnv,
+          deploymentEnv: environment.deploymentEnv,
+          origin: environment.appOrigin,
+          root: path.resolve(currentDirectory, '../../web'),
+          server: developmentServer,
+        });
+      }
+    : frontendMount(process.argv.slice(2));
 
   let server: Server | undefined;
   try {
@@ -204,7 +210,7 @@ async function startServer(): Promise<void> {
       ...(mountFrontend ? { mountFrontend } : {}),
     });
 
-    server = await listen(application, environment.port, environment.host);
+    server = await listen(application, environment.port, environment.host, developmentServer);
     server.requestTimeout = 30000;
     server.headersTimeout = 10000;
     server.keepAliveTimeout = 5000;

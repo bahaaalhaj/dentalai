@@ -1,5 +1,6 @@
 import { t } from '../i18n';
-import { displayStatus } from '../i18n/display';
+import { StudyCard } from './StudyCard';
+import { UploadDropZone } from './UploadDropZone';
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { ImagingHistory } from '@dentalai/contracts';
@@ -99,9 +100,7 @@ export function ImagingPage() {
           {t('ui.b59e0c1cc1e1faf9')}
         </Link>
         <h1 className="text-2xl font-bold">{t('ui.ef234b9f5937a9e6')}</h1>
-        <p className="rounded-xl border border-amber-300 bg-amber-50 p-4">
-          {t('ui.617b9f5ba5dc5589')}
-        </p>
+        <p className="ui-safety-notice">{t('ui.617b9f5ba5dc5589')}</p>
         {capabilities && !capabilities.storageConfigured && (
           <p role="status">{t('ui.8ba48c3114fac053')}</p>
         )}
@@ -157,19 +156,15 @@ export function ImagingPage() {
                 ),
               );
           }}
-          className="rounded-xl bg-white p-4"
+          className="ui-card space-y-4"
         >
-          <label>
-            {t('ui.9eefe33e02c935dd')}
-            <input
-              key={patient}
-              type="file"
-              accept="image/png,image/jpeg"
-              onChange={(e) => setFile(e.target.files?.[0])}
-              disabled={busy}
-              className="block py-3"
-            />
-          </label>
+          <UploadDropZone
+            key={patient}
+            file={file}
+            busy={busy}
+            choose={setFile}
+            reject={() => setError(t('polish.fileRejected'))}
+          />
           <button
             disabled={!capabilities?.storageConfigured || !patient || !file || !valid || busy}
             className="rounded bg-indigo-600 px-4 py-2 text-white disabled:opacity-50"
@@ -177,7 +172,12 @@ export function ImagingPage() {
             {t('ui.15bfd0d3dca50ed1')}
           </button>
         </form>
-        {busy && <p role="status">{t('ui.23e39291d6135814')}</p>}
+        {busy && (
+          <div role="status">
+            <p>{t('polish.uploading')}</p>
+            <progress aria-label={t('polish.uploading')} />
+          </div>
+        )}
         {notice && <p role="status">{notice}</p>}
         {error && (
           <p role="alert" className="text-red-700">
@@ -186,128 +186,24 @@ export function ImagingPage() {
         )}
         {patient && !history && !error && <p role="status">{t('ui.ea3e18eff454e041')}</p>}
         {history?.images.length === 0 && <p>{t('ui.b765570f6e945578')}</p>}
-        {history?.images.map((image) => (
-          <section key={image.id} className="space-y-3 rounded-xl border bg-white p-4">
-            <h2 className="font-semibold">
-              {t('ui.8f8cf9c6d47777cc')}
-              {image.studyId} {t('ui.44f2bf202ba8f6ae')}
-              {image.version}
-            </h2>
-            <p>
-              {image.width} × {image.height} · {image.createdAt}
-            </p>
-            <a
-              href={`/api/v1/imaging/images/${image.id}/content`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-indigo-700"
-            >
-              {t('ui.831890c867eb5620')}
-            </a>
-            <div className="flex gap-3">
-              <button
-                disabled={!capabilities?.inferenceConfigured || !valid || busy}
-                onClick={() =>
-                  void action(() =>
-                    apiClient.analyzeClinicalImage(
-                      image.id,
-                      reason,
-                      requestKey(JSON.stringify(['analysis', image.id, reason])),
-                    ),
-                  )
-                }
-                className="rounded border px-3 py-2"
-              >
-                {t('ui.35345d03d2a60d42')}
-              </button>
-              <button
-                disabled={!capabilities?.storageConfigured || !file || !valid || busy}
-                onClick={() => {
-                  if (file)
-                    void action(() =>
-                      apiClient.uploadClinicalImage(
-                        patient,
-                        file,
-                        reason,
-                        image.studyId,
-                        requestKey(
-                          JSON.stringify([
-                            'upload',
-                            patient,
-                            image.studyId,
-                            reason,
-                            file.name,
-                            file.size,
-                            file.lastModified,
-                          ]),
-                        ),
-                      ),
-                    );
-                }}
-                className="rounded border px-3 py-2"
-              >
-                {t('ui.e380c283dc0a39b2')}
-              </button>
-            </div>
-            {history.analyses
-              .filter((r) => r.imageId === image.id)
-              .map((run) => (
-                <article key={run.id} className="rounded border p-3">
-                  <h3>
-                    {t('ui.3e2b8bb857d251fe')}
-                    {displayStatus(run.status)} {t('ui.7837d5cddbc3e1a8')}
-                    {displayStatus(run.reviewState)}
-                  </h3>
-                  {run.errorCode && <p>{t('ui.9a7809ab7d28e976')}</p>}
-                  {run.result && (
-                    <>
-                      <p>
-                        {t('ui.f7c40b97c6d5ee54')}
-                        {run.result.modelName} / {run.result.modelVersion} ·{' '}
-                        {run.result.latencyMs.toFixed(1)} {t('ui.f785c3ce1d580c8f')}
-                      </p>
-                      <p className="break-all text-xs">
-                        {t('ui.c8036cef7ed6f9cd')}
-                        {run.result.artifactSha256}
-                      </p>
-                      {run.result.detections.length === 0 ? (
-                        <p>{t('ui.3a8215301197d890')}</p>
-                      ) : (
-                        <ul>
-                          {run.result.detections.map((d, i) => (
-                            <li key={i}>
-                              {run.result!.classMap[d.classId]} {t('ui.af05f7133375d548')}
-                              {d.score.toFixed(4)}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      {run.reviewState === 'draft' && (
-                        <div className="flex gap-3">
-                          {(['confirmed', 'rejected'] as const).map((decision) => (
-                            <button
-                              key={decision}
-                              disabled={!valid || busy}
-                              onClick={() =>
-                                void action(() =>
-                                  apiClient.reviewClinicalImage(run.id, decision, reason),
-                                )
-                              }
-                              className="rounded border px-3 py-2"
-                            >
-                              {decision === 'confirmed'
-                                ? t('ui.758ccc4a8db3cc1e')
-                                : t('ui.0eac35d479835c5c')}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </article>
-              ))}
-          </section>
-        ))}
+        <h2 className="ui-section-title">{t('polish.studies')}</h2>
+        <div className="ui-grid">
+          {history?.images.map((image) => (
+            <StudyCard
+              key={image.id}
+              image={image}
+              history={history}
+              capabilities={capabilities}
+              valid={valid}
+              busy={busy}
+              file={file}
+              patient={patient}
+              reason={reason}
+              action={action}
+              requestKey={requestKey}
+            />
+          ))}
+        </div>
       </div>
     </main>
   );

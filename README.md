@@ -1,5 +1,29 @@
 # DentalAI
 
+## Phase 17 UI verification
+
+Authenticated pages use one role-aware workspace with a graphical FDI chart and
+private saved-image previews. Dashboard metrics describe loaded API pages, not
+all-time totals. Clinical codes and clinician-authored content remain verbatim.
+Experimental decision support is not clinically validated; anesthesia output is
+still disabled pending approved references.
+
+Use the existing local setup below, then `npm run dev` with a canonical loopback
+`APP_ORIGIN` and development configuration. Vite's preamble is hash-authorized only
+on development HTML; HMR uses that exact local origin. Staging/production cannot
+enable this middleware. `npm run build && npm start` keeps the strict static-build
+script policy.
+
+After the normal verification flow and with disposable `DATABASE_URL`, run
+`npm run test:ui` for the additional English/Arabic 1280/390 role layouts,
+accessibility, real development HMR and compiled-server CSP checks. The original
+`npm run test:e2e` workflows are retained. Screenshots contain synthetic fixtures
+only and are stored under ignored `.local/phase17-screenshots/`.
+
+See [restoration design](docs/phase17-ui-ux-restoration.md) and
+[candidate verification](docs/phase17-final-verification.md). Neither UI polish nor
+passing engineering tests constitutes production, regulatory or clinical approval.
+
 Current specification: [aligned SRS](docs/srs.md), [requirements-to-tests matrix](docs/requirements-traceability.md)
 and [Phase 16 verification](docs/phase16-final-verification.md). These supersede earlier
 present-tense architecture/completion claims; historical phase reports describe their dated checkpoints.
