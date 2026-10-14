@@ -1,3 +1,4 @@
+import { navigateWorkspace } from './navigation.js';
 import { test, expect, type Page } from '@playwright/test';
 import express from 'express';
 import { fileURLToPath } from 'node:url';
@@ -32,12 +33,10 @@ async function login(page: Page, role: string) {
   await page.locator('input[type=email]').fill(`${role}@example.test`);
   await page.locator('input[type=password]').fill(fixturePassword);
   await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-  await page
-    .getByRole('link', {
-      name: role === 'patient' ? 'Your invoices and receipts' : 'Clinic billing',
-      exact: true,
-    })
-    .click();
+  await navigateWorkspace(
+    page,
+    role === 'patient' ? 'Your invoices and receipts' : 'Clinic billing',
+  );
 }
 async function confirm(page: Page, title: string) {
   const dialog = page.getByRole('dialog', { name: title });
@@ -61,6 +60,7 @@ test('owner issues a snapshot, staff records payment, owner refunds, patient rea
       staff = await staffContext.newPage(),
       patient = await patientContext.newPage();
     await login(owner, 'clinic_owner');
+    await owner.getByText('Services and price lists', { exact: true }).click();
     await owner.getByLabel('Service code').fill('FICTIONAL');
     await owner.getByLabel('Service name').fill('Fictional E2E service');
     await owner.getByLabel('Pricing reason').fill('Fictional pricing');

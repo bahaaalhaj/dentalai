@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:ui": "playwright test --config playwright.phase17.config.ts"
   },
   "dependencies": {
     "@dentalai/contracts": "0.0.0",

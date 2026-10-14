@@ -5,11 +5,13 @@ export function ActionDialog({
   children,
   onClose,
   busy = false,
+  className = '',
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   busy?: boolean;
+  className?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -32,7 +34,7 @@ export function ActionDialog({
         // queued close event must not dismiss a dialog that is open again.
         if (dialog.current && !dialog.current.open) onClose();
       }}
-      className="w-full max-w-xl p-6 rounded-3xl border border-slate-200 shadow-xl backdrop:bg-slate-900/40"
+      className={`w-full max-w-xl p-6 rounded-3xl border border-slate-200 shadow-xl backdrop:bg-slate-900/40 ${className}`}
     >
       <div className="flex justify-between gap-4 mb-5">
         <h2 id={titleId} className="font-bold text-xl text-slate-900">

@@ -1,0 +1,180 @@
+/* Authenticated-only design tokens. Public/authentication surfaces are intentionally untouched. */
+.app-shell {
+  --ui-primary: #5140e8;
+  --ui-ink: #17243e;
+  --ui-muted: #59687d;
+  --ui-line: #e5eaf2;
+  display: grid;
+  grid-template-columns: 246px minmax(0, 1fr);
+  min-height: 100dvh;
+  background: #f5f7fb;
+  color: var(--ui-ink);
+  font-size: 14px;
+}
+.ui-sidebar {
+  background: #111b31;
+  color: #fff;
+  padding: 28px 17px;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.ui-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 10px 29px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.ui-brand-icon {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  background: var(--ui-primary);
+  border-radius: 13px;
+  color: white;
+}
+.ui-nav-group {
+  margin: 20px 0 7px;
+  padding-inline: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #b6c2dc;
+  letter-spacing: 0.07em;
+}
+.ui-nav-link,
+.ui-nav-action {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border-radius: 11px;
+  padding: 12px;
+  margin: 4px 0;
+  color: #d5dff0;
+  text-align: start;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+}
+.ui-nav-link:hover,
+.ui-nav-action:hover {
+  background: #1d2943;
+  color: #fff;
+}
+.ui-nav-link[aria-current='page'] {
+  background: #5140e8;
+  color: #fff;
+  box-shadow: 0 5px 18px #0002;
+}
+.ui-sidebar-footer {
+  margin-top: auto;
+  padding-top: 24px;
+}
+.ui-sidebar-clinic {
+  border-top: 1px solid #2b3650;
+  padding: 20px 12px 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.ui-clinic-mark {
+  background: #2a3553;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  min-width: 35px;
+  height: 35px;
+  color: white;
+  font-weight: 600;
+}
+.ui-clinic-name {
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+.ui-shell-body {
+  min-width: 0;
+}
+.ui-topbar {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 30px;
+  background: #fff;
+  border-bottom: 1px solid var(--ui-line);
+}
+.ui-topbar-context {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.ui-topbar-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+.ui-topbar-clinic {
+  color: var(--ui-muted);
+  font-size: 12px;
+}
+.ui-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.ui-user-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ui-avatar {
+  display: grid;
+  place-items: center;
+  background: #eae8ff;
+  color: #4330bb;
+  font-weight: 700;
+  border-radius: 12px;
+  width: 41px;
+  height: 41px;
+  flex-shrink: 0;
+}
+.ui-user-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+.ui-user-role {
+  color: var(--ui-muted);
+  font-size: 11px;
+}
+.ui-language {
+  font-size: 12px;
+}
+.ui-language select {
+  background: transparent;
+  width: auto;
+  border: 0;
+  padding: 5px;
+}
+.ui-workspace {
+  max-width: 1480px;
+  margin: auto;
+  padding: 30px;
+  min-width: 0;
+}
+.app-shell main {
+  min-height: 0;
+  background: transparent;
+  padding: 0;
+}
+.app-shell main > div {
+  max-width: none;
+}
+.app-shell main > div > a:first-child {
+  display: none;
+}

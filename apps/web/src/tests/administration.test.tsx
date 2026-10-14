@@ -67,8 +67,10 @@ it('shows recoverable preference errors and does not pretend a failed save succe
 it('does not mirror the FDI tooth chart in Arabic', () => {
   setLocale('ar');
   render(<Odontogram records={[]} select={() => undefined} />);
-  const tooth = screen.getByRole('button', { name: 'Tooth 18: unrecorded' });
-  expect(tooth.parentElement?.getAttribute('dir')).toBe('ltr');
+  const tooth = screen.getByRole('button', {
+    name: t('polish.tooth', { code: '18', state: t('polish.unrecorded') }),
+  });
+  expect(tooth.closest('[dir]')?.getAttribute('dir')).toBe('ltr');
 });
 it('refreshes membership before navigating without a full page reload after onboarding', async () => {
   const refresh = vi.fn().mockResolvedValue(undefined);

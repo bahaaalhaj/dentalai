@@ -57,7 +57,7 @@ export function PatientClinicalHistory() {
         )}
         {value && !loading && (
           <>
-            <Odontogram records={value.records} />
+            <Odontogram records={value.records} approvedProjection />
             {!value.records.length && <p>{t('ui.b67b362d895b9f80')}</p>}
             {value.records.map((r) => (
               <article key={r.id} className="bg-white border rounded-2xl p-5">

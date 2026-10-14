@@ -14,6 +14,8 @@ import { apiClient } from '../lib/api-client';
 import { InvoiceEditor } from './InvoiceEditor';
 import { PaymentDialog, type FinancialAction } from './PaymentDialog';
 import { PricingPanel } from './PricingPanel';
+import { StatusBadge } from '../ui/StatusBadge';
+import { BillingSummary } from './BillingSummary';
 import { FinancialHistory } from './FinancialHistory';
 import { showMoney } from './Money';
 export function BillingPage({ portal = false }: { portal?: boolean }) {
@@ -98,10 +100,16 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
         )}
         {!portal && catalog && (
           <>
-            <PricingPanel catalog={catalog} refresh={refresh} />
+            <details className="ui-card">
+              <summary>{t('polish.pricing')}</summary>
+              <PricingPanel catalog={catalog} refresh={refresh} />
+            </details>
             <section className="bg-white border rounded-2xl p-5">
               <h2 className="font-bold">{t('ui.0a49928d7e40e7c2')}</h2>
               {!reports.length && <p>{t('ui.182865eb7af255dd')}</p>}
+              {reports.map((value) => (
+                <BillingSummary key={value.currency} value={value} />
+              ))}
               {reports.map((r) => (
                 <p key={r.currency}>
                   {r.currency} · {r.invoiceCount} {t('ui.4c7e116e90017a10')}{' '}
@@ -166,10 +174,11 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
           />
         )}
         {invoice && (
-          <section className="bg-white border rounded-2xl p-5 space-y-3">
+          <section className="ui-card space-y-4">
             <h2 className="font-bold">
-              {invoice.invoiceNumber} · {displayStatus(invoice.status)}
+              {invoice.invoiceNumber} · <StatusBadge value={invoice.status} />
             </h2>
+            <BillingSummary value={invoice} />
             <p>
               {t('ui.9feb5fc023004901')}
               {showMoney(invoice.originalTotalMinor, invoice.currency)} {t('ui.9d64568c68311f9f')}{' '}
@@ -178,12 +187,30 @@ export function BillingPage({ portal = false }: { portal?: boolean }) {
               {showMoney(invoice.refundsMinor, invoice.currency)} {t('ui.b266aaace53d0524')}{' '}
               {showMoney(invoice.balanceMinor, invoice.currency)}
             </p>
-            {invoice.items.map((i) => (
-              <p key={i.id}>
-                {i.description} {t('ui.db84fd58edf34e24')}
-                {i.quantityHundredths / 100} · {showMoney(i.lineTotalMinor, invoice.currency)}
-              </p>
-            ))}
+            <div className="ui-table-scroll">
+              <table className="ui-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('polish.description')}</th>
+                    <th scope="col">{t('polish.quantity')}</th>
+                    <th scope="col">{t('polish.amount')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoice.items.map((item) => (
+                    <tr key={item.id}>
+                      <td>
+                        <bdi>{item.description}</bdi>
+                      </td>
+                      <td>{item.quantityHundredths / 100}</td>
+                      <td>
+                        <bdi>{showMoney(item.lineTotalMinor, invoice.currency)}</bdi>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {!portal && catalog?.permissions.write && invoice.status === 'draft' && (
               <div className="flex gap-4">
                 <button

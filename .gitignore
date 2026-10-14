@@ -1,5 +1,6 @@
 node_modules/
 .local/
+apps/web/.phase17-*
 infra/private-objects/
 infra/private-mail/
 infra/secrets/

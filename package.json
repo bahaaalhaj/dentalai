@@ -57,6 +57,7 @@
     "test:coverage": "npm run build:packages && npm run test:coverage --workspace @dentalai/web && npm run test:coverage --workspace @dentalai/api",
     "test:watch": "npm run build:packages && npm run test:watch --workspace @dentalai/web",
     "test:e2e": "npm run test:e2e --workspace @dentalai/web",
+    "test:ui": "npm run test:ui --workspace @dentalai/web",
     "audit": "npm audit --audit-level=high",
     "verify": "npm run typecheck && npm run lint && npm run i18n:check && npm run i18n:arabic && npm run source:check && npm run format:check && npm test && npm run build && npm run bundle:check && npm run audit",
     "infra:config": "docker compose --env-file infra/.env -f infra/compose.yml config --quiet",

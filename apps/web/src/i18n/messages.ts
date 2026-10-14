@@ -1,4 +1,7 @@
+import { polishEnglish, polishArabic } from './polish';
+
 export const english = {
+  ...polishEnglish,
   'fallback.noProvider': 'None – invite a dentist first.',
   'status.past_due': 'Past due',
   'status.read_only': 'Read only',
@@ -171,6 +174,7 @@ export const english = {
   'role.patient': 'Patient',
 } as const;
 export const arabic: Record<keyof typeof english, string> = {
+  ...polishArabic,
   'fallback.noProvider': 'لا يوجد طبيب؛ أرسل دعوة لطبيب أسنان أولاً.',
   'status.past_due': 'متأخر',
   'status.read_only': 'للقراءة فقط',

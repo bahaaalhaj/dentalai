@@ -159,7 +159,12 @@ describe('actual clinical UI modules', () => {
     render(<Odontogram records={[]} select={select} />);
     fireEvent.click(screen.getByRole('button', { name: 'Tooth 16: unrecorded' }));
     expect(select).toHaveBeenCalledWith('16');
-    expect(screen.queryByText('caries')).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'Tooth 16: unrecorded' }).getAttribute('data-state'),
+    ).toBe('unknown');
+    expect(
+      screen.getByText('No finding or procedure is recorded for this tooth in this view.'),
+    ).toBeTruthy();
   });
   it('validates explicit tooth and surfaces before sending a draft', async () => {
     const save = vi.fn();

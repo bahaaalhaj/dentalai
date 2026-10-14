@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { z } from 'zod';
 import type {
   AuthIdentity,
@@ -12,8 +12,8 @@ import { apiClient } from '../lib/api-client';
 import { getErrorMessage } from '../lib/errors';
 import { t } from '../i18n';
 import { displayStatus, formatInstant } from '../i18n/display';
-import { ClinicFields } from './ClinicFields';
-import type { ClinicFieldsValue } from './initial-clinic';
+import { Profile } from './Profile';
+import { SectionTabs } from '../ui/SectionTabs';
 import { Field } from '../clinical/ClinicalFields';
 import { MembershipPanel } from './MembershipPanel';
 import { ExportPanel } from './ExportPanel';
@@ -35,6 +35,19 @@ export function AdministrationPage({
     [message, setMessage] = useState(''),
     [reason, setReason] = useState(''),
     [operational, setOperational] = useState(true);
+  const [parameters, setParameters] = useSearchParams();
+  const requestedTab = parameters.get('tab');
+  const tab = [
+    'configuration',
+    'subscription',
+    'team',
+    'locations',
+    'notifications',
+    'operations',
+  ].includes(requestedTab ?? '')
+    ? requestedTab!
+    : 'configuration';
+  const setTab = (value: string) => setParameters({ tab: value });
   const owner = identity.activeMembership?.roles.includes('clinic_owner') ?? false;
   const refresh = useCallback(async () => {
     const [overview, catalog, notifications, preferences, audits] = await Promise.all([
@@ -117,194 +130,186 @@ export function AdministrationPage({
           </p>
         )}
         {message && <p role="status">{message}</p>}
-        <Profile key={configuration.version} value={configuration} busy={busy} apply={apply} />
-        <section className="bg-white border p-5 rounded-2xl space-y-3">
-          <h2 className="font-bold">{t('admin.plan')}</h2>
-          <p>{t('admin.provider')}</p>
-          <p>
-            {subscription.planCode} · {displayStatus(subscription.effectiveState)} ·{' '}
-            {displayStatus(subscription.state)}
-          </p>
-          {subscription.periodEnd && <p>{formatInstant(subscription.periodEnd)}</p>}
-          {!subscription.growthAllowed && <p role="status">{t('admin.readOnly')}</p>}
-          <Field label={t('admin.reason')} value={reason} onChange={setReason} required />
-          {plans.map((plan) => (
-            <div key={plan.code} className="border rounded-xl p-3">
-              <b>{plan.name}</b>
-              <p>
-                {t('admin.seats')}: {plan.limits.seats} · {t('admin.locations')}:{' '}
-                {plan.limits.locations} · {t('admin.bookings')}: {plan.limits.appointments} ·{' '}
-                {t('admin.storage')}: {plan.limits.storageBytes}
-              </p>
-              {owner && (
-                <button
-                  disabled={busy || reason.trim().length < 3}
-                  onClick={() =>
-                    void apply(() =>
-                      apiClient.subscriptionAction({
-                        action: 'request_plan',
-                        planCode: plan.code === 'team' ? 'team' : 'starter',
-                        version: subscription.version,
-                        reason,
-                      }),
-                    )
+        <SectionTabs
+          active={tab}
+          change={setTab}
+          label={t('admin.title')}
+          tabs={[
+            { id: 'configuration', label: t('polish.configuration') },
+            { id: 'subscription', label: t('polish.subscription') },
+            { id: 'team', label: t('polish.team') },
+            { id: 'locations', label: t('admin.locations') },
+            { id: 'notifications', label: t('polish.notifications') },
+            ...(owner ? [{ id: 'operations', label: t('polish.operations') }] : []),
+          ]}
+        >
+          {tab === 'configuration' && (
+            <Profile key={configuration.version} value={configuration} busy={busy} apply={apply} />
+          )}
+          {tab === 'subscription' && (
+            <>
+              <section className="bg-white border p-5 rounded-2xl space-y-3">
+                <h2 className="font-bold">{t('admin.plan')}</h2>
+                <p>{t('admin.provider')}</p>
+                <p>
+                  {subscription.planCode} · {displayStatus(subscription.effectiveState)} ·{' '}
+                  {displayStatus(subscription.state)}
+                </p>
+                {subscription.periodEnd && <p>{formatInstant(subscription.periodEnd)}</p>}
+                {!subscription.growthAllowed && <p role="status">{t('admin.readOnly')}</p>}
+                <Field label={t('admin.reason')} value={reason} onChange={setReason} required />
+                {plans.map((plan) => (
+                  <div key={plan.code} className="border rounded-xl p-3">
+                    <b>{plan.name}</b>
+                    <p>
+                      {t('admin.seats')}: {plan.limits.seats} · {t('admin.locations')}:{' '}
+                      {plan.limits.locations} · {t('admin.bookings')}: {plan.limits.appointments} ·{' '}
+                      {t('admin.storage')}: {plan.limits.storageBytes}
+                    </p>
+                    {owner && (
+                      <button
+                        disabled={busy || reason.trim().length < 3}
+                        onClick={() =>
+                          void apply(() =>
+                            apiClient.subscriptionAction({
+                              action: 'request_plan',
+                              planCode: plan.code === 'team' ? 'team' : 'starter',
+                              version: subscription.version,
+                              reason,
+                            }),
+                          )
+                        }
+                      >
+                        {t('admin.requestPlan')}
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {subscription.requestedPlan && (
+                  <p>
+                    {t('admin.requestPlan')}: {subscription.requestedPlan}
+                  </p>
+                )}
+                {owner && (
+                  <button
+                    disabled={busy || reason.trim().length < 3}
+                    onClick={() =>
+                      void apply(() =>
+                        apiClient.subscriptionAction({
+                          action: subscription.cancelAtPeriodEnd ? 'resume' : 'cancel',
+                          version: subscription.version,
+                          reason,
+                        }),
+                      )
+                    }
+                  >
+                    {subscription.cancelAtPeriodEnd ? t('admin.resumePlan') : t('admin.cancelPlan')}
+                  </button>
+                )}
+              </section>
+              <section className="bg-white border rounded-2xl p-5 space-y-2">
+                <h2 className="font-bold">{t('admin.usage')}</h2>
+                <p dir="ltr">
+                  {data.usage.period} {t('ui.7e5f76c94a635c21')}
+                </p>
+                <dl className="grid sm:grid-cols-2 gap-3">
+                  {(
+                    [
+                      ['admin.seats', data.usage.seats, subscription.limits.seats],
+                      ['admin.locations', data.usage.locations, subscription.limits.locations],
+                      ['admin.bookings', data.usage.appointments, subscription.limits.appointments],
+                      ['admin.storage', data.usage.storageBytes, subscription.limits.storageBytes],
+                    ] as const
+                  ).map(([label, value, maximum]) => (
+                    <div key={label}>
+                      <dt>{t(label)}</dt>
+                      <dd dir="ltr">
+                        {value} / {maximum}
+                      </dd>
+                      <progress
+                        className="w-full"
+                        aria-label={t(label)}
+                        value={Math.min(value, maximum)}
+                        max={maximum}
+                      />
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            </>
+          )}
+          {tab === 'team' && (
+            <>
+              <Link className="ui-btn-primary" to="/dashboard#team">
+                {t('admin.invitations')}
+              </Link>
+              <MembershipPanel
+                members={data.members}
+                self={identity.activeMembership!.id}
+                owner={owner}
+                busy={busy}
+                apply={(id, body) => apply(() => apiClient.changeMember(id, body))}
+              />
+            </>
+          )}
+          {tab === 'locations' && (
+            <LocationPanel
+              locations={data.locations}
+              timezone={configuration.timezone}
+              busy={busy}
+              save={(body) => apply(() => apiClient.saveLocation(body))}
+            />
+          )}
+          <section className="bg-white border rounded-2xl p-5 space-y-3">
+            <nav className="flex flex-wrap gap-4">
+              <Link to="/appointments">{t('admin.hours')}</Link>
+              <Link to="/billing">{t('admin.services')}</Link>
+              <Link to="/dashboard">{t('admin.invitations')}</Link>
+            </nav>
+          </section>
+          {tab === 'notifications' && (
+            <section className="ui-card space-y-3">
+              <h2 className="font-bold">{t('admin.preferences')}</h2>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={operational}
+                  disabled={busy}
+                  onChange={(e) =>
+                    void apply(() => apiClient.notificationPreferences(e.target.checked))
                   }
-                >
-                  {t('admin.requestPlan')}
-                </button>
-              )}
-            </div>
-          ))}
-          {subscription.requestedPlan && (
-            <p>
-              {t('admin.requestPlan')}: {subscription.requestedPlan}
-            </p>
-          )}
-          {owner && (
-            <button
-              disabled={busy || reason.trim().length < 3}
-              onClick={() =>
-                void apply(() =>
-                  apiClient.subscriptionAction({
-                    action: subscription.cancelAtPeriodEnd ? 'resume' : 'cancel',
-                    version: subscription.version,
-                    reason,
-                  }),
-                )
-              }
-            >
-              {subscription.cancelAtPeriodEnd ? t('admin.resumePlan') : t('admin.cancelPlan')}
-            </button>
-          )}
-        </section>
-        <section className="bg-white border rounded-2xl p-5 space-y-2">
-          <h2 className="font-bold">{t('admin.usage')}</h2>
-          <p dir="ltr">
-            {data.usage.period} {t('ui.7e5f76c94a635c21')}
-          </p>
-          <dl className="grid sm:grid-cols-2 gap-3">
-            {(
-              [
-                ['admin.seats', data.usage.seats, subscription.limits.seats],
-                ['admin.locations', data.usage.locations, subscription.limits.locations],
-                ['admin.bookings', data.usage.appointments, subscription.limits.appointments],
-                ['admin.storage', data.usage.storageBytes, subscription.limits.storageBytes],
-              ] as const
-            ).map(([label, value, maximum]) => (
-              <div key={label}>
-                <dt>{t(label)}</dt>
-                <dd dir="ltr">
-                  {value} / {maximum}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-        <MembershipPanel
-          members={data.members}
-          self={identity.activeMembership!.id}
-          owner={owner}
-          busy={busy}
-          apply={(id, body) => apply(() => apiClient.changeMember(id, body))}
-        />
-        <LocationPanel
-          locations={data.locations}
-          timezone={configuration.timezone}
-          busy={busy}
-          save={(body) => apply(() => apiClient.saveLocation(body))}
-        />
-        <section className="bg-white border rounded-2xl p-5 space-y-3">
-          <nav className="flex flex-wrap gap-4">
-            <Link to="/appointments">{t('admin.hours')}</Link>
-            <Link to="/billing">{t('admin.services')}</Link>
-            <Link to="/dashboard">{t('admin.invitations')}</Link>
-          </nav>
-        </section>
-        <section className="bg-white border rounded-2xl p-5 space-y-3">
-          <h2 className="font-bold">{t('admin.preferences')}</h2>
-          <label>
-            <input
-              type="checkbox"
-              checked={operational}
-              disabled={busy}
-              onChange={(e) =>
-                void apply(() => apiClient.notificationPreferences(e.target.checked))
-              }
-            />{' '}
-            {t('admin.emailPreference')}
-          </label>
-          <p>{t('admin.requiredEmails')}</p>
-          <h2 className="font-bold">{t('admin.notifications')}</h2>
-          <p>{t('admin.accepted')}</p>
-          {!history.length && <p>{t('admin.empty')}</p>}
-          {history.map((item) => (
-            <p key={item.id}>
-              <bdi>{item.recipient}</bdi> · {item.category} · {displayStatus(item.state)} ·{' '}
-              {item.attempts} · {new Date(item.createdAt).toLocaleString()}
-            </p>
-          ))}
-        </section>
-        {owner && (
-          <>
-            <section className="bg-white border rounded-2xl p-5 space-y-3">
-              <h2 className="font-bold">{t('admin.audit')}</h2>
-              {!audit.length && <p>{t('admin.empty')}</p>}
-              {audit.map((event) => (
-                <p key={event.id}>
-                  <bdi>{event.actorName}</bdi> · {event.action} ·{' '}
-                  {new Date(event.occurredAt).toLocaleString()}
+                />{' '}
+                {t('admin.emailPreference')}
+              </label>
+              <p>{t('admin.requiredEmails')}</p>
+              <h2 className="font-bold">{t('admin.notifications')}</h2>
+              <p>{t('admin.accepted')}</p>
+              {!history.length && <p>{t('admin.empty')}</p>}
+              {history.map((item) => (
+                <p key={item.id}>
+                  <bdi>{item.recipient}</bdi> · {item.category} · {displayStatus(item.state)} ·{' '}
+                  {item.attempts} · {new Date(item.createdAt).toLocaleString()}
                 </p>
               ))}
             </section>
-            <ExportPanel name={configuration.displayName} busy={busy} apply={apply} />
-          </>
-        )}
+          )}
+          {owner && tab === 'operations' && (
+            <>
+              <section className="bg-white border rounded-2xl p-5 space-y-3">
+                <h2 className="font-bold">{t('admin.audit')}</h2>
+                {!audit.length && <p>{t('admin.empty')}</p>}
+                {audit.map((event) => (
+                  <p key={event.id}>
+                    <bdi>{event.actorName}</bdi> · {event.action} ·{' '}
+                    {new Date(event.occurredAt).toLocaleString()}
+                  </p>
+                ))}
+              </section>
+              <ExportPanel name={configuration.displayName} busy={busy} apply={apply} />
+            </>
+          )}
+        </SectionTabs>
       </div>
     </main>
-  );
-}
-function Profile({
-  value,
-  busy,
-  apply,
-}: {
-  value: ClinicFieldsValue & { version: number };
-  busy: boolean;
-  apply: (operation: () => Promise<unknown>) => Promise<void>;
-}) {
-  const [configuration, setConfiguration] = useState<ClinicFieldsValue>({
-      legalName: value.legalName,
-      displayName: value.displayName,
-      currency: value.currency,
-      timezone: value.timezone,
-      locale: value.locale,
-      contactEmail: value.contactEmail,
-      contactPhone: value.contactPhone,
-      brandColor: value.brandColor,
-      brandMark: value.brandMark,
-    }),
-    [reason, setReason] = useState('');
-  return (
-    <section className="bg-white border rounded-2xl p-5 space-y-3">
-      <h2 className="font-bold">{t('admin.profile')}</h2>
-      <form
-        className="space-y-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          void apply(() =>
-            apiClient.configureClinic({ ...configuration, version: value.version, reason }),
-          );
-        }}
-      >
-        <ClinicFields value={configuration} onChange={setConfiguration} />
-        <Field label={t('admin.reason')} value={reason} onChange={setReason} required />
-        <button
-          className="bg-indigo-600 text-white px-5 py-3 rounded-xl disabled:opacity-50"
-          disabled={busy || reason.trim().length < 3}
-        >
-          {t('admin.save')}
-        </button>
-      </form>
-    </section>
   );
 }

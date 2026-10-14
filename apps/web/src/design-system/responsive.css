@@ -1,0 +1,141 @@
+.ui-skip-link {
+  position: fixed;
+  top: 8px;
+  inset-inline-start: 8px;
+  z-index: 100;
+  background: white;
+  color: #17243e;
+  padding: 12px;
+  border-radius: 10px;
+  transform: translateY(-150%);
+}
+.ui-skip-link:focus {
+  transform: translateY(0);
+}
+.ui-icon-button.ui-menu-toggle {
+  display: none;
+}
+.ui-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #344260;
+}
+.ui-mobile-drawer {
+  margin: 0;
+  height: 100dvh;
+  max-height: 100dvh;
+  width: min(85vw, 310px);
+  inset-inline-start: 0;
+  inset-inline-end: auto;
+  border-radius: 0;
+  background: #111b31;
+  color: white;
+  padding: 22px;
+}
+.ui-mobile-drawer h2,
+.ui-mobile-drawer button {
+  color: white;
+}
+.ui-mobile-drawer .ui-sidebar {
+  height: auto;
+  position: static;
+  padding: 0;
+}
+.ui-mobile-drawer::backdrop {
+  background: #111b3190;
+}
+@media (max-width: 1100px) {
+  .ui-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ui-desktop-sidebar {
+    display: none;
+  }
+  .ui-icon-button.ui-menu-toggle {
+    display: inline-grid;
+  }
+  .ui-topbar {
+    padding: 0 16px;
+    height: 70px;
+  }
+  .ui-workspace {
+    padding: 20px 16px;
+  }
+  .ui-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ui-topbar-actions {
+    gap: 9px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 60%;
+  }
+  .ui-topbar {
+    height: auto;
+    min-height: 70px;
+    padding-block: 12px;
+  }
+  .ui-topbar-actions > select {
+    max-width: 130px;
+  }
+  .ui-topbar-context {
+    flex: 1;
+  }
+  .ui-topbar .ui-user-copy {
+    display: none;
+  }
+  .ui-topbar .ui-language > label {
+    font-size: 0;
+  }
+  .ui-topbar .ui-language select {
+    font-size: 12px;
+    max-width: 95px;
+  }
+  .ui-card {
+    padding: 18px;
+  }
+}
+@media (max-width: 480px) {
+  .ui-metrics {
+    gap: 10px;
+  }
+  .ui-metric {
+    padding: 16px;
+  }
+  .ui-metric-label {
+    font-size: 11px;
+  }
+  .ui-metric-value {
+    font-size: 25px;
+  }
+  .ui-schedule-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .ui-topbar-title {
+    font-size: 12px;
+  }
+  .ui-topbar-clinic {
+    max-width: 115px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *,
+  .app-shell *::before,
+  .app-shell *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

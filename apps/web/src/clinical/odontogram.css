@@ -1,0 +1,100 @@
+.odontogram-scroll {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border-radius: 16px;
+  padding: 12px 4px;
+}
+.odontogram-arches {
+  min-width: 720px;
+  max-width: 940px;
+  margin: auto;
+}
+.odontogram-orientation {
+  display: flex;
+  justify-content: space-between;
+  color: #475569;
+  font-size: 0.75rem;
+  padding: 0 10px 12px;
+}
+.odontogram-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+.odontogram-row-group {
+  margin-bottom: 16px;
+}
+.tooth-button {
+  position: relative;
+  flex: 1;
+  max-width: 54px;
+  min-width: 40px;
+  padding: 6px 3px;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  display: grid;
+  justify-items: center;
+  background: #f8fafc;
+}
+.tooth-button:hover {
+  background: #eef2ff;
+}
+.tooth-button[data-selected='true'] {
+  background: #eef2ff;
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 2px #c7d2fe;
+}
+.tooth-button svg {
+  width: 36px;
+  height: 64px;
+}
+.tooth-number {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+}
+.tooth-marker {
+  font-size: 0.7rem;
+  color: #475569;
+}
+.odontogram-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 16px;
+}
+.odontogram-legend > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+}
+.legend-glyph {
+  display: inline-flex;
+  width: 22px;
+  height: 30px;
+}
+.legend-glyph svg {
+  width: 22px;
+  height: 30px;
+}
+.legend-unknown,
+.legend-pending {
+  width: 14px;
+  height: 14px;
+  border: 1px dashed #64748b;
+  border-radius: 4px;
+}
+.legend-pending {
+  border: 1px solid #b45309;
+  background: repeating-linear-gradient(45deg, #fef3c7, #fef3c7 3px, #d97706 3px, #d97706 4px);
+}
+.odontogram-selection {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}

@@ -31,8 +31,11 @@ describe('production odontogram projection', () => {
         ]}
       />,
     );
-    expect(screen.getByLabelText('Tooth 16: unrecorded')).toBeTruthy();
+    const procedure = screen.getByLabelText('Tooth 16: restoration (Completed)');
+    expect(procedure.getAttribute('data-state')).toBe('pending');
     expect(screen.getByLabelText('Tooth 11: fracture')).toBeTruthy();
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull();
+    expect(screen.getByLabelText('Tooth 18: unrecorded')).toBeTruthy();
+    expect(procedure.querySelector('rect')).toBeNull();
   });
 });
